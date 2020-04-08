@@ -1,0 +1,10 @@
+<launch>
+  <param name="robot_description" textfile="$(find nightmare_description)/urdf/nightmare_v2.urdf"/>
+  <node args="-param robot_description -urdf -model nightmare_v2" name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"/>
+  
+  <rosparam command="load" file="$(find nightmare_description)/src/nightmare_v2_controller.yaml"/>
+  <node args="Rigid14_position_controller Rigid15_position_controller Rigid16_position_controller Rigid17_position_controller Rigid18_position_controller Rigid19_position_controller Rigid20_position_controller Rigid21_position_controller Rigid22_position_controller Rigid23_position_controller Rev24_position_controller Rev25_position_controller Rev26_position_controller Rev27_position_controller Rev28_position_controller Rev29_position_controller Rev30_position_controller Rev31_position_controller Rev32_position_controller Rev33_position_controller Rev34_position_controller Rev35_position_controller Rev36_position_controller Rev37_position_controller Rev38_position_controller Rev39_position_controller Rigid40_position_controller Rigid41_position_controller Rigid42_position_controller Rigid43_position_controller Rigid44_position_controller Rigid46_position_controller Rigid47_position_controller Rev48_position_controller Rev49_position_controller Rev50_position_controller Rev51_position_controller Rev52_position_controller Rev53_position_controller Rev54_position_controller Rev55_position_controller Rigid57_position_controller Rigid59_position_controller Rigid60_position_controller Rigid61_position_controller Rigid62_position_controller Rigid63_position_controller Rigid64_position_controller Rev65_position_controller Rev66_position_controller Rigid67_position_controller Rigid68_position_controller Rev69_position_controller joint_state_controller" name="controller_spawner" ns="nightmare_v2" output="screen" pkg="controller_manager" respawn="false" type="spawner"/>
+  <node name="robot_state_publisher" output="screen" pkg="robot_state_publisher" respawn="false" type="robot_state_publisher">
+    <remap from="/joint_states" to="/nightmare_v2/joint_states"/>
+  </node>
+</launch>
