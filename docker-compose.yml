@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  roscore:
+    build: ./roscore
+    image: roscore:nightmarev3
+    deploy:
+      replicas: 1
+    networks:
+      rosnet:
+        ipv4_address: "172.18.0.10"
+  nightmare-hardware-handler:
+    build: ./hardware-handler
+    image: talker:nv3
+    networks: 
+      - rosnet
+    deploy:
+      replicas: 1
+    depends_on:
+      - roscore
+
+networks:
+  rosnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/16"

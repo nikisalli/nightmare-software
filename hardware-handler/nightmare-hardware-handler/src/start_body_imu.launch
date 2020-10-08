@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="nightmare" name="listener" type="listener.py" output="screen">
+    <node pkg="nightmare-hardware-handler" name="listener" type="listener.py" output="screen">
         <param name="fixed_frame" type="string" value="map" />
         <param name="publish_transform" type="bool" value="true" />
     </node>
