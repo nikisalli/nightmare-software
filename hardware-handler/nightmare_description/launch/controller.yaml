@@ -1,0 +1,79 @@
+nightmare_controller:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+
+  # Position Controllers --------------------------------------
+  Rev103_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev103
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev104_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev104
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev105_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev105
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev106_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev106
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev107_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev107
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev108_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev108
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev109_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev109
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev110_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev110
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev111_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev111
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev112_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev112
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev113_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev113
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev114_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev114
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev115_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev115
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev116_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev116
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev117_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev117
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev118_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev118
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev119_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev119
+    pid: {p: 100.0, i: 0.01, d: 10.0}
+  Rev120_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: Rev120
+    pid: {p: 100.0, i: 0.01, d: 10.0}

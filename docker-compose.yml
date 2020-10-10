@@ -9,7 +9,7 @@ services:
     networks:
       rosnet:
         ipv4_address: "172.18.0.10"
-  nightmare-hardware-handler:
+  nightmare_hardware_handler:
     build: ./hardware-handler
     image: talker:nv3
     networks: 

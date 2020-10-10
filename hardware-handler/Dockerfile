@@ -8,8 +8,8 @@ RUN apt update && apt install -y \
 	python3-rospy \
 	ros-std-msgs
 
-COPY nightmare-hardware-handler /nightmare-hardware-handler
-RUN cd nightmare-hardware-handler && \
+COPY nightmare_hardware_handler /nightmare_hardware_handler
+RUN cd nightmare_hardware_handler && \
 	catkin_make
 
-CMD [ "/bin/bash", "-c", "cd /nightmare-hardware-handler && source devel/setup.bash && ROS_MASTER_URI=http://127.0.0.1:11311 rosrun listener listener.py" ]
+CMD [ "/bin/bash", "-c", "cd /nightmare_hardware_handler && source devel/setup.bash && ROS_MASTER_URI=http://127.0.0.1:11311 rosrun listener listener.py" ]
