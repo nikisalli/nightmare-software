@@ -40,16 +40,19 @@ class robot_listener(Thread):                                                   
         self.start()
     def run(self):
         while True:
+            t = time.time()
             for leg_num in range(6):
                 for servo_num in range(3):
-                    id = (leg_num * 3) + servo_num + 1
                     try:
-                        pos = controller[port].get_position(id, timeout=0.2)
+                        id = legs[leg_num].servo[servo_num].id
+                        port = legs[leg_num].servo[servo_num].tty
+                        pos = controller[port].get_position(id, timeout=0.02)
                         legs[leg_num].servo[servo_num].pos = pos
-                        legs[leg_num].servo[servo_num].angle = fmap(pos, 0, 1000, -120, 120)
-                        break
-                    except:
+                        legs[leg_num].servo[servo_num].angle = round(fmap(pos, 0, 1000, -120, 120),2)
+                    except Exception as e:
+                        print(e)
                         pass
+            print(time.time()-t)
 
 class nightmare_node():
     def __init__(self):
@@ -75,7 +78,7 @@ class nightmare_node():
         self.seq = 0
 
         rospy.on_shutdown(self.shutdown_node)
-        rate = rospy.Rate(50) # 100hz
+        rate = rospy.Rate(30) # 100hz
 
         rospy.loginfo("Ready for publishing")
 
@@ -86,11 +89,13 @@ class nightmare_node():
             rate.sleep()
 
     def publish_jnt(self):
-        angles = []*18
+        angles = [0]*18
         
         for leg_num in range(6):
             for servo_num in range(3):
                 angles[(leg_num * 3) + servo_num] = legs[leg_num].servo[servo_num].angle
+        
+        print(angles)
         
         self.jnt_msg.position = angles
         
@@ -106,6 +111,8 @@ class nightmare_node():
 
 if __name__ == '__main__':
     rospy.loginfo("starting hardware handler node")
+    
+    rospy.init_node('hardware_handler')
     
     rospy.loginfo("creating controller objects")
     
@@ -136,6 +143,6 @@ if __name__ == '__main__':
     
     try:
         pass
-        #obj_temp = nightmare_node()
+        obj_temp = nightmare_node()
     except rospy.ROSInterruptException:
         pass
