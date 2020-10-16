@@ -1,6 +1,7 @@
 FROM ubuntu:latest
 SHELL [ "/bin/bash", "-c" ]
-
+ENV ROS_HOSTNAME localhost
+ENV ROS_MASTER_URI http://localhost:11311
 RUN apt update && apt install -y \
 	catkin \
 	gcc \

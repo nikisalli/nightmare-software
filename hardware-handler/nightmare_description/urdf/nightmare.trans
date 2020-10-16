@@ -199,4 +199,15 @@
   </actuator>
 </transmission>
 
+<transmission name="Rev121_tran">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="Rev121">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="Rev121_actr">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
 </robot>

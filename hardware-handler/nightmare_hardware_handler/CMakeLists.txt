@@ -18,5 +18,5 @@ include_directories(
 catkin_python_setup()
 
 catkin_install_python(PROGRAMS 
-  src/listener.py
+  src/hardware-handler.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
