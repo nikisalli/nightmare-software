@@ -17,53 +17,55 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import Quaternion
 from tf.broadcaster import TransformBroadcaster
 
-tty_list = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]                        #robot serial port
+# robot servo serial ports
+tty_list = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
 
+# simple range mapping function
 def fmap(x, in_min, in_max, out_min, out_max):
   return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min
 
+# servo class to hold servo parameters
 class servo:
     tty = ""
     id = 0
     angle = 0
     pos = 0
 
+# leg class to hold servo positions
 class leg:
     def __init__(self, num):
         self.num = num
         self.servo = [servo(), servo(), servo()]
         
-class robot_listener(Thread):                                                                      #robot listener to parse data coming from the robot
+# listener thread to read servo positions
+class robot_listener(Thread): 
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
         self.start()
     def run(self):
         while True:
-            t = time.time()
             for leg_num in range(6):
                 for servo_num in range(3):
+                    id = legs[leg_num].servo[servo_num].id
+                    port = legs[leg_num].servo[servo_num].tty
                     try:
-                        id = legs[leg_num].servo[servo_num].id
-                        port = legs[leg_num].servo[servo_num].tty
                         pos = controller[port].get_position(id, timeout=0.02)
                         legs[leg_num].servo[servo_num].pos = pos
                         legs[leg_num].servo[servo_num].angle = round(fmap(pos, 0, 1000, -120, 120),2)
-                    except Exception as e:
-                        print(e)
-                        pass
-            print(time.time()-t)
+                    except:
+                        rospy.logerr("couldn't read servo position. ID: " + str(id) + " port: ttyUSB" + str(port))
+            node.publish_jnt()
+            time.sleep(0.5) # execute every 0.5s
 
+# main node class
 class nightmare_node():
     def __init__(self):
-        self.rate = rospy.get_param('~rate', 30.0)                                                #the rate at which to publish the transform
+        self.fixed_frame = rospy.get_param('~fixed_frame', "world") # set fixed frame relative to world to apply the transform
+        self.publish_transform = rospy.get_param('~publish_transform', False) # set true in launch file if the transform is needed
+        self.pub_jnt = rospy.Publisher("nightmare/joint_states", JointState, queue_size=10) # joint state publisher
 
-        self.fixed_frame = rospy.get_param('~fixed_frame', "world")                                #set fixed frame to apply the transform
-        self.publish_transform = rospy.get_param('~publish_transform', False)                      #set true in lunch file if the transform is needed
-
-        self.pub_jnt = rospy.Publisher("nightmare/joint_states", JointState, queue_size=10)
-
-        self.jnt_msg = JointState()
+        self.jnt_msg = JointState() # joint topic structure
         self.jnt_msg.header = Header()
         self.jnt_msg.name = ['Rev24', 'Rev25', 'Rev26', 'Rev27', 'Rev28', 'Rev29',
                              'Rev30', 'Rev31', 'Rev32', 'Rev33', 'Rev34', 'Rev35',
@@ -78,16 +80,9 @@ class nightmare_node():
         self.seq = 0
 
         rospy.on_shutdown(self.shutdown_node)
-        rate = rospy.Rate(30) # 100hz
-
+        
         rospy.loginfo("Ready for publishing")
-
-        while not rospy.is_shutdown():
-            self.current_time = rospy.get_time()
-            self.publish_jnt()
-
-            rate.sleep()
-
+        
     def publish_jnt(self):
         angles = [0]*18
         
@@ -95,7 +90,7 @@ class nightmare_node():
             for servo_num in range(3):
                 angles[(leg_num * 3) + servo_num] = legs[leg_num].servo[servo_num].angle
         
-        print(angles)
+        #print(angles)
         
         self.jnt_msg.position = angles
         
@@ -114,12 +109,16 @@ if __name__ == '__main__':
     
     rospy.init_node('hardware_handler')
     
+    #-------------------------------------------
+    
     rospy.loginfo("creating controller objects")
     
     controller = [0]*4
     for i, tty in enumerate(tty_list):
         controller[i] = lewansoul_lx16a.ServoController(serial.Serial(tty, 115200, timeout=1))
     
+    #-------------------------------------------
+
     rospy.loginfo("indexing servos")
     
     legs = []
@@ -138,11 +137,15 @@ if __name__ == '__main__':
                     break
                 except:
                     pass
-        
+    
+    #-------------------------------------------
+
     robot_listener()
     
     try:
-        pass
-        obj_temp = nightmare_node()
+        node = nightmare_node()
     except rospy.ROSInterruptException:
         pass
+    
+    while True:
+        time.sleep(10)
