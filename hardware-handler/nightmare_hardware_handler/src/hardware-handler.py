@@ -44,7 +44,7 @@ class robot_listener(Thread):
         self.daemon = True
         self.start()
     def run(self):
-        while True:
+        while not rospy.is_shutdown():
             for leg_num in range(6):
                 for servo_num in range(3):
                     id = legs[leg_num].servo[servo_num].id
@@ -56,7 +56,7 @@ class robot_listener(Thread):
                     except:
                         rospy.logerr("couldn't read servo position. ID: " + str(id) + " port: ttyUSB" + str(port))
             node.publish_jnt()
-            time.sleep(0.5) # execute every 0.5s
+            time.sleep(0.3) # execute every 0.3s
 
 # main node class
 class nightmare_node():
@@ -103,7 +103,7 @@ class nightmare_node():
 
     def shutdown_node(self):
         rospy.loginfo("shutting down hardware handler node")
-
+        
 if __name__ == '__main__':
     rospy.loginfo("starting hardware handler node")
     
@@ -139,7 +139,7 @@ if __name__ == '__main__':
                     pass
     
     #-------------------------------------------
-
+    
     robot_listener()
     
     try:
@@ -147,5 +147,5 @@ if __name__ == '__main__':
     except rospy.ROSInterruptException:
         pass
     
-    while True:
-        time.sleep(10)
+    while not rospy.is_shutdown():
+        time.sleep(1)
