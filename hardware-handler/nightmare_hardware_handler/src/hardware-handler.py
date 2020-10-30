@@ -52,7 +52,7 @@ class listener_thread(Thread):
                         try:
                             pos = controller[port].get_position(id, timeout=0.02)
                             legs[leg_num].servo[servo_num].pos = pos
-                            legs[leg_num].servo[servo_num].angle = round(fmap(pos, -500, 1500, -3.14, 3.14),4)
+                            legs[leg_num].servo[servo_num].angle = round(fmap(pos, 0, 1000, -2.0944, 2.0944),4)
                         except:
                             rospy.logerr("couldn't read servo position. ID: " + str(id) + " port: ttyUSB" + str(port))
             time.sleep(0.05) # execute every 0.05s
