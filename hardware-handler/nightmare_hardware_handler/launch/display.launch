@@ -1,6 +1,3 @@
 <launch>
-  <arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
-  <arg default="$(find nightmare_description)/launch/urdf.rviz" name="rvizconfig"/>
-  <param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
   <node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py"/>
 </launch>

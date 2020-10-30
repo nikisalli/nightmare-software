@@ -10,21 +10,20 @@ from beeprint import pp
 from math import sin, cos, pi
 from threading import Thread
 
-import tf
+from tf.broadcaster import TransformBroadcaster
 import rospy
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 from geometry_msgs.msg import Quaternion
-from tf2_ros import TransformBroadcaster, TransformStamped
 
 # robot servo serial ports
 tty_list = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
 
 # simple range mapping function
 def fmap(x, in_min, in_max, out_min, out_max):
-  return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min
+    return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min
 
 # servo class to hold servo parameters
 class servo:
@@ -38,13 +37,6 @@ class leg:
     def __init__(self, num):
         self.num = num
         self.servo = [servo(), servo(), servo()]
-
-def euler_to_quaternion(roll, pitch, yaw):
-  qx = sin(roll/2) * cos(pitch/2) * cos(yaw/2) - cos(roll/2) * sin(pitch/2) * sin(yaw/2)
-  qy = cos(roll/2) * sin(pitch/2) * cos(yaw/2) + sin(roll/2) * cos(pitch/2) * sin(yaw/2)
-  qz = cos(roll/2) * cos(pitch/2) * sin(yaw/2) - sin(roll/2) * sin(pitch/2) * cos(yaw/2)
-  qw = cos(roll/2) * cos(pitch/2) * cos(yaw/2) + sin(roll/2) * sin(pitch/2) * sin(yaw/2)
-  return Quaternion(x=qx, y=qy, z=qz, w=qw)
             
 class listener_thread(Thread): 
     def __init__(self, tty):
@@ -69,14 +61,11 @@ class listener_thread(Thread):
 class nightmare_node():
     def __init__(self):
         self.fixed_frame = rospy.get_param('~fixed_frame', "world") # set fixed frame relative to world to apply the transform
-        self.publish_transform = rospy.get_param('~publish_transform', False) # set true in launch file if the transform is needed
+        self.frame = rospy.get_param('~frame', "base_link") #set frame name
         self.pub_jnt = rospy.Publisher("joint_states", JointState, queue_size=10) # joint state publisher
         self.odom_broadcaster = TransformBroadcaster()
         
         self.jnt_msg = JointState() # joint topic structure
-        self.odom_trans = TransformStamped()
-        self.odom_trans.header.frame_id = 'world'
-        self.odom_trans.child_frame_id = 'base_link'
         
         self.jnt_msg.header = Header()
         self.jnt_msg.name = ['Rev103', 'Rev104', 'Rev105', 'Rev106', 'Rev107', 'Rev108',
@@ -98,13 +87,12 @@ class nightmare_node():
         rate = rospy.Rate(50)
         
         while not rospy.is_shutdown():
-            self.odom_trans.header.stamp = rospy.Time.now()
-            self.odom_trans.transform.translation.x = 0
-            self.odom_trans.transform.translation.y = 0
-            self.odom_trans.transform.translation.z = 0
-            self.odom_trans.transform.rotation = euler_to_quaternion(0, 0, 0) # roll,pitch,yaw
+            self.odom_broadcaster.sendTransform((0,0,0), 
+                                                (0,0,0,0), 
+                                                rospy.Time.now(), 
+                                                self.fixed_frame, 
+                                                self.frame)
             
-            self.odom_broadcaster.sendTransform(self.odom_trans)
             self.publish_jnt()
             
             rate.sleep()
