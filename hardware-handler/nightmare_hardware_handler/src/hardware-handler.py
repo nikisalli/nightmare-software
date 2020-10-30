@@ -94,20 +94,18 @@ class nightmare_node():
             rate.sleep()
             
     def publish_jnt(self):
-        angles = [0]*18
+        angles = [0]*19
         
         for leg_num in range(6):
             for servo_num in range(3):
                 angles[(leg_num * 3) + servo_num] = legs[leg_num].servo[servo_num].angle
         
-        #print(angles)
+        print(angles)
         
-        self.jnt_msg.position = angles
+        self.jnt_msg.position = [ angles[6],  angles[3],  angles[0],  angles[15],  angles[12],  angles[9],
+                                 -angles[7], -angles[4], -angles[1], -angles[16], -angles[13], -angles[10],
+                                 -angles[8], -angles[5], -angles[2], -angles[17], -angles[14], -angles[11], 0]
         
-        self.jnt_msg.position = [ angles[2],  angles[8],  angles[14], angles[1],  angles[7],  angles[13],
-                                  angles[0],  angles[6],  angles[12], angles[5],  angles[11], angles[17],
-                                  angles[4],  angles[10], angles[16], angles[3],  angles[9],  angles[15], 0]
-
         self.jnt_msg.header.stamp = rospy.Time.now()
         self.pub_jnt.publish(self.jnt_msg)
 
