@@ -10,7 +10,7 @@ from beeprint import pp
 from math import sin, cos, pi
 from threading import Thread
 
-from tf.broadcaster import TransformBroadcaster
+import tf
 import rospy
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
@@ -63,7 +63,7 @@ class nightmare_node():
         self.fixed_frame = rospy.get_param('~fixed_frame', "world") # set fixed frame relative to world to apply the transform
         self.frame = rospy.get_param('~frame', "base_link") #set frame name
         self.pub_jnt = rospy.Publisher("joint_states", JointState, queue_size=10) # joint state publisher
-        self.odom_broadcaster = TransformBroadcaster()
+        self.odom_broadcaster = tf.TransformBroadcaster()
         
         self.jnt_msg = JointState() # joint topic structure
         
@@ -72,11 +72,7 @@ class nightmare_node():
                              'Rev109', 'Rev110', 'Rev111', 'Rev112', 'Rev113', 'Rev114',
                              'Rev115', 'Rev116', 'Rev117', 'Rev118', 'Rev119', 'Rev120',
                              'Rev121']
-        
-        """self.jnt_msg.name = ['Rev105', 'Rev111', 'Rev117', 'Rev104', 'Rev110', 'Rev116',
-                             'Rev103', 'Rev109', 'Rev115', 'Rev108', 'Rev114', 'Rev120',
-                             'Rev107', 'Rev113', 'Rev119', 'Rev106', 'Rev112', 'Rev118', 
-                             'Rev121']"""
+
         self.jnt_msg.velocity = []
         self.jnt_msg.effort = []
         
@@ -88,10 +84,10 @@ class nightmare_node():
         
         while not rospy.is_shutdown():
             self.odom_broadcaster.sendTransform((0,0,0), 
-                                                (0,0,0,0), 
+                                                tf.transformations.quaternion_from_euler(0, 0, 0), 
                                                 rospy.Time.now(), 
-                                                self.fixed_frame, 
-                                                self.frame)
+                                                self.frame, 
+                                                self.fixed_frame)
             
             self.publish_jnt()
             
