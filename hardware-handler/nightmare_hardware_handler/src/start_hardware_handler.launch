@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="nightmare_hardware_handler" name="nightmare_hardware_handler" type="joint_state_publisher" output="screen">
+        <param name="fixed_frame" type="string" value="world" />
+        <param name="publish_transform" type="bool" value="true" />
+    </node>
+</launch>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(nightmare-hardware-handler)
+project(nightmare_hardware_handler)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

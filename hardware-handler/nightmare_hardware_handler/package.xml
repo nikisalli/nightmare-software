@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>nightmare-hardware-handler</name>
+  <name>nightmare_hardware_handler</name>
   <version>0.0.0</version>
   <description>nightmare robot hardware abstraction layer</description>
 

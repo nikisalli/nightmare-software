@@ -1,21 +1,23 @@
 #!/usr/bin/env python
 
-import rospy
+import os
 import serial
 import lewansoul_lx16a
 import numpy as np
-import tf
 import math
 import time
 from beeprint import pp
-
+from math import sin, cos, pi
 from threading import Thread
+
+import tf
+import rospy
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 from geometry_msgs.msg import Quaternion
-from tf.broadcaster import TransformBroadcaster
+from tf2_ros import TransformBroadcaster, TransformStamped
 
 # robot servo serial ports
 tty_list = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
@@ -36,53 +38,77 @@ class leg:
     def __init__(self, num):
         self.num = num
         self.servo = [servo(), servo(), servo()]
-        
-# listener thread to read servo positions
-class robot_listener(Thread): 
-    def __init__(self):
+
+def euler_to_quaternion(roll, pitch, yaw):
+  qx = sin(roll/2) * cos(pitch/2) * cos(yaw/2) - cos(roll/2) * sin(pitch/2) * sin(yaw/2)
+  qy = cos(roll/2) * sin(pitch/2) * cos(yaw/2) + sin(roll/2) * cos(pitch/2) * sin(yaw/2)
+  qz = cos(roll/2) * cos(pitch/2) * sin(yaw/2) - sin(roll/2) * sin(pitch/2) * cos(yaw/2)
+  qw = cos(roll/2) * cos(pitch/2) * cos(yaw/2) + sin(roll/2) * sin(pitch/2) * sin(yaw/2)
+  return Quaternion(x=qx, y=qy, z=qz, w=qw)
+            
+class listener_thread(Thread): 
+    def __init__(self, tty):
         Thread.__init__(self)
-        self.daemon = True
-        self.start()
+        self.tty = tty
     def run(self):
         while not rospy.is_shutdown():
             for leg_num in range(6):
                 for servo_num in range(3):
                     id = legs[leg_num].servo[servo_num].id
                     port = legs[leg_num].servo[servo_num].tty
-                    try:
-                        pos = controller[port].get_position(id, timeout=0.02)
-                        legs[leg_num].servo[servo_num].pos = pos
-                        legs[leg_num].servo[servo_num].angle = round(fmap(pos, 0, 1000, -120, 120),2)
-                    except:
-                        rospy.logerr("couldn't read servo position. ID: " + str(id) + " port: ttyUSB" + str(port))
-            node.publish_jnt()
-            time.sleep(0.3) # execute every 0.3s
+                    if port == self.tty:
+                        try:
+                            pos = controller[port].get_position(id, timeout=0.02)
+                            legs[leg_num].servo[servo_num].pos = pos
+                            legs[leg_num].servo[servo_num].angle = round(fmap(pos, -500, 1500, -3.14, 3.14),4)
+                        except:
+                            rospy.logerr("couldn't read servo position. ID: " + str(id) + " port: ttyUSB" + str(port))
+            time.sleep(0.05) # execute every 0.05s
 
 # main node class
 class nightmare_node():
     def __init__(self):
         self.fixed_frame = rospy.get_param('~fixed_frame', "world") # set fixed frame relative to world to apply the transform
         self.publish_transform = rospy.get_param('~publish_transform', False) # set true in launch file if the transform is needed
-        self.pub_jnt = rospy.Publisher("nightmare/joint_states", JointState, queue_size=10) # joint state publisher
-
+        self.pub_jnt = rospy.Publisher("joint_states", JointState, queue_size=10) # joint state publisher
+        self.odom_broadcaster = TransformBroadcaster()
+        
         self.jnt_msg = JointState() # joint topic structure
+        self.odom_trans = TransformStamped()
+        self.odom_trans.header.frame_id = 'world'
+        self.odom_trans.child_frame_id = 'base_link'
+        
         self.jnt_msg.header = Header()
-        self.jnt_msg.name = ['Rev24', 'Rev25', 'Rev26', 'Rev27', 'Rev28', 'Rev29',
-                             'Rev30', 'Rev31', 'Rev32', 'Rev33', 'Rev34', 'Rev35',
-                             'Rev36', 'Rev37', 'Rev38', 'Rev39', 'Rev48', 'Rev49', 
-                             'Rev50']
+        self.jnt_msg.name = ['Rev103', 'Rev104', 'Rev105', 'Rev106', 'Rev107', 'Rev108',
+                             'Rev109', 'Rev110', 'Rev111', 'Rev112', 'Rev113', 'Rev114',
+                             'Rev115', 'Rev116', 'Rev117', 'Rev118', 'Rev119', 'Rev120',
+                             'Rev121']
+        
+        """self.jnt_msg.name = ['Rev105', 'Rev111', 'Rev117', 'Rev104', 'Rev110', 'Rev116',
+                             'Rev103', 'Rev109', 'Rev115', 'Rev108', 'Rev114', 'Rev120',
+                             'Rev107', 'Rev113', 'Rev119', 'Rev106', 'Rev112', 'Rev118', 
+                             'Rev121']"""
         self.jnt_msg.velocity = []
         self.jnt_msg.effort = []
-
-        self.current_time = rospy.get_time()
-        self.last_time = rospy.get_time()
-
-        self.seq = 0
-
+        
         rospy.on_shutdown(self.shutdown_node)
         
         rospy.loginfo("Ready for publishing")
         
+        rate = rospy.Rate(50)
+        
+        while not rospy.is_shutdown():
+            self.odom_trans.header.stamp = rospy.Time.now()
+            self.odom_trans.transform.translation.x = 0
+            self.odom_trans.transform.translation.y = 0
+            self.odom_trans.transform.translation.z = 0
+            self.odom_trans.transform.rotation = euler_to_quaternion(0, 0, 0) # roll,pitch,yaw
+            
+            self.odom_broadcaster.sendTransform(self.odom_trans)
+            self.publish_jnt()
+            
+            rate.sleep()
+            
     def publish_jnt(self):
         angles = [0]*18
         
@@ -94,9 +120,9 @@ class nightmare_node():
         
         self.jnt_msg.position = angles
         
-        """self.jnt_msg.position = [-angles[0], -angles[1], -angles[2], -angles[3], -angles[4], -angles[5],
-                                  angles[6],  angles[7],  angles[8],  angles[9],  angles[10], angles[11],
-                                  angles[12], angles[13], angles[14], angles[15], angles[16], angles[17], 0]"""
+        self.jnt_msg.position = [ angles[2],  angles[8],  angles[14], angles[1],  angles[7],  angles[13],
+                                  angles[0],  angles[6],  angles[12], angles[5],  angles[11], angles[17],
+                                  angles[4],  angles[10], angles[16], angles[3],  angles[9],  angles[15], 0]
 
         self.jnt_msg.header.stamp = rospy.Time.now()
         self.pub_jnt.publish(self.jnt_msg)
@@ -108,6 +134,13 @@ if __name__ == '__main__':
     rospy.loginfo("starting hardware handler node")
     
     rospy.init_node('hardware_handler')
+    
+    #-------------------------------------------
+    
+    rospy.loginfo("setting ports to low latency mode")
+    
+    for tty in tty_list:
+        os.system('setserial ' + tty + ' low_latency')
     
     #-------------------------------------------
     
@@ -140,12 +173,15 @@ if __name__ == '__main__':
     
     #-------------------------------------------
     
-    robot_listener()
+    rospy.loginfo("spawning reading threads")
     
+    thread_list = []
+    
+    for i in range(len(tty_list)):
+        thread_list.append(listener_thread(i))
+        thread_list[i].start()
+        
     try:
         node = nightmare_node()
     except rospy.ROSInterruptException:
         pass
-    
-    while not rospy.is_shutdown():
-        time.sleep(1)
