@@ -1,0 +1,9 @@
+<launch>
+
+<rosparam file="$(find nightmare_description)/launch/controller.yaml" command="load"/>
+<node args="Rev103_position_controller Rev104_position_controller Rev105_position_controller Rev106_position_controller Rev107_position_controller Rev108_position_controller Rev109_position_controller Rev110_position_controller Rev111_position_controller Rev112_position_controller Rev113_position_controller Rev114_position_controller Rev115_position_controller Rev116_position_controller Rev117_position_controller Rev118_position_controller Rev119_position_controller Rev120_position_controller Rev121_position_controller joint_state_controller " name="controller_spawner" ns="nightmare" output="screen" pkg="controller_manager" respawn="false" type="spawner"/>
+<node name="robot_state_publisher" output="screen" pkg="robot_state_publisher" respawn="false" type="robot_state_publisher">
+  <remap from="/joint_states" to="/nightmare/joint_states"/>
+</node>
+
+</launch>
