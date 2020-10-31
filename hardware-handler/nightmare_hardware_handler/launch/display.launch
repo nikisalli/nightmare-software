@@ -1,4 +1,6 @@
 <launch>
-	<!-- <node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py"/> -->
+	<arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
+	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
+	<node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py"/>
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
 </launch>

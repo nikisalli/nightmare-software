@@ -27,10 +27,11 @@ def fmap(x, in_min, in_max, out_min, out_max):
 
 # servo class to hold servo parameters
 class servo:
-    tty = ""
-    id = 0
-    angle = 0
-    pos = 0
+    def __init__(self):
+        self.tty = ""
+        self.id = 0
+        self.angle = 0
+        self.pos = 0
 
 # leg class to hold servo positions
 class leg:
