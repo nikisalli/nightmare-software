@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import serial
 import lewansoul_lx16a
 import numpy as np
@@ -141,16 +142,21 @@ if __name__ == '__main__':
         
     for leg_num in range(6):
         for servo_num in range(3):
+            found = False
+            id = (leg_num * 3) + servo_num + 1
             for tty_num, tty in enumerate(tty_list):
-                id = (leg_num * 3) + servo_num + 1
                 try:
                     controller[tty_num].get_servo_id(id, timeout=0.05)
                     rospy.loginfo("found servo id " + str(id) + " on " + str(tty))
                     legs[leg_num].servo[servo_num].id = id
                     legs[leg_num].servo[servo_num].tty = tty_num
+                    found = True
                     break
                 except:
                     pass
+            if(not found):
+                rospy.logerr("couldn't find a servo with ID: " + str(id) + " on any serial bus!")
+                sys.exit("couldn't find a servo with ID: " + str(id) + " on any serial bus!")
     
     #-------------------------------------------
     
