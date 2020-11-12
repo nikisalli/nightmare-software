@@ -52,7 +52,7 @@ def get_servo_tty(servo_id, controllers):
             controller.get_servo_id(servo_id, timeout=0.05)
             rospy.loginfo(f"found servo id {servo_id} on {tty}")
             return tty
-        except TimeoutError:
+        except lewansoul_lx16a.TimeoutError:
             pass
 
     rospy.logerr(f"couldn't find a servo with ID: {servo_id} on any serial bus!")
@@ -122,7 +122,6 @@ class HardwareHandlerNode:
     def _publish_jnt(self):
         angles = [servo.angle for leg in self.legs for servo in leg.servos]
 
-        # yes
         self.joint_msg.position = [angles[6], angles[3], angles[0], angles[15], angles[12], angles[9],
                                    -angles[7], -angles[4], -angles[1], -angles[16], -angles[13], -angles[10],
                                    -angles[8], -angles[5], -angles[2], -angles[17], -angles[14], -angles[11], 0]
