@@ -5,6 +5,7 @@ import rospy
 from std_msgs.msg import Byte
 import tf
 from movements import stand_up
+import time
 
 class engine_node():
     def __init__(self):
@@ -14,7 +15,7 @@ class engine_node():
     def run(self):
         while not rospy.is_shutdown():
             if(self.state == 0):
-                pass
+                time.sleep(1000)
                 #movements.sleep()
     
     def set_state(self, msg):
