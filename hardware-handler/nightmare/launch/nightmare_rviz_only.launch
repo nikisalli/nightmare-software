@@ -1,0 +1,10 @@
+<launch>
+	<arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
+	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
+	<node pkg="robot_state_publisher" type="robot_state_publisher" required="true" name="robot_state_publisher" >
+      <remap from="joint_states" to="engine_angle_joint_states" />
+    </node>
+    <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py"/>
+    <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="engine.py"/>
+	<node pkg="tf" type="static_transform_publisher" name="base2world_broadcaster" args="0 0 0 0 0 0 world base_link 100" />
+</launch>

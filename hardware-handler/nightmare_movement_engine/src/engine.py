@@ -37,7 +37,9 @@ class engineNode():
             if(self.state == 0):
                 pass
                 # movements.sleep()
-            rospy.sleep(self.rate)
+
+            self.publish_joints()
+            self.rate.sleep()
 
     def publish_joints(self):
         angles = [0]*19
