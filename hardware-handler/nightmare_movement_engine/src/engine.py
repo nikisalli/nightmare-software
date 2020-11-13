@@ -3,10 +3,11 @@
 import time
 import numpy as np
 
+import movements
+
 import rospy
 from std_msgs.msg import Byte, Header
 from sensor_msgs.msg import JointState
-from movements import stand_up
 
 
 class engineNode():
@@ -31,12 +32,14 @@ class engineNode():
                                                 'tail_joint'],
                                           velocity=[],
                                           effort=[])  # joint state topic structure
+        self.hw_pose = [0]*19  # initialize as empty and fill it later in set_hw_joint_state callback
+        self.pose = [0]*19  # init as empty to fill later in callbacks
+        self.states = [0]*19  # all servos disconnected while starting
 
     def run(self):
         while not rospy.is_shutdown():
             if(self.state == 0):
-                pass
-                # movements.sleep()
+                movements.sleep(self)
 
             self.publish_joints()
             self.rate.sleep()
@@ -56,6 +59,9 @@ class engineNode():
     def set_state(self, msg):
         self.state = msg.data
 
+    def set_hw_joint_state(self, msg):
+        self.pose = msg.data
+
 
 if __name__ == '__main__':
     rospy.init_node('movement_engine')
@@ -65,5 +71,6 @@ if __name__ == '__main__':
 
     rospy.loginfo("subscribing to nodes")
     rospy.Subscriber("/nightmare/state", Byte, engine.set_state)
+    rospy.Subscriber("/joint_states", JointState, engine.set_hw_joint_state)
 
     engine.run()
