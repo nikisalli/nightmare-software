@@ -8,7 +8,7 @@ from sensor_msgs.msg import JointState
 from movements import stand_up
 
 
-class engine_node():
+class engineNode():
     def __init__(self):
         self.state = 0
         self.prev_state = 0
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     rospy.init_node('movement_engine')
 
     rospy.loginfo("starting engine node")
-    engine = engine_node()
+    engine = engineNode()
 
     rospy.loginfo("subscribing to nodes")
     rospy.Subscriber("/nightmare/state", Byte, engine.set_state)
