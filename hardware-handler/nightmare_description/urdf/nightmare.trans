@@ -133,23 +133,12 @@
   </actuator>
 </transmission>
 
-<transmission name="Rev115_tran">
+<transmission name="Rev121_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev115">
+  <joint name="Rev121">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev115_actr">
-    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    <mechanicalReduction>1</mechanicalReduction>
-  </actuator>
-</transmission>
-
-<transmission name="Rev116_tran">
-  <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev116">
-    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-  </joint>
-  <actuator name="Rev116_actr">
+  <actuator name="Rev121_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
@@ -166,23 +155,23 @@
   </actuator>
 </transmission>
 
-<transmission name="Rev118_tran">
+<transmission name="Rev116_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev118">
+  <joint name="Rev116">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev118_actr">
+  <actuator name="Rev116_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev119_tran">
+<transmission name="Rev115_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev119">
+  <joint name="Rev115">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev119_actr">
+  <actuator name="Rev115_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
@@ -199,12 +188,23 @@
   </actuator>
 </transmission>
 
-<transmission name="Rev121_tran">
+<transmission name="Rev119_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev121">
+  <joint name="Rev119">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev121_actr">
+  <actuator name="Rev119_actr">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
+<transmission name="Rev118_tran">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="Rev118">
+    <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="Rev118_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
