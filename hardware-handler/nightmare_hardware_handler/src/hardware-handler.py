@@ -163,7 +163,7 @@ if __name__ == '__main__':
 
     node = HardwareHandlerNode(
         legs=leg_list,
-        fixed_frame=rospy.get_param('~fixed_frame', 'world'), # set fixed frame relative to world to apply the transform
+        fixed_frame=rospy.get_param('~fixed_frame', 'world'),  # set fixed frame relative to world to apply the transform
         frame=rospy.get_param('~frame', "base_link"),  # set frame name
         publisher=rospy.Publisher('joint_states', JointState, queue_size=10),  # joint state publisher
         broadcaster=tf.TransformBroadcaster(),
