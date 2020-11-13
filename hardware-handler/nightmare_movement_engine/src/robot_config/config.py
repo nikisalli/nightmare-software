@@ -1,40 +1,75 @@
-h_stand = -16
-l_body = 15.5
-w_body_min = 13.7
-w_body_max = 18.6
+import numpy as np
+from dataclasses import dataclass
 
-# default standing robot pose
-#                 x    y    z
-default_pose = [[ 20, -20, h_stand],
-                [  0, -26, h_stand],
-                [-20, -20, h_stand],
-                [-20,  20, h_stand],
-                [  0,  26, h_stand],
-                [ 20,  20, h_stand]]
+STAND_HEIGTH = -16
+STAND_MID_LEG_Y = 26
+STAND_OUT_LEG_Y = 20
+STAND_MID_LEG_X = 0
+STAND_OUT_LEG_X = 20
+BODY_LENGTH = 15.5  # X
+BODY_MID_WIDTH = 18.6  # Y
+BODY_OUT_WIDTH = 13.7  # Y
+LEG_COXA_LENGTH = 6.5
+LEG_FEMUR_LENGTH = 13
+LEG_TIBIA_LENGTH = 17
+RIGHT = True
+LEFT = False
+PI = np.pi
 
-# leg start offset from body
-#                     x               y
-leg_offset =   [[ (l_body/2), -(w_body_min/2)],   
-                [          0, -(w_body_max/2)], 
-                [-(l_body/2), -(w_body_min/2)], 
-                [-(l_body/2),  (w_body_min/2)],   
-                [          0,  (w_body_max/2)], 
-                [ (l_body/2),  (w_body_min/2)]]
+DEFAULT_DIM = np.array([LEG_COXA_LENGTH, LEG_FEMUR_LENGTH, LEG_TIBIA_LENGTH])
 
-# servo offset angle
-#                  c   f   t
-servo_offset = [[-45,  0,  0],
-                [  0,  0,  0],
-                [ 45,  0,  0],
-                [-45,  0,  0],
-                [  0,  0,  0],
-                [ 45,  0,  0]]
 
-#leg segments dimensions
-#                  c   f   t
-leg_dim =      [[6.5, 13, 17],
-                [6.5, 13, 17],
-                [6.5, 13, 17],
-                [6.5, 13, 17],
-                [6.5, 13, 17],
-                [6.5, 13, 17]]
+@dataclass
+class leg():
+    def __init__(self, dim, offset, pose, side, servo_offset=np.array([0, 0, 0])):
+        self.dim = dim
+        self.servo_offset = servo_offset
+        self.side = side  # from robot POV
+        self.abs_offset = offset
+        self.abs_pose = pose
+
+
+legs = [
+    leg(  # leg 1
+        dim=DEFAULT_DIM,
+        offset=np.array([BODY_LENGTH/2, -BODY_OUT_WIDTH/2, 0]),
+        pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, STAND_HEIGTH]),
+        side=RIGHT,
+        servo_offset=np.array([-PI/4, 0, -PI/2])
+    ),
+    leg(  # leg 2
+        dim=DEFAULT_DIM,
+        offset=np.array([0, -BODY_MID_WIDTH/2, 0]),
+        pose=np.array([STAND_MID_LEG_X, -STAND_MID_LEG_Y, STAND_HEIGTH]),
+        side=RIGHT,
+        servo_offset=np.array([0, 0, -PI/2])
+    ),
+    leg(  # leg 3
+        dim=DEFAULT_DIM,
+        offset=np.array([-BODY_LENGTH/2, -BODY_OUT_WIDTH/2, 0]),
+        pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, STAND_HEIGTH]),
+        side=RIGHT,
+        servo_offset=np.array([PI/4, 0, -PI/2])
+    ),
+    leg(  # leg 4
+        dim=DEFAULT_DIM,
+        offset=np.array([-BODY_LENGTH/2, BODY_OUT_WIDTH/2, 0]),
+        pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, STAND_HEIGTH]),
+        side=LEFT,
+        servo_offset=np.array([-PI/4, 0, -PI/2])
+    ),
+    leg(  # leg 5
+        dim=DEFAULT_DIM,
+        offset=np.array([0, BODY_MID_WIDTH/2, 0]),
+        pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, STAND_HEIGTH]),
+        side=RIGHT,
+        servo_offset=np.array([0, 0, -PI/2])
+    ),
+    leg(  # leg 6
+        dim=DEFAULT_DIM,
+        offset=np.array([BODY_LENGTH/2, BODY_OUT_WIDTH/2, 0]),
+        pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, STAND_HEIGTH]),
+        side=LEFT,
+        servo_offset=np.array([PI/4, 0, -PI/2])
+    )
+]
