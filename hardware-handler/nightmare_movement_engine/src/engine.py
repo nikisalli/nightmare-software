@@ -23,7 +23,7 @@ class engineNode():
     def run(self):
         while not rospy.is_shutdown():
             if(self.state == 0):
-                time.sleep(1000)
+                time.sleep(1)
                 # movements.sleep()
 
     def publish_joints(self):

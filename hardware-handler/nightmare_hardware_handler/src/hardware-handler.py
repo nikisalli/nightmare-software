@@ -19,6 +19,7 @@ TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
 NUMBER_OF_LEGS = 6
 NUMBER_OF_SERVOS = 19
 NUMBER_OF_SERVOS_PER_LEG = 3
+PI = 3.14159265359
 
 
 # simple range mapping function
@@ -120,11 +121,11 @@ class HardwareHandlerNode:
         self._publish_jnt()
 
     def _publish_jnt(self):
-        angles = [servo.angle for leg in self.legs for servo in leg.servos]
+        ang = [servo.angle for leg in self.legs for servo in leg.servos]
 
-        self.joint_msg.position = [angles[6], angles[3], angles[0], angles[15], angles[12], angles[9],
-                                   -angles[7], -angles[4], -angles[1], -angles[16], -angles[13], -angles[10],
-                                   -angles[8], -angles[5], -angles[2], -angles[17], -angles[14], -angles[11], 0]
+        self.joint_msg.position = [ang[6], ang[3], ang[0], ang[15], ang[12], ang[9],
+                                   -ang[7], -ang[4], -ang[1], -ang[16], -ang[13], -ang[10],
+                                   -ang[8]-PI/2, -ang[5]-PI/2, -ang[2]-PI/2, -ang[17]-PI/2, -ang[14]-PI/2, -ang[11]-PI/2, 0]
 
         self.joint_msg.header.stamp = rospy.Time.now()
         self.publisher.publish(self.joint_msg)
