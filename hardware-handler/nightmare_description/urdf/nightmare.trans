@@ -1,210 +1,210 @@
 <?xml version="1.0" ?>
 <robot name="nightmare" xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-<transmission name="Rev103_tran">
+<transmission name="leg3coxa_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev103">
+  <joint name="leg3coxa">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev103_actr">
+  <actuator name="leg3coxa_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev104_tran">
+<transmission name="leg2coxa_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev104">
+  <joint name="leg2coxa">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev104_actr">
+  <actuator name="leg2coxa_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev105_tran">
+<transmission name="leg1coxa_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev105">
+  <joint name="leg1coxa">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev105_actr">
+  <actuator name="leg1coxa_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev106_tran">
+<transmission name="leg6coxa_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev106">
+  <joint name="leg6coxa">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev106_actr">
+  <actuator name="leg6coxa_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev107_tran">
+<transmission name="leg5coxa_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev107">
+  <joint name="leg5coxa">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev107_actr">
+  <actuator name="leg5coxa_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev108_tran">
+<transmission name="leg4coxa_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev108">
+  <joint name="leg4coxa">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev108_actr">
+  <actuator name="leg4coxa_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev109_tran">
+<transmission name="leg3femur_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev109">
+  <joint name="leg3femur">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev109_actr">
+  <actuator name="leg3femur_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev110_tran">
+<transmission name="leg2femur_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev110">
+  <joint name="leg2femur">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev110_actr">
+  <actuator name="leg2femur_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev111_tran">
+<transmission name="leg1femur_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev111">
+  <joint name="leg1femur">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev111_actr">
+  <actuator name="leg1femur_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev112_tran">
+<transmission name="leg6femur_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev112">
+  <joint name="leg6femur">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev112_actr">
+  <actuator name="leg6femur_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev113_tran">
+<transmission name="leg5femur_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev113">
+  <joint name="leg5femur">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev113_actr">
+  <actuator name="leg5femur_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev114_tran">
+<transmission name="leg4femur_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev114">
+  <joint name="leg4femur">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev114_actr">
+  <actuator name="leg4femur_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev121_tran">
+<transmission name="tail_joint_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev121">
+  <joint name="tail_joint">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev121_actr">
+  <actuator name="tail_joint_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev117_tran">
+<transmission name="leg1tibia_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev117">
+  <joint name="leg1tibia">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev117_actr">
+  <actuator name="leg1tibia_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev116_tran">
+<transmission name="leg2tibia_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev116">
+  <joint name="leg2tibia">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev116_actr">
+  <actuator name="leg2tibia_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev115_tran">
+<transmission name="leg3tibia_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev115">
+  <joint name="leg3tibia">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev115_actr">
+  <actuator name="leg3tibia_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev120_tran">
+<transmission name="leg4tibia_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev120">
+  <joint name="leg4tibia">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev120_actr">
+  <actuator name="leg4tibia_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev119_tran">
+<transmission name="leg5tibia_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev119">
+  <joint name="leg5tibia">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev119_actr">
+  <actuator name="leg5tibia_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
-<transmission name="Rev118_tran">
+<transmission name="leg6tibia_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="Rev118">
+  <joint name="leg6tibia">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
   </joint>
-  <actuator name="Rev118_actr">
+  <actuator name="leg6tibia_actr">
     <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>

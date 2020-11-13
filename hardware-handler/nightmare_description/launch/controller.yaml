@@ -5,79 +5,79 @@ nightmare_controller:
     publish_rate: 50
 
   # Position Controllers --------------------------------------
-  Rev103_position_controller:
+  leg3coxa_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev103
+    joint: leg3coxa
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev104_position_controller:
+  leg2coxa_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev104
+    joint: leg2coxa
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev105_position_controller:
+  leg1coxa_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev105
+    joint: leg1coxa
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev106_position_controller:
+  leg6coxa_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev106
+    joint: leg6coxa
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev107_position_controller:
+  leg5coxa_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev107
+    joint: leg5coxa
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev108_position_controller:
+  leg4coxa_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev108
+    joint: leg4coxa
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev109_position_controller:
+  leg3femur_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev109
+    joint: leg3femur
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev110_position_controller:
+  leg2femur_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev110
+    joint: leg2femur
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev111_position_controller:
+  leg1femur_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev111
+    joint: leg1femur
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev112_position_controller:
+  leg6femur_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev112
+    joint: leg6femur
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev113_position_controller:
+  leg5femur_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev113
+    joint: leg5femur
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev114_position_controller:
+  leg4femur_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev114
+    joint: leg4femur
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev115_position_controller:
+  leg3tibia_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev115
+    joint: leg3tibia
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev116_position_controller:
+  leg2tibia_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev116
+    joint: leg2tibia
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev117_position_controller:
+  leg1tibia_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev117
+    joint: leg1tibia
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev118_position_controller:
+  leg6tibia_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev118
+    joint: leg6tibia
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev119_position_controller:
+  leg5tibia_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev119
+    joint: leg5tibia
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev120_position_controller:
+  leg4tibia_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev120
+    joint: leg4tibia
     pid: {p: 100.0, i: 0.01, d: 10.0}
-  Rev121_position_controller:
+  tail_joint_position_controller:
     type: effort_controllers/JointPositionController
-    joint: Rev121
+    joint: tail_joint
     pid: {p: 100.0, i: 0.01, d: 10.0}

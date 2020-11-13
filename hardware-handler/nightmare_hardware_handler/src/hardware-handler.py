@@ -169,9 +169,9 @@ if __name__ == '__main__':
         publisher=rospy.Publisher('joint_states', JointState, queue_size=10),  # joint state publisher
         broadcaster=tf.TransformBroadcaster(),
         joint_msg=JointState(header=Header(),
-                             name=['Rev103', 'Rev104', 'Rev105', 'Rev106', 'Rev107', 'Rev108', 'Rev109',
-                                   'Rev110', 'Rev111', 'Rev112', 'Rev113', 'Rev114', 'Rev115', 'Rev116',
-                                   'Rev117', 'Rev118', 'Rev119', 'Rev120', 'Rev121'],
+                             name=['leg3coxa', 'leg2coxa', 'leg1coxa', 'leg6coxa', 'leg5coxa', 'leg4coxa', 'leg3femur',
+                                   'leg2femur', 'leg1femur', 'leg6femur', 'leg5femur', 'leg4femur', 'leg3tibia', 'leg2tibia',
+                                   'leg1tibia', 'leg6tibia', 'leg5tibia', 'leg4tibia', 'tail_joint'],
                              velocity=[],
                              effort=[])  # joint topic structure
     )

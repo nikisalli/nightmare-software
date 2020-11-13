@@ -424,133 +424,133 @@
   </collision>
 </link>
 
-<joint name="Rev103" type="continuous">
+<joint name="leg3coxa" type="continuous">
   <origin rpy="0 0 0" xyz="0.068335 -0.078335 0.0385"/>
   <parent link="base_link"/>
   <child link="leg_3_coxa_1"/>
   <axis xyz="-0.0 -0.0 -1.0"/>
 </joint>
 
-<joint name="Rev104" type="continuous">
+<joint name="leg2coxa" type="continuous">
   <origin rpy="0 0 0" xyz="0.093 0.0 0.0385"/>
   <parent link="base_link"/>
   <child link="leg_2_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
-<joint name="Rev105" type="continuous">
+<joint name="leg1coxa" type="continuous">
   <origin rpy="0 0 0" xyz="0.068335 0.078335 0.0385"/>
   <parent link="base_link"/>
   <child link="leg_1_coxa_1"/>
   <axis xyz="0.0 -0.0 -1.0"/>
 </joint>
 
-<joint name="Rev106" type="continuous">
+<joint name="leg6coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.068335 0.078335 0.0385"/>
   <parent link="base_link"/>
   <child link="leg_6_coxa_1"/>
   <axis xyz="0.0 -0.0 -1.0"/>
 </joint>
 
-<joint name="Rev107" type="continuous">
+<joint name="leg5coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.093 -0.0005 0.0385"/>
   <parent link="base_link"/>
   <child link="leg_5_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
-<joint name="Rev108" type="continuous">
+<joint name="leg4coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.068335 -0.078335 0.0385"/>
   <parent link="base_link"/>
   <child link="leg_4_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
-<joint name="Rev109" type="continuous">
+<joint name="leg3femur" type="continuous">
   <origin rpy="0 0 0" xyz="0.0626 -0.033609 -0.0205"/>
   <parent link="leg_3_coxa_1"/>
   <child link="leg_3_femur_1"/>
   <axis xyz="-0.707107 -0.707107 0.0"/>
 </joint>
 
-<joint name="Rev110" type="continuous">
+<joint name="leg2femur" type="continuous">
   <origin rpy="0 0 0" xyz="0.068031 0.0205 -0.0205"/>
   <parent link="leg_2_coxa_1"/>
   <child link="leg_2_femur_1"/>
   <axis xyz="-0.0 -1.0 -0.0"/>
 </joint>
 
-<joint name="Rev111" type="continuous">
+<joint name="leg1femur" type="continuous">
   <origin rpy="0 0 0" xyz="0.033609 0.0626 -0.0205"/>
   <parent link="leg_1_coxa_1"/>
   <child link="leg_1_femur_1"/>
   <axis xyz="0.707107 -0.707107 0.0"/>
 </joint>
 
-<joint name="Rev112" type="continuous">
+<joint name="leg6femur" type="continuous">
   <origin rpy="0 0 0" xyz="-0.033609 0.0626 -0.0205"/>
   <parent link="leg_6_coxa_1"/>
   <child link="leg_6_femur_1"/>
   <axis xyz="0.707107 0.707107 -0.0"/>
 </joint>
 
-<joint name="Rev113" type="continuous">
+<joint name="leg5femur" type="continuous">
   <origin rpy="0 0 0" xyz="-0.068031 0.0205 -0.0205"/>
   <parent link="leg_5_coxa_1"/>
   <child link="leg_5_femur_2"/>
   <axis xyz="0.0 1.0 0.0"/>
 </joint>
 
-<joint name="Rev114" type="continuous">
+<joint name="leg4femur" type="continuous">
   <origin rpy="0 0 0" xyz="-0.0626 -0.033609 -0.0205"/>
   <parent link="leg_4_coxa_1"/>
   <child link="leg_4_femur_2"/>
   <axis xyz="-0.707107 0.707107 0.0"/>
 </joint>
 
-<joint name="Rev121" type="continuous">
+<joint name="tail_joint" type="continuous">
   <origin rpy="0 0 0" xyz="0.0 -0.113 0.0385"/>
   <parent link="base_link"/>
   <child link="tail_link_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
-<joint name="Rev117" type="continuous">
+<joint name="leg1tibia" type="continuous">
   <origin rpy="0 0 0" xyz="0.08726 0.087968 -0.000179"/>
   <parent link="leg_1_femur_1"/>
   <child link="leg_1_tibia_2"/>
   <axis xyz="0.707107 -0.707107 -0.0"/>
 </joint>
 
-<joint name="Rev116" type="continuous">
+<joint name="leg2tibia" type="continuous">
   <origin rpy="0 0 0" xyz="0.123905 0.0005 -0.000179"/>
   <parent link="leg_2_femur_1"/>
   <child link="leg_2_tibia_1"/>
   <axis xyz="0.0 -1.0 -0.0"/>
 </joint>
 
-<joint name="Rev115" type="continuous">
+<joint name="leg3tibia" type="continuous">
   <origin rpy="0 0 0" xyz="0.087968 -0.08726 -0.000179"/>
   <parent link="leg_3_femur_1"/>
   <child link="leg_3_tibia_1"/>
   <axis xyz="-0.707107 -0.707107 -0.0"/>
 </joint>
 
-<joint name="Rev120" type="continuous">
+<joint name="leg4tibia" type="continuous">
   <origin rpy="0 0 0" xyz="-0.087261 -0.087967 -0.000179"/>
   <parent link="leg_4_femur_2"/>
   <child link="leg_4_tibia_1"/>
   <axis xyz="-0.707107 0.707107 -0.0"/>
 </joint>
 
-<joint name="Rev119" type="continuous">
+<joint name="leg5tibia" type="continuous">
   <origin rpy="0 0 0" xyz="-0.123905 -0.0005 -0.000179"/>
   <parent link="leg_5_femur_2"/>
   <child link="leg_5_tibia_1"/>
   <axis xyz="0.0 1.0 -0.0"/>
 </joint>
 
-<joint name="Rev118" type="continuous">
+<joint name="leg6tibia" type="continuous">
   <origin rpy="0 0 0" xyz="-0.087967 0.087261 -0.000179"/>
   <parent link="leg_6_femur_1"/>
   <child link="leg_6_tibia_1"/>
