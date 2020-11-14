@@ -10,11 +10,6 @@ def abs_pos2ang(pose):
     angles = np.zeros(shape=(6, 3))
     for i, rel in enumerate(rel_poses):
         angles[i] = rel_pos2ang(rel, legs[i].dim)
-    print("---------------------------------")
-    print(rel_poses)
-    print(np.append(angles.ravel(), 0))
-    print(SERVO_OFFSET)
-    print(np.append(angles.ravel(), 0) + SERVO_OFFSET)
     return np.append(angles.ravel(), 0) + SERVO_OFFSET
 
 
@@ -29,7 +24,6 @@ def rel_pos2ang(rel_pos, leg_dim):
     d1 = d - CX
     d2 = sqrt(z**2 + d1**2)
     alpha = arctan2(x, y)
-    # print(alpha)
     beta = arctan(d1 / -z) + arccos((FM**2 + d2**2 - TB**2)/(2*FM*d2))
     gamma = - arccos((FM**2 + TB**2 - d2**2) / (2*FM*TB))
     return np.array([alpha, beta - PI/2, PI - gamma])
