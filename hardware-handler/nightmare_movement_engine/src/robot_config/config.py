@@ -37,44 +37,47 @@ legs = [
         abs_offset=np.array([BODY_LENGTH/2, -BODY_OUT_WIDTH/2, 0]),
         default_pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, STAND_HEIGTH]),
         side=RIGHT,
-        servo_offset=np.array([PI/4, 0, -PI/2])
+        servo_offset=np.array([PI/4, 0, 0])
     ),
     leg_class(  # leg 2
         dim=DEFAULT_DIM,
         abs_offset=np.array([0, -BODY_MID_WIDTH/2, 0]),
         default_pose=np.array([STAND_MID_LEG_X, -STAND_MID_LEG_Y, STAND_HEIGTH]),
         side=RIGHT,
-        servo_offset=np.array([0, 0, -PI/2])
+        servo_offset=np.array([0, 0, 0])
     ),
     leg_class(  # leg 3
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_LENGTH/2, -BODY_OUT_WIDTH/2, 0]),
         default_pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, STAND_HEIGTH]),
         side=RIGHT,
-        servo_offset=np.array([-PI/4, 0, -PI/2])
+        servo_offset=np.array([-PI/4, 0, 0])
     ),
     leg_class(  # leg 4
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_LENGTH/2, BODY_OUT_WIDTH/2, 0]),
         default_pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, STAND_HEIGTH]),
         side=LEFT,
-        servo_offset=np.array([PI/4, 0, -PI/2])
+        servo_offset=np.array([PI/4, 0, 0])
     ),
     leg_class(  # leg 5
         dim=DEFAULT_DIM,
         abs_offset=np.array([0, BODY_MID_WIDTH/2, 0]),
         default_pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, STAND_HEIGTH]),
         side=LEFT,
-        servo_offset=np.array([0, 0, -PI/2])
+        servo_offset=np.array([0, 0, 0])
     ),
     leg_class(  # leg 6
         dim=DEFAULT_DIM,
         abs_offset=np.array([BODY_LENGTH/2, BODY_OUT_WIDTH/2, 0]),
         default_pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, STAND_HEIGTH]),
         side=LEFT,
-        servo_offset=np.array([-PI/4, 0, -PI/2])
+        servo_offset=np.array([-PI/4, 0, 0])
     )
 ]
 
 DEFAULT_POSE = np.array([leg.default_pose for leg in legs])
 SERVO_OFFSET = np.append(np.array([leg.servo_offset for leg in legs]).ravel(), 0)
+POSE_OFFSET = np.array([leg.abs_offset for leg in legs])
+print(DEFAULT_POSE)
+print(POSE_OFFSET)
