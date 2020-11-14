@@ -3,8 +3,9 @@
 import time
 import numpy as np
 
-import movements
-from robot_config.config import DEFAULT_POSE
+from modules import movements
+from modules.config import DEFAULT_POSE
+
 import rospy
 from std_msgs.msg import Byte, Header
 from sensor_msgs.msg import JointState
@@ -30,7 +31,7 @@ class engineNode():
         self.angles_array = [0]*19  # angle array
         self.states = [0]*19  # all servos disconnected at start
         self.hw_pose = np.zeros(shape=(6, 3))  # initialize as empty and fill it later in set_hw_joint_state callback
-        self.pose = DEFAULT_POSE  # init as empty to fill later in callbacks
+        self.pose = DEFAULT_POSE.copy()  # init as empty to fill later in callbacks
 
         self.joint_angle_publisher = rospy.Publisher('engine_angle_joint_states', JointState, queue_size=10)
         self.joint_angle_msg = JOINTSTATE_MSG  # joint angle topic structure
@@ -39,9 +40,8 @@ class engineNode():
 
     def run(self):
         while not rospy.is_shutdown():
-            # if(self.state == 0):
-            #    movements.sleep(self)
-            movements.test(self)
+            if(self.state == 0):
+                movements.sleep(self)
             self.publish_joints()
             self.rate.sleep()
 

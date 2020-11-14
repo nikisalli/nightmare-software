@@ -1,11 +1,21 @@
 import numpy as np
 from numpy import sin, cos, tan, arccos, arcsin, arctan, arctan, arctan2, sqrt
+from modules.config import legs, DEFAULT_POSE, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
 
 PI = np.pi
 
 
-def abs_pos2ang():
-    pass
+def abs_pos2ang(pose):
+    rel_poses = (pose - POSE_OFFSET) * POSE_REL_CONVERT
+    angles = np.zeros(shape=(6, 3))
+    for i, rel in enumerate(rel_poses):
+        angles[i] = rel_pos2ang(rel, legs[i].dim)
+    print("---------------------------------")
+    print(rel_poses)
+    print(np.append(angles.ravel(), 0))
+    print(SERVO_OFFSET)
+    print(np.append(angles.ravel(), 0) + SERVO_OFFSET)
+    return np.append(angles.ravel(), 0) + SERVO_OFFSET
 
 
 def rel_pos2ang(rel_pos, leg_dim):
@@ -18,7 +28,8 @@ def rel_pos2ang(rel_pos, leg_dim):
     d = sqrt(x**2 + y**2)
     d1 = d - CX
     d2 = sqrt(z**2 + d1**2)
-    alpha = arctan2(y, x)
+    alpha = arctan2(x, y)
+    # print(alpha)
     beta = arctan(d1 / -z) + arccos((FM**2 + d2**2 - TB**2)/(2*FM*d2))
     gamma = - arccos((FM**2 + TB**2 - d2**2) / (2*FM*TB))
     return np.array([alpha, beta - PI/2, PI - gamma])
