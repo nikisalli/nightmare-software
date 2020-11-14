@@ -123,9 +123,12 @@ class HardwareHandlerNode:
     def _publish_jnt(self):
         ang = [servo.angle for leg in self.legs for servo in leg.servos]
 
-        self.joint_msg.position = [ang[6], ang[3], ang[0], ang[15], ang[12], ang[9],
-                                   -ang[7], -ang[4], -ang[1], -ang[16], -ang[13], -ang[10],
-                                   -ang[8]-PI/2, -ang[5]-PI/2, -ang[2]-PI/2, -ang[17]-PI/2, -ang[14]-PI/2, -ang[11]-PI/2, 0]
+        self.joint_msg.position = [ang[0], -ang[1], -ang[2]-PI/2,
+                                   ang[3], -ang[4], -ang[5]-PI/2,
+                                   ang[6], -ang[7], -ang[8]-PI/2,
+                                   ang[9], -ang[10], -ang[11]-PI/2,
+                                   ang[12], -ang[13], -ang[14]-PI/2,
+                                   ang[15], -ang[16], -ang[17]-PI/2, 0]
 
         self.joint_msg.header.stamp = rospy.Time.now()
         self.publisher.publish(self.joint_msg)
@@ -169,9 +172,12 @@ if __name__ == '__main__':
         publisher=rospy.Publisher('joint_states', JointState, queue_size=10),  # joint state publisher
         broadcaster=tf.TransformBroadcaster(),
         joint_msg=JointState(header=Header(),
-                             name=['leg3coxa', 'leg2coxa', 'leg1coxa', 'leg6coxa', 'leg5coxa', 'leg4coxa', 'leg3femur',
-                                   'leg2femur', 'leg1femur', 'leg6femur', 'leg5femur', 'leg4femur', 'leg3tibia', 'leg2tibia',
-                                   'leg1tibia', 'leg6tibia', 'leg5tibia', 'leg4tibia', 'tail_joint'],
+                             name=['leg1coxa', 'leg1femur', 'leg1tibia',
+                                   'leg2coxa', 'leg2femur', 'leg2tibia',
+                                   'leg3coxa', 'leg3femur', 'leg3tibia',
+                                   'leg4coxa', 'leg4femur', 'leg4tibia',
+                                   'leg5coxa', 'leg5femur', 'leg5tibia',
+                                   'leg6coxa', 'leg6femur', 'leg6tibia', 'tail_joint'],
                              velocity=[],
                              effort=[])  # joint topic structure
     )
