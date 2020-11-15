@@ -65,7 +65,6 @@ class engineNode():
         self.hw_angles_array = msg.position
         self.hw_angles = np.reshape(self.hw_angles_array[:-1], newshape=(6, 3))
         self.hw_pose = abs_ang2pos(self.hw_angles_array)
-        # print(self.hw_pose)
 
 
 if __name__ == '__main__':
