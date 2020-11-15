@@ -4,7 +4,11 @@
 <xacro:include filename="$(find nightmare_description)/urdf/materials.xacro" />
 <xacro:include filename="$(find nightmare_description)/urdf/nightmare.trans" />
 <xacro:include filename="$(find nightmare_description)/urdf/nightmare.gazebo" />
+
 <link name="base_link">
+</link>
+
+<link name="body_link">
   <inertial>
     <origin rpy="0 0 0" xyz="0.00027642737085348105 0.010613740030603296 0.02249920074743168"/>
     <mass value="5.757228845962151"/>
@@ -424,44 +428,50 @@
   </collision>
 </link>
 
+<joint name="base2body" type="fixed">
+  <origin rpy="0 0 0" xyz="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="body_link"/>
+</joint>
+
 <joint name="leg3coxa" type="continuous">
   <origin rpy="0 0 0" xyz="0.068335 -0.078335 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="leg_3_coxa_1"/>
   <axis xyz="-0.0 -0.0 -1.0"/>
 </joint>
 
 <joint name="leg2coxa" type="continuous">
   <origin rpy="0 0 0" xyz="0.093 0.0 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="leg_2_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
 <joint name="leg1coxa" type="continuous">
   <origin rpy="0 0 0" xyz="0.068335 0.078335 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="leg_1_coxa_1"/>
   <axis xyz="0.0 -0.0 -1.0"/>
 </joint>
 
 <joint name="leg6coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.068335 0.078335 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="leg_6_coxa_1"/>
   <axis xyz="0.0 -0.0 -1.0"/>
 </joint>
 
 <joint name="leg5coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.093 -0.0005 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="leg_5_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
 <joint name="leg4coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.068335 -0.078335 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="leg_4_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
@@ -510,7 +520,7 @@
 
 <joint name="tail_joint" type="continuous">
   <origin rpy="0 0 0" xyz="0.0 -0.113 0.0385"/>
-  <parent link="base_link"/>
+  <parent link="body_link"/>
   <child link="tail_link_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
