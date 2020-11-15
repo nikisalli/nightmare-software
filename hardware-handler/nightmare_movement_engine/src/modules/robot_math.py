@@ -23,12 +23,8 @@ def abs_pos2ang(pose):
 
 
 def rel_pos2ang(rel_pos, leg_dim):
-    x = rel_pos[0]
-    y = rel_pos[1]
-    z = rel_pos[2]
-    CX = leg_dim[0]
-    FM = leg_dim[1]
-    TB = leg_dim[2]
+    x, y, z = rel_pos
+    CX, FM, TB = leg_dim
     d = sqrt(x**2 + y**2)
     d1 = d - CX
     d2 = sqrt(z**2 + d1**2)
@@ -39,12 +35,8 @@ def rel_pos2ang(rel_pos, leg_dim):
 
 
 def rel_ang2pos(ang, leg_dim):
-    alpha = ang[0]
-    beta = ang[1]
-    gamma = ang[2]
-    CX = leg_dim[0]
-    FM = leg_dim[1]
-    TB = leg_dim[2]
+    alpha, beta, gamma = ang
+    CX, FM, TB = leg_dim
     d = CX + cos(beta)*FM + sin(gamma + beta + PI/2) * TB
     x = sin(alpha)*d
     y = cos(alpha)*d
