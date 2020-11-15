@@ -15,5 +15,5 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS 
-  src/engine.py
+  src/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
