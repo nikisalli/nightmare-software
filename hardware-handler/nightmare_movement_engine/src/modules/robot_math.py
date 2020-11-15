@@ -7,9 +7,7 @@ PI = np.pi
 
 def abs_ang2pos(ang):
     angles = np.reshape((ang - SERVO_OFFSET)[:-1], newshape=(6, 3))
-    rel_pose = np.zeros(shape=(6, 3))
-    for i, ang in enumerate(angles):
-        rel_pose[i] = rel_ang2pos(ang, legs[i].dim)
+    rel_pose = np.array([rel_ang2pose(ang, leg.dim) for ang, leg in zip(angles, legs)])
     pose = (rel_pose * POSE_REL_CONVERT) + POSE_OFFSET
     return pose
 
@@ -17,20 +15,17 @@ def abs_ang2pos(ang):
 def abs_pos2ang(pose):
     rel_poses = (pose - POSE_OFFSET) * POSE_REL_CONVERT
     angles = np.zeros(shape=(6, 3))
-    for i, rel in enumerate(rel_poses):
-        angles[i] = rel_pos2ang(rel, legs[i].dim)
+    angles = np.array([rel_pos2ang(rel, leg.dim) for rel, leg in zip(rel_poses, legs)])
     return np.append(angles.ravel(), 0) + SERVO_OFFSET
 
 
 def rel_pos2ang(rel_pos, leg_dim):
     x, y, z = rel_pos
     CX, FM, TB = leg_dim
-    d = sqrt(x**2 + y**2)
-    d1 = d - CX
-    d2 = sqrt(z**2 + d1**2)
+    d = sqrt(z**2 + (sqrt(x**2 + y**2) - CX)**2)
     alpha = arctan2(x, y)
-    beta = arctan(d1 / -z) + arccos((FM**2 + d2**2 - TB**2)/(2*FM*d2))
-    gamma = - arccos((FM**2 + TB**2 - d2**2) / (2*FM*TB))
+    beta = arctan((sqrt(x**2 + y**2) - CX) / -z) + arccos((FM**2 + d**2 - TB**2)/(2*FM*d))
+    gamma = - arccos((FM**2 + TB**2 - d**2) / (2*FM*TB))
     return np.array([alpha, beta - PI/2, PI - gamma])
 
 
