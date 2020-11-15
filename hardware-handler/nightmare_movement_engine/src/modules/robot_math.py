@@ -5,6 +5,15 @@ from modules.config import legs, DEFAULT_POSE, SERVO_OFFSET, POSE_OFFSET, POSE_R
 PI = np.pi
 
 
+def abs_ang2pos(ang):
+    angles = np.reshape((ang - SERVO_OFFSET)[:-1], newshape=(6, 3))
+    rel_pose = np.zeros(shape=(6, 3))
+    for i, ang in enumerate(angles):
+        rel_pose[i] = rel_ang2pos(ang, legs[i].dim)
+    pose = (rel_pose * POSE_REL_CONVERT) + POSE_OFFSET
+    return pose
+
+
 def abs_pos2ang(pose):
     rel_poses = (pose - POSE_OFFSET) * POSE_REL_CONVERT
     angles = np.zeros(shape=(6, 3))
@@ -36,8 +45,8 @@ def rel_ang2pos(ang, leg_dim):
     CX = leg_dim[0]
     FM = leg_dim[1]
     TB = leg_dim[2]
-    d = CX + cos(beta)*FM + sin(gamma - PI/2 + beta)
+    d = CX + cos(beta)*FM + sin(gamma + beta + PI/2) * TB
     x = sin(alpha)*d
     y = cos(alpha)*d
-    z = cos(gamma - PI/2 + beta) + TB - sin(beta) * FM
+    z = - (cos(gamma + beta + PI/2) * TB - sin(beta) * FM)
     return np.array([x, y, z])
