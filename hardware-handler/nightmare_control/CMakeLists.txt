@@ -12,3 +12,7 @@ catkin_package()
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
+
+catkin_install_python(PROGRAMS 
+  src/joint_state_redirector.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
