@@ -4,8 +4,11 @@
 <xacro:property name="body_color" value="Gazebo/Silver" />
 
 <gazebo>
-  <plugin filename="libgazebo_ros_control.so" name="control"/>
+  <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <robotNamespace>/nightmare</robotNamespace>
+  </plugin>
 </gazebo>
+
 <gazebo reference="body_link">
   <material>${body_color}</material>
   <mu1>0.2</mu1>
