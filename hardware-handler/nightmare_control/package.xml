@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>nightmare_control</name>
+  <name>nightmare_gazebo</name>
   <version>0.0.0</version>
-  <description>The nightmare_control package</description>
+  <description>The nightmare_gazebo package</description>
 
   <maintainer email="niki.salli@gmail.com">nik</maintainer>
   <license>GPLv3</license>
