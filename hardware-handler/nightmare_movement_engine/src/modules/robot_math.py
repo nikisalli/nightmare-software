@@ -1,6 +1,6 @@
 import numpy as np
-from numpy import sin, cos, tan, arccos, arcsin, arctan, arctan, arctan2, sqrt
-from .config import legs, DEFAULT_POSE, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
+from numpy import sin, cos, arccos, arctan2, sqrt, arctan
+from .config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
 
 PI = np.pi
 
