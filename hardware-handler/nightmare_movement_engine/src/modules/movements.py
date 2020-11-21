@@ -15,7 +15,7 @@ def stand_up(engine):
         curves.append(curve)
     for i in range(int(TIME_STAND_UP * ENGINE_FPS)):
         for j, curve in enumerate(curves):
-            engine.pose[j] = np.array(curve.evaluate(i / ENGINE_FPS)).flatten()
+            engine.pose[j] = np.array(curve.evaluate(i / int(TIME_STAND_UP * ENGINE_FPS))).flatten()
 
         engine.compute_ik()
         time.sleep(1 / ENGINE_FPS)
@@ -23,5 +23,5 @@ def stand_up(engine):
 
 def sleep(engine):
     engine.pose = DEFAULT_POSE.copy()
-    engine.pose[:, 2] += sin(time.time())*10
+    engine.pose[:, 2] += sin(time.time()*2)*10
     engine.compute_ik()

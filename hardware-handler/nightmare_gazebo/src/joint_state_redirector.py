@@ -46,7 +46,7 @@ class Node():
         self.joint_angle_msg = JOINTSTATE_MSG
         self.publishers = []
         for topic in rostopic:
-            rospy.loginfo(f"subscribing to {topic}")
+            rospy.loginfo(f"generating publisher on topic {topic}")
             self.publishers.append(rospy.Publisher(topic, Float64, queue_size=1))
 
     def publish_engine_joint_state(self, msg):
