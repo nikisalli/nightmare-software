@@ -6,5 +6,5 @@
   </node>
   <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py"/>
   <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py"/>
-	<node pkg="tf" type="static_transform_publisher" name="base2world_broadcaster" args="0 0 0 0 0 0 world base_link 100" />
+	<node pkg="tf" type="static_transform_publisher" name="base2world_broadcaster" args="0 0 0 0 0 0 world base_link 100" /> <!-- TODO remove this when position approximation with kalman is done!-->
 </launch>
