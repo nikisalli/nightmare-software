@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 import rospy
-from std_msgs.msg import Byte, Header
+from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64
 

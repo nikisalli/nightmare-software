@@ -2,15 +2,13 @@
 
 import os
 import sys
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
-import time
-import numpy as np
-
 from modules import movements
-from modules.config import DEFAULT_POSE, SERVO_OFFSET
-from modules.robot_math import abs_ang2pos
+from modules.config import DEFAULT_POSE
+from modules.robot_math import abs_ang2pos, abs_pos2ang
 
 import rospy
 from std_msgs.msg import Byte, Header
@@ -32,7 +30,6 @@ class engineNode():
     def __init__(self):
         self.state = 0  # actual engine state
         self.prev_state = 0  # previous engine state
-        self.rate = rospy.Rate(60)  # engine frame rate
         self.angles = np.zeros(shape=(6, 3))  # angle matrix
         self.angles_array = [0]*19  # angle array
         self.hw_angles_array = [0]*19
@@ -46,12 +43,14 @@ class engineNode():
         self.joint_state_publisher = rospy.Publisher('engine_state_joint_states', JointState, queue_size=10)
         self.joint_state_msg = JOINTSTATE_MSG  # joint state topic structure
 
+    def compute_ik(self):
+        self.angles_array = abs_pos2ang(self.pose)
+        self.publish_joints()
+
     def run(self):
         while not rospy.is_shutdown():
-            if(self.state == 0):
-                movements.sleep(self)
-            self.publish_joints()
-            self.rate.sleep()
+            movements.sleep(self)
+            rospy.sleep(0.02)
 
     def publish_joints(self):
         self.joint_angle_msg.position = self.angles_array

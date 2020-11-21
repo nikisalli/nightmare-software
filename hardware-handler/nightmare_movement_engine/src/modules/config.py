@@ -16,6 +16,14 @@ RIGHT = 1
 LEFT = 0
 PI = np.pi
 
+
+# engine params
+
+ENGINE_FPS = 60
+STEP_HEIGHT = 6.
+TIME_STAND_UP = 10.
+
+
 DEFAULT_DIM = np.array([LEG_COXA_LENGTH, LEG_FEMUR_LENGTH, LEG_TIBIA_LENGTH])
 
 
