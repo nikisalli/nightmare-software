@@ -41,3 +41,7 @@ def rel_ang2pos(ang, leg_dim):
     y = cos(alpha)*d
     z = - (cos(gamma + beta + PI/2) * TB - sin(beta) * FM)
     return np.array([x, y, z])
+
+
+def asymmetrical_sigmoid(val):
+    return (1 / (1 + np.e**(-13 * (val - 0.5))))

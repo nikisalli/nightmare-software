@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import sin
 import time
+from .robot_math import asymmetrical_sigmoid
 from .config import (DEFAULT_POSE,
                      STEP_HEIGHT,
                      ENGINE_FPS,
@@ -33,7 +34,7 @@ def stand_up(engine):
             time.sleep(TIME_STAND_UP / (3 * ENGINE_FPS))
     for i in range(int(TIME_STAND_UP * ENGINE_FPS)):
         engine.pose = DEFAULT_SIT_POSE.copy()
-        engine.pose[:, 2] += (i / (TIME_STAND_UP * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        engine.pose[:, 2] += asymmetrical_sigmoid(i / (TIME_STAND_UP * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
         engine.compute_ik()
         time.sleep(0.01)
 
@@ -57,7 +58,7 @@ def sit(engine):
             time.sleep(TIME_SIT / (3 * ENGINE_FPS))
     for i in range(int(TIME_SIT * ENGINE_FPS)):
         engine.pose = DEFAULT_POSE.copy()
-        engine.pose[:, 2] -= (i / (TIME_SIT * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        engine.pose[:, 2] -= asymmetrical_sigmoid(i / (TIME_SIT * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
         engine.compute_ik()
         time.sleep(0.01)
 
