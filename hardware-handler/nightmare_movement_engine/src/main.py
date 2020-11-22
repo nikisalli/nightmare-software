@@ -49,9 +49,9 @@ class engineNode():
 
     def run(self):
         rospy.wait_for_message("/joint_states", JointState)
-        movements.stand_up(self)
         while not rospy.is_shutdown():
-            # movements.sit(self)
+            movements.stand_up(self)
+            movements.sit(self)
             # movements.sleep(self)
             rospy.sleep(0.02)
 
