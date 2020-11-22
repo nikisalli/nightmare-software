@@ -1,7 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
 
-STAND_HEIGTH = -12.
 STAND_MID_LEG_Y = 26.
 STAND_OUT_LEG_Y = 20.
 STAND_MID_LEG_X = 0.
@@ -19,11 +18,16 @@ PI = np.pi
 
 # engine params
 
+STAND_HEIGTH = -12.
+SIT_HEIGHT = -0
 ENGINE_FPS = 60
 STEP_HEIGHT = 6.
-TIME_STAND_UP = 1.
+TIME_STAND_UP = 2.
+TIME_SIT = 2.
 
 
+DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
+                    [[3, 6], [1, 5], [2, 4]]]
 DEFAULT_DIM = np.array([LEG_COXA_LENGTH, LEG_FEMUR_LENGTH, LEG_TIBIA_LENGTH])
 
 
@@ -83,6 +87,7 @@ legs = [
 ]
 
 DEFAULT_POSE = np.array([leg.default_pose for leg in legs])
+DEFAULT_SIT_POSE = np.array([[pos[0], pos[1], SIT_HEIGHT] for pos in DEFAULT_POSE.copy()])
 SERVO_OFFSET = np.append(np.array([leg.servo_offset for leg in legs]).ravel(), 0)
 POSE_OFFSET = np.array([leg.abs_offset for leg in legs])
 POSE_REL_CONVERT = np.array([[-1 if leg.side else 1, -1 if leg.side else 1, 1] for leg in legs])

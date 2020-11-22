@@ -1,24 +1,33 @@
 import numpy as np
 from numpy import sin
 import time
-from .config import DEFAULT_POSE, STEP_HEIGHT, ENGINE_FPS, TIME_STAND_UP
+from .config import DEFAULT_POSE, STEP_HEIGHT, ENGINE_FPS, TIME_STAND_UP, DEFAULT_SIT_POSE, DOUBLE_SEQUENCES, STAND_HEIGTH, SIT_HEIGHT
 import bezier
+from random import randint
 
 
 def stand_up(engine):
     curves = []
-    for start_pose, end_pose in zip(engine.hw_pose.copy(), DEFAULT_POSE.copy()):
+    for start_pose, end_pose in zip(engine.hw_pose.copy(), DEFAULT_SIT_POSE.copy()):
         nodes = [[start_pose[0], start_pose[0], end_pose[0], end_pose[0]],
                  [start_pose[1], start_pose[1], end_pose[1], end_pose[1]],
                  [start_pose[2], start_pose[2] + STEP_HEIGHT, end_pose[2] + STEP_HEIGHT, end_pose[2]]]
         curve = bezier.Curve(nodes, degree=3)
         curves.append(curve)
+    seq_num = randint(0, 1)
+    engine.pose = engine.hw_pose.copy()
+    for pair in DOUBLE_SEQUENCES[seq_num]:
+        print(pair)
+        for i in range(int((TIME_STAND_UP * ENGINE_FPS) / 3)):
+            engine.pose[pair[0] - 1] = np.array(curves[pair[0] - 1].evaluate(i / ((TIME_STAND_UP * ENGINE_FPS) / 3))).flatten()
+            engine.pose[pair[1] - 1] = np.array(curves[pair[1] - 1].evaluate(i / ((TIME_STAND_UP * ENGINE_FPS) / 3))).flatten()
+            engine.compute_ik()
+            time.sleep(TIME_STAND_UP / (3 * ENGINE_FPS))
     for i in range(int(TIME_STAND_UP * ENGINE_FPS)):
-        for j, curve in enumerate(curves):
-            engine.pose[j] = np.array(curve.evaluate(i / int(TIME_STAND_UP * ENGINE_FPS))).flatten()
-
+        engine.pose = DEFAULT_SIT_POSE.copy()
+        engine.pose[:, 2] += (i / (TIME_STAND_UP * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
         engine.compute_ik()
-        time.sleep(1 / ENGINE_FPS)
+        time.sleep(0.01)
 
 
 def sleep(engine):

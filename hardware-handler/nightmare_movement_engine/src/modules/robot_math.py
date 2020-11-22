@@ -1,8 +1,9 @@
 import numpy as np
-from numpy import sin, cos, arccos, arctan2, sqrt, arctan
+from numpy import sin, cos, arccos, arctan2, sqrt
 from .config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
 
 PI = np.pi
+EPSILON = 0.001
 
 
 def abs_ang2pos(ang):
@@ -21,10 +22,13 @@ def abs_pos2ang(pose):
 
 def rel_pos2ang(rel_pos, leg_dim):
     x, y, z = rel_pos
+    if(z < EPSILON and z > -EPSILON):  # check if z is zero because this could cause division by zero or nan!!!
+        z = EPSILON
     CX, FM, TB = leg_dim
-    d = sqrt(z**2 + (sqrt(x**2 + y**2) - CX)**2)
+    d1 = sqrt(x**2 + y**2) - CX
+    d = sqrt(z**2 + (d1)**2)
     alpha = arctan2(x, y)
-    beta = arctan((sqrt(x**2 + y**2) - CX) / -z) + arccos((FM**2 + d**2 - TB**2)/(2*FM*d))
+    beta = arccos((z**2 + d**2 - d1**2)/(2*(-z)*d)) + arccos((FM**2 + d**2 - TB**2)/(2*FM*d))
     gamma = - arccos((FM**2 + TB**2 - d**2) / (2*FM*TB))
     return np.array([alpha, beta - PI/2, PI - gamma])
 
