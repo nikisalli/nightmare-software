@@ -3,7 +3,7 @@
   <include file="$(find gazebo_ros)/launch/empty_world.launch" />
   <param name="/use_sim_time" value="false"/>
   <arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
-  <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)" />
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
   <rosparam file="$(find nightmare_gazebo)/config/nightmare_control.yaml" command="load"/>
   <rosparam file="$(find nightmare_gazebo)/config/gazebo_ros_control_params.yaml" command="load"/>
 
