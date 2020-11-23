@@ -26,7 +26,6 @@ def stand_up(engine):
     seq_num = randint(0, 1)
     engine.pose = engine.hw_pose.copy()
     for pair in DOUBLE_SEQUENCES[seq_num]:
-        print(pair)
         for i in range(int((TIME_STAND_UP * ENGINE_FPS) / 3)):
             engine.pose[pair[0] - 1] = np.array(curves[pair[0] - 1].evaluate(i / ((TIME_STAND_UP * ENGINE_FPS) / 3))).flatten()
             engine.pose[pair[1] - 1] = np.array(curves[pair[1] - 1].evaluate(i / ((TIME_STAND_UP * ENGINE_FPS) / 3))).flatten()
@@ -50,7 +49,6 @@ def sit(engine):
     seq_num = randint(0, 1)
     engine.pose = engine.hw_pose.copy()
     for pair in DOUBLE_SEQUENCES[seq_num]:
-        print(pair)
         for i in range(int((TIME_SIT * ENGINE_FPS) / 3)):
             engine.pose[pair[0] - 1] = np.array(curves[pair[0] - 1].evaluate(i / ((TIME_SIT * ENGINE_FPS) / 3))).flatten()
             engine.pose[pair[1] - 1] = np.array(curves[pair[1] - 1].evaluate(i / ((TIME_SIT * ENGINE_FPS) / 3))).flatten()

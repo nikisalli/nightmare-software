@@ -22,7 +22,7 @@ def abs_pos2ang(pose):
 
 def rel_pos2ang(rel_pos, leg_dim):
     x, y, z = rel_pos
-    if(z < EPSILON and z > -EPSILON):  # check if z is zero because this could cause division by zero or nan!!!
+    if -EPSILON < z < EPSILON:  # check if z is zero because this could cause division by zero or nan!!!
         z = EPSILON
     CX, FM, TB = leg_dim
     d1 = sqrt(x**2 + y**2) - CX
@@ -44,4 +44,4 @@ def rel_ang2pos(ang, leg_dim):
 
 
 def asymmetrical_sigmoid(val):
-    return (1 / (1 + np.e**(-13 * (val - 0.5))))
+    return 1 / (1 + np.e**(-13 * (val - 0.5)))
