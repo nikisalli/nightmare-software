@@ -1,0 +1,10 @@
+lewansoul_lx16a
+numpy
+catkin_pkg
+bezier
+tf
+rospy
+dataclasses
+pyserial
+rospkg
+defusedxml
