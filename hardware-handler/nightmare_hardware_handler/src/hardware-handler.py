@@ -123,12 +123,12 @@ class HardwareHandlerNode:
     def _publish_jnt(self):
         ang = [servo.angle for leg in self.legs for servo in leg.servos]
 
-        self.joint_msg.position = [ang[0], -ang[1], -ang[2]-PI/2,
-                                   ang[3], -ang[4], -ang[5]-PI/2,
-                                   ang[6], -ang[7], -ang[8]-PI/2,
-                                   ang[9], -ang[10], -ang[11]-PI/2,
-                                   ang[12], -ang[13], -ang[14]-PI/2,
-                                   ang[15], -ang[16], -ang[17]-PI/2, 0]
+        self.joint_msg.position = [ang[0], -ang[1], -ang[2] - PI / 2,
+                                   ang[3], -ang[4], -ang[5] - PI / 2,
+                                   ang[6], -ang[7], -ang[8] - PI / 2,
+                                   ang[9], -ang[10], -ang[11] - PI / 2,
+                                   ang[12], -ang[13], -ang[14] - PI / 2,
+                                   ang[15], -ang[16], -ang[17] - PI / 2, 0]
 
         self.joint_msg.header.stamp = rospy.Time.now()
         self.publisher.publish(self.joint_msg)
