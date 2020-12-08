@@ -112,7 +112,7 @@ class ListenerThread(Thread):
         if (feq(msg.ty, -1) or feq(msg.ty, 1)) and (time.time() - self.height_change_timer) > 0.5:
             self.height_displacement += 0.5 * -msg.ty  # increment by 0.5cm every 0.5s
             if abs(self.height_displacement) > MAX_HEIGHT_DISPLACEMENT:  # if limit exceeded set to limit
-                self.height_displacement = MAX_HEIGHT_DISPLACEMENT * msg.ty
+                self.height_displacement = MAX_HEIGHT_DISPLACEMENT * -msg.ty
             rospy.loginfo(f"height set to {self.height_displacement}")
 
         if self.mode == 'walk':
