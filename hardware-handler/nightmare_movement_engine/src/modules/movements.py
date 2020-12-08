@@ -1,5 +1,6 @@
 import numpy as np
 from numpy import sin
+from scipy.spatial.transform import Rotation as R
 import time
 from .robot_math import asymmetrical_sigmoid
 from .config import (DEFAULT_POSE,
@@ -61,7 +62,18 @@ def sit(engine):
         time.sleep(0.01)
 
 
+def stand(engine):
+    rotation_degrees = sin(time.time() * 2) * 5
+    rotation_radians = np.radians(rotation_degrees)
+    rotation_axis = np.array([0, 0, 1])
+    pose = DEFAULT_POSE.copy()
+    rotation_vector = rotation_radians * rotation_axis
+    rotation = R.from_rotvec(rotation_vector)
+    rotated_pose = rotation.apply(pose)
+    engine.pose = rotated_pose
+    engine.compute_ik()
+
+
 def sleep(engine):
-    engine.pose = DEFAULT_POSE.copy()
-    engine.pose[:, 2] += sin(time.time()*2)*10
+    engine.pose = DEFAULT_SIT_POSE.copy()
     engine.compute_ik()

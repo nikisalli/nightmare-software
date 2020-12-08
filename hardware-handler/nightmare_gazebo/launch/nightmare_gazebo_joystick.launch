@@ -8,7 +8,7 @@
   <rosparam file="$(find nightmare_gazebo)/config/gazebo_ros_control_params.yaml" command="load"/>
 
   <!-- start nightmare engine node, robot state publisher and state broadcaster -->
-  <include file="$(find nightmare)/launch/nightmare_no_engine.launch" />
+  <include file="$(find nightmare)/launch/nightmare_simulated.launch" />
 
   <!-- start gazebo node -->
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model robot" />

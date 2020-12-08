@@ -9,9 +9,10 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 from modules import movements
 from modules.config import DEFAULT_POSE
 from modules.robot_math import abs_ang2pos, abs_pos2ang
+from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
+from std_msgs.msg import Header
 
 import rospy
-from std_msgs.msg import Byte, Header
 from sensor_msgs.msg import JointState
 
 
@@ -28,8 +29,11 @@ JOINTSTATE_MSG = JointState(header=Header(),
 
 class engineNode():
     def __init__(self):
-        self.state = 0  # actual engine state
-        self.prev_state = 0  # previous engine state
+        self.state = 'sleep'  # actual engine state
+        self.prev_state = 'sleep'  # previous engine state
+        self.body_displacement = [0] * 6
+        self.walk_direction = [0] * 3
+
         self.angles = np.zeros(shape=(6, 3))  # angle matrix
         self.angles_array = [0] * 19  # angle array
         self.hw_angles_array = [0] * 19
@@ -48,11 +52,20 @@ class engineNode():
         self.publish_joints()
 
     def run(self):
-        rospy.wait_for_message("/joint_states", JointState)
+        rospy.wait_for_message("/joint_states", JointState)  # at start wait for first hardware frame to know where to start
+        rospy.wait_for_message("/nightmare/command", command)
+
         while not rospy.is_shutdown():
-            movements.stand_up(self)
-            movements.sit(self)
-            # movements.sleep(self)
+            if self.state == 'stand' and self.prev_state == 'sleep':
+                movements.stand_up(self)
+            elif self.state == 'sleep' and self.prev_state == 'stand':
+                movements.sit(self)
+            if self.state == 'stand':
+                movements.stand(self)
+            elif self.state == 'sleep':
+                movements.sleep(self)
+                
+            self.prev_state = self.state
             rospy.sleep(0.02)
 
     def publish_joints(self):
@@ -66,7 +79,9 @@ class engineNode():
         self.joint_state_publisher.publish(self.joint_state_msg)
 
     def set_state(self, msg):
-        self.state = msg.data
+        self.state = msg.state
+        self.walk_direction = msg.walk_direction
+        self.body_displacement = msg.body_displacement
 
     def set_hw_joint_state(self, msg):
         self.hw_angles_array = msg.position
@@ -81,7 +96,7 @@ if __name__ == '__main__':
     engine = engineNode()
 
     rospy.loginfo("subscribing to nodes")
-    rospy.Subscriber("/nightmare/state", Byte, engine.set_state)
+    rospy.Subscriber("/nightmare/command", command, engine.set_state)
     rospy.Subscriber("/joint_states", JointState, engine.set_hw_joint_state)
 
     engine.run()
