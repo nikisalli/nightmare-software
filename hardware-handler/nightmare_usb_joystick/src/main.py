@@ -93,7 +93,6 @@ button_map = []
 
 def handle_js():
     while not rospy.is_shutdown():
-        rospy.loginfo(str(axis_states))
         evbuf = jsdev.read(8)
         if evbuf:
             _, value, _type, number = struct.unpack('IhBB', evbuf)
@@ -116,6 +115,7 @@ def publisher():
         # If None is used as the header value, rospy will automatically
         # fill it in.
         header.stamp = rospy.Time.now()
+        rospy.loginfo(str(axis_states))
         pub.publish(joystick(header,
                              axis_states['jlx'],
                              axis_states['jly'],
@@ -194,3 +194,6 @@ if __name__ == '__main__':
     t.start()
 
     publisher()
+
+    rospy.loginfo("exiting")
+    os._exit(0)
