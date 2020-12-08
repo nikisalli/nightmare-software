@@ -31,10 +31,10 @@ class engineNode():
         self.state = 0  # actual engine state
         self.prev_state = 0  # previous engine state
         self.angles = np.zeros(shape=(6, 3))  # angle matrix
-        self.angles_array = [0]*19  # angle array
-        self.hw_angles_array = [0]*19
+        self.angles_array = [0] * 19  # angle array
+        self.hw_angles_array = [0] * 19
         self.hw_angles = np.zeros(shape=(6, 3))
-        self.states = [0]*19  # all servos disconnected at start
+        self.states = [0] * 19  # all servos disconnected at start
         self.hw_pose = np.zeros(shape=(6, 3))  # initialize as empty and fill it later in set_hw_joint_state callback
         self.pose = DEFAULT_POSE.copy()  # init as empty to fill later in callbacks
 
