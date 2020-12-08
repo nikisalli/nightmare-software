@@ -7,9 +7,6 @@
   <rosparam file="$(find nightmare_gazebo)/config/nightmare_control.yaml" command="load"/>
   <rosparam file="$(find nightmare_gazebo)/config/gazebo_ros_control_params.yaml" command="load"/>
 
-  <!-- start nightmare engine node, robot state publisher and state broadcaster -->
-  <include file="$(find nightmare)/launch/nightmare_no_engine.launch" />
-
   <!-- start gazebo node -->
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model robot" />
 
@@ -18,5 +15,8 @@
 
   <!-- start joint compatibility layer node -->
   <node name="joint_redirector" pkg="nightmare_gazebo" required="true" type="joint_state_redirector.py"/>
+  
+  <!-- start usb joystick parser node -->
+  <include file="$(find nightmare_usb_joystick)/launch/joystick.launch" />
 
 </launch>
