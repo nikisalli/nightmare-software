@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import sin, cos, arccos, arctan2, sqrt
 from .config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
+from scipy.spatial.transform import Rotation as R
 
 PI = np.pi
 EPSILON = 0.001
@@ -28,20 +29,30 @@ def rel_pos2ang(rel_pos, leg_dim):
     d1 = sqrt(x**2 + y**2) - CX
     d = sqrt(z**2 + (d1)**2)
     alpha = arctan2(x, y)
-    beta = arccos((z**2 + d**2 - d1**2)/(2*(-z)*d)) + arccos((FM**2 + d**2 - TB**2)/(2*FM*d))
-    gamma = - arccos((FM**2 + TB**2 - d**2) / (2*FM*TB))
-    return np.array([alpha, beta - PI/2, PI - gamma])
+    beta = arccos((z**2 + d**2 - d1**2) / (2 * (-z) * d)) + arccos((FM**2 + d**2 - TB**2) / (2 * FM * d))
+    gamma = - arccos((FM**2 + TB**2 - d**2) / (2 * FM * TB))
+    return np.array([alpha, beta - PI / 2, PI - gamma])
 
 
 def rel_ang2pos(ang, leg_dim):
     alpha, beta, gamma = ang
     CX, FM, TB = leg_dim
-    d = CX + cos(beta)*FM + sin(gamma + beta + PI/2) * TB
-    x = sin(alpha)*d
-    y = cos(alpha)*d
-    z = - (cos(gamma + beta + PI/2) * TB - sin(beta) * FM)
+    d = CX + cos(beta) * FM + sin(gamma + beta + PI / 2) * TB
+    x = sin(alpha) * d
+    y = cos(alpha) * d
+    z = - (cos(gamma + beta + PI / 2) * TB - sin(beta) * FM)
     return np.array([x, y, z])
 
 
 def asymmetrical_sigmoid(val):
     return 1 / (1 + np.e**(-13 * (val - 0.5)))
+
+
+def rotation_matrix(pose, rot_vec):
+    y_rot = R.from_rotvec(np.array([0, 0, rot_vec[2]]))
+    x_rot = R.from_rotvec(np.array([0, rot_vec[0], 0]))
+    z_rot = R.from_rotvec(np.array([rot_vec[1], 0, 0]))
+
+    r1 = x_rot.apply(pose)
+    r2 = y_rot.apply(r1)
+    return z_rot.apply(r2)

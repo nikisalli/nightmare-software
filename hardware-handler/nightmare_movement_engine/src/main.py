@@ -61,10 +61,10 @@ class engineNode():
             elif self.state == 'sleep' and self.prev_state == 'stand':
                 movements.sit(self)
             if self.state == 'stand':
-                movements.stand(self)
+                movements.stand(self, self.body_displacement)
             elif self.state == 'sleep':
                 movements.sleep(self)
-                
+
             self.prev_state = self.state
             rospy.sleep(0.02)
 
