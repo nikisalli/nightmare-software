@@ -5,6 +5,7 @@ import struct
 import array
 from fcntl import ioctl
 from threading import Thread
+import time
 
 from nightmare_usb_joystick.msg import joystick  # noqa
 from std_msgs.msg import Header
@@ -109,13 +110,12 @@ def handle_js():
 
 def publisher():
     rate = rospy.Rate(50)
-    pub = rospy.Publisher("/usb_joystick", joystick, queue_size=1)
+    pub = rospy.Publisher("/control/usb_joystick", joystick, queue_size=1)
 
     while not rospy.is_shutdown():
         # If None is used as the header value, rospy will automatically
         # fill it in.
         header.stamp = rospy.Time.now()
-        rospy.loginfo(str(axis_states))
         pub.publish(joystick(header,
                              axis_states['jlx'],
                              axis_states['jly'],
@@ -144,9 +144,16 @@ if __name__ == '__main__':
     # Iterate over the joystick devices.
     device = ""
 
-    for fn in os.listdir('/dev/input'):
-        if fn.startswith('js'):
-            device = '/dev/input/%s' % (fn)
+    while True:
+        for fn in os.listdir('/dev/input'):
+            if fn.startswith('js'):
+                device = '/dev/input/%s' % (fn)
+                break
+        else:
+            time.sleep(0.8)
+            rospy.loginfo("connect valid joystick to host")
+            continue
+        break
 
     # Open the joystick device.
     fn = device
