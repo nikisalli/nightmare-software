@@ -104,9 +104,11 @@ class ListenerThread(Thread):
         if msg.start and state == 'sleep' and self.prev_start is False:
             state = 'stand'
             rospy.loginfo('state set to stand')
+            self.height_displacement = 0
         elif msg.start and state == 'stand' and self.prev_start is False:
             state = 'sleep'
             rospy.loginfo('state set to sleep')
+            self.height_displacement = 0
         self.prev_start = msg.start
 
         if (feq(msg.ty, -1) or feq(msg.ty, 1)) and (time.time() - self.height_change_timer) > 0.5:
