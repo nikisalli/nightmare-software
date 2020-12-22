@@ -28,6 +28,7 @@ ENV ROS_WS /root/catkin_ws
 RUN mkdir -p $ROS_WS/src
 WORKDIR $ROS_WS
 RUN git -C src clone \
+    --branch features/movements \
     https://github.com/nikisalli/nightmare-software.git
 
 ## install ros package dependencies
