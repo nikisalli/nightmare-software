@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
     libegl1 \
     libxext6 \
     libx11-6 \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
     && rm -rf /var/lib/apt/lists/*
 
 ## create ros workspace
