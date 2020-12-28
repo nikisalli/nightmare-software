@@ -1,4 +1,4 @@
-FROM osrf/ros:noetic-desktop-full
+FROM osrf/ros:noetic-desktop
 
 ## install things
 RUN apt-get update && apt-get install -y \
@@ -36,7 +36,7 @@ RUN apt-get update && \
         src/nightmare-software \
       --ignore-src && \
     rm -rf /var/lib/apt/lists/*
-RUN pip3 install osrf-pycommon
+RUN pip3 install osrf-pycommon pybullet
 RUN pip3 install -r src/nightmare-software/requirements.txt
 
 ## build ros package source
