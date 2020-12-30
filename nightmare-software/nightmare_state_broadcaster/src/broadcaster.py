@@ -139,7 +139,7 @@ def handle_state():
 
     while not rospy.is_shutdown():
         header.stamp = rospy.Time.now()
-        pub_state.publish(command(header, body_displacement, walk_direction, state))
+        pub_state.publish(command(header, body_displacement, walk_direction, state, 'tripod'))
         rate.sleep()
 
 
