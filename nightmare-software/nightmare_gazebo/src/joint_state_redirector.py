@@ -41,7 +41,7 @@ JOINTSTATE_MSG = JointState(header=Header(),
 
 class Node():
     def __init__(self):
-        self.angles_array = [0]*19  # angle array
+        self.angles_array = [0] * 19  # angle array
         self.hw_publisher = rospy.Publisher("/joint_states", JointState, queue_size=1)
         self.joint_angle_msg = JOINTSTATE_MSG
         self.publishers = []
