@@ -49,6 +49,9 @@ RUN sed --in-place --expression \
       '$isource "$ROS_WS/devel/setup.bash"' \
       /ros_entrypoint.sh
 
+## delete everything in the current ws to let you mount your own for easier development workflow!
+RUN rm -rf $ROS_WS/*
+
 ## Env vars for the nvidia-container-runtime.
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
