@@ -8,7 +8,6 @@ import os
 
 # ros imports
 import rospy
-from nightmare_state_broadcaster.msg import joystick  # pylint: disable=no-name-in-module
 from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
 from std_msgs.msg import Header
 
@@ -44,7 +43,7 @@ def find_talker():
 
     # in future more options will be here (one for each control method)
     if '/control/usb_joystick' in parsed_topic_list:
-        return ['/control/usb_joystick', joystick]  # return topic name and topic type
+        return ['/control/usb_joystick', command]  # return topic name and topic type
     else:
         rospy.loginfo("control method not yet implemented!")
         return [None, None]
