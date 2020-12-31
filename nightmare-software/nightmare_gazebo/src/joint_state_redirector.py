@@ -51,12 +51,11 @@ class Node():
 
     def publish_engine_joint_state(self, msg):
         for publisher, angle in zip(self.publishers, msg.position):
-            publisher.publish(angle)
+            publisher.publish(angle)  # publish to gazebo
 
-    def publish_hw_joint_state(self, msg):
         self.joint_angle_msg.position = np.asarray(msg.position)
         self.joint_angle_msg.header.stamp = rospy.Time.now()
-        self.hw_publisher.publish(self.joint_angle_msg)
+        self.hw_publisher.publish(self.joint_angle_msg)  # publish to whatever needs tf
 
 
 if __name__ == '__main__':
@@ -67,6 +66,5 @@ if __name__ == '__main__':
 
     rospy.loginfo("subscribing to nodes")
     rospy.Subscriber("/engine_angle_joint_states", JointState, engine.publish_engine_joint_state)
-    rospy.Subscriber("/nightmare/joint_states", JointState, engine.publish_hw_joint_state)
     while not rospy.is_shutdown():
         time.sleep(0.3)
