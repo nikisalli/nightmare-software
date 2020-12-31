@@ -21,6 +21,7 @@ EPSILON = 0.001  # for float comparisons
 
 
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
+gait = 'tripod'  # string containing the robot's walking gait
 
 # roll pitch yaw x y z body displacement
 body_displacement = [0] * 6
@@ -55,16 +56,6 @@ class ListenerThread(Thread):
         self.topic = [None, None]
         self.old_topic = [None, None]
 
-        # joystick vars
-        self.mode = 'walk'  # string containing joystick control mode
-        self.height_displacement = 0
-        self.height_change_timer = 0
-        self.prev_start = False
-        self.prev_ba = False
-        self.prev_bb = False
-        self.prev_bx = False
-        self.prev_by = False
-
     def run(self):
         while not rospy.is_shutdown():
             while None in self.topic and not rospy.is_shutdown():  # wait for topic or for process to die
@@ -86,50 +77,12 @@ class ListenerThread(Thread):
         global state
         global walk_direction
         global body_displacement
+        global gait
 
-        if msg.bb and self.prev_bb is False:  # joystick mode slection
-            self.mode = 'walk'
-            rospy.loginfo('mode set to walk')
-        elif msg.ba and self.prev_ba is False:
-            self.mode = 'stand'
-            rospy.loginfo('mode set to stand')
-        elif msg.bx and self.prev_bx is False:
-            self.mode = 'leg control'
-            rospy.loginfo('mode set to leg control')
-        self.prev_ba = msg.ba
-        self.prev_bb = msg.bb
-        self.prev_bx = msg.bx
-        self.prev_by = msg.by
-
-        if msg.start and state == 'sleep' and self.prev_start is False:
-            state = 'stand'
-            rospy.loginfo('state set to stand')
-            self.height_displacement = 0
-        elif msg.start and state == 'stand' and self.prev_start is False:
-            state = 'sleep'
-            rospy.loginfo('state set to sleep')
-            self.height_displacement = 0
-        self.prev_start = msg.start
-
-        if (feq(msg.ty, -1) or feq(msg.ty, 1)) and (time.time() - self.height_change_timer) > 0.5:
-            self.height_displacement += 0.5 * -msg.ty  # increment by 0.5cm every 0.5s
-            if abs(self.height_displacement) > MAX_HEIGHT_DISPLACEMENT:  # if limit exceeded set to limit
-                self.height_displacement = MAX_HEIGHT_DISPLACEMENT * -msg.ty
-            rospy.loginfo(f"height set to {self.height_displacement}")
-
-        if self.mode == 'walk':
-            walk_direction = [msg.jlx * MAX_WALK_SPEED_X,
-                              -msg.jly * MAX_WALK_SPEED_Y,
-                              msg.jrx * MAX_WALK_ROTATIONAL_SPEED]  # for some reason my joystick gives inverted y
-            body_displacement = [0, 0, self.height_displacement, 0, 0, 0]
-        elif self.mode == 'stand':
-            walk_direction = [0, 0, 0]
-            body_displacement = [msg.jlx * MAX_X_DISPLACEMENT,
-                                 msg.jly * MAX_Y_DISPLACEMENT,
-                                 self.height_displacement,
-                                 msg.jrx * MAX_ROLL_DISPLACEMENT,
-                                 msg.jry * MAX_PITCH_DISPLACEMENT,
-                                 0]
+        walk_direction = msg.walk_direction
+        body_displacement = msg.body_displacement
+        state = msg.state
+        gait = msg.gait
 
 
 def handle_state():
@@ -139,7 +92,7 @@ def handle_state():
 
     while not rospy.is_shutdown():
         header.stamp = rospy.Time.now()
-        pub_state.publish(command(header, body_displacement, walk_direction, state, 'tripod'))
+        pub_state.publish(command(header, body_displacement, walk_direction, state, gait))
         rate.sleep()
 
 
