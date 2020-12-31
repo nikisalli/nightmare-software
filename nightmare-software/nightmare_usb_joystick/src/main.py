@@ -122,7 +122,7 @@ def handle_js():
             if _type & 0x01:
                 button = button_map[number]
                 if button:
-                    button_states[button] = value
+                    button_states[button] = bool(value)
             if _type & 0x02:
                 _axis = axis_map[number]
                 if _axis:
@@ -141,8 +141,8 @@ def publisher():
     height_change_timer = 0
     height_displacement = 0
 
-    prev_button_states = button_states
-    prev_axis_states = axis_states
+    prev_button_states = button_states.copy()
+    prev_axis_states = axis_states.copy()
     rate = rospy.Rate(50)
     pub = rospy.Publisher("/control/usb_joystick", command, queue_size=1)
 
@@ -160,7 +160,6 @@ def publisher():
         prev_button_states['bb'] = button_states['bb']
         prev_button_states['bx'] = button_states['bx']
         prev_button_states['by'] = button_states['by']
-
         if button_states['start'] and state == 'sleep' and prev_button_states['start'] is False:
             state = 'stand'
             rospy.loginfo('state set to stand')
@@ -191,9 +190,6 @@ def publisher():
                                  axis_states['jrx'],
                                  axis_states['jry'],
                                  0]
-
-        prev_axis_states = axis_states.copy()  # used for change detection
-        prev_button_states = button_states.copy()
 
         # If None is used as the header value, rospy will automatically
         # fill it in.

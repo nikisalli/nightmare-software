@@ -22,7 +22,7 @@ EPSILON = 0.001  # for float comparisons
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
 gait = 'tripod'  # string containing the robot's walking gait
 
-# roll pitch yaw x y z body displacement
+# x y z  roll pitch yaw body displacement
 body_displacement = [0] * 6
 
 # x y in cm/sec being the resultants of a vector describing direction and modulo (speed) the robot should follow
@@ -78,8 +78,17 @@ class ListenerThread(Thread):
         global body_displacement
         global gait
 
-        walk_direction = msg.walk_direction
-        body_displacement = msg.body_displacement
+        walk_direction = [msg.walk_direction[0] * MAX_WALK_SPEED_X,
+                          msg.walk_direction[1] * MAX_WALK_SPEED_Y,
+                          msg.walk_direction[2] * MAX_WALK_ROTATIONAL_SPEED]
+
+        body_displacement = [msg.body_displacement[0] * MAX_X_DISPLACEMENT,
+                             msg.body_displacement[1] * MAX_Y_DISPLACEMENT,
+                             msg.body_displacement[2] * MAX_HEIGHT_DISPLACEMENT,
+                             msg.body_displacement[4] * MAX_PITCH_DISPLACEMENT,
+                             msg.body_displacement[3] * MAX_ROLL_DISPLACEMENT,
+                             msg.body_displacement[5] * MAX_YAW_DISPLACEMENT]
+
         state = msg.state
         gait = msg.gait
 
