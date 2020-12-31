@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import time
 import numpy as np
 
 import rospy
@@ -51,14 +50,15 @@ class Node():
             self.publishers.append(rospy.Publisher(topic, Float64, queue_size=1))
 
     def run(self):
-        for publisher, angle in zip(self.publishers, self.engine_msg):
-            publisher.publish(angle)  # publish to gazebo
+        while not rospy.is_shutdown():
+            for publisher, angle in zip(self.publishers, self.engine_msg):
+                publisher.publish(angle)  # publish to gazebo
 
-        self.joint_angle_msg.position = np.asarray(self.engine_msg)
-        self.joint_angle_msg.header.stamp = rospy.Time.now()
-        self.hw_publisher.publish(self.joint_angle_msg)  # publish to whatever needs tf
+            self.joint_angle_msg.position = np.asarray(self.engine_msg)
+            self.joint_angle_msg.header.stamp = rospy.Time.now()
+            self.hw_publisher.publish(self.joint_angle_msg)  # publish to whatever needs tf
 
-        self.rate.sleep()
+            self.rate.sleep()
 
     def publish_engine_joint_state(self, msg):
         self.engine_msg = msg.position
