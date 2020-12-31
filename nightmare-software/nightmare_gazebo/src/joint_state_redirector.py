@@ -41,21 +41,27 @@ JOINTSTATE_MSG = JointState(header=Header(),
 
 class Node():
     def __init__(self):
-        self.angles_array = [0] * 19  # angle array
         self.hw_publisher = rospy.Publisher("/joint_states", JointState, queue_size=1)
         self.joint_angle_msg = JOINTSTATE_MSG
         self.publishers = []
+        self.engine_msg = [0] * 19
+        self.rate = rospy.Rate(50)
         for topic in rostopic:
             rospy.loginfo(f"generating publisher on topic {topic}")
             self.publishers.append(rospy.Publisher(topic, Float64, queue_size=1))
 
-    def publish_engine_joint_state(self, msg):
-        for publisher, angle in zip(self.publishers, msg.position):
+    def run(self):
+        for publisher, angle in zip(self.publishers, self.engine_msg):
             publisher.publish(angle)  # publish to gazebo
 
-        self.joint_angle_msg.position = np.asarray(msg.position)
+        self.joint_angle_msg.position = np.asarray(self.engine_msg)
         self.joint_angle_msg.header.stamp = rospy.Time.now()
         self.hw_publisher.publish(self.joint_angle_msg)  # publish to whatever needs tf
+
+        self.rate.sleep()
+
+    def publish_engine_joint_state(self, msg):
+        self.engine_msg = msg.position
 
 
 if __name__ == '__main__':
