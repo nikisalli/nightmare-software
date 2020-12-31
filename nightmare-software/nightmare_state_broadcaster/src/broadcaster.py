@@ -37,7 +37,7 @@ def feq(a, b):  # floating point equal
 def find_talker():
     unparsed_topic_list = rospy.get_published_topics(namespace='/control')
     if len(unparsed_topic_list) == 0:
-        rospy.loginfo("nightmare_state_publisher couldn't find any listenable topics!")
+        rospy.loginfo("nightmare_state_broadcaster couldn't find any listenable topics!")
         return [None, None]
     parsed_topic_list = [topic[0] for topic in unparsed_topic_list]
 

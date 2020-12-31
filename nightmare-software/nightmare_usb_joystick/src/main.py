@@ -7,13 +7,29 @@ from fcntl import ioctl
 from threading import Thread
 import time
 
-from nightmare_usb_joystick.msg import joystick  # noqa
+from nightmare_usb_joystick.msg import command  # noqa
 from std_msgs.msg import Header
 import rospy
 
+# joystick vars #
 
 axis_states = {}
 button_states = {}
+prev_axis_states = {}
+prev_button_states = {}
+mode = 'stand'  # joystick command mode
+
+
+# robot vars #
+
+state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
+
+# roll pitch yaw x y z body displacement
+body_displacement = [0] * 6
+
+# x y in cm/sec being the resultants of a vector describing direction and modulo (speed) the robot should follow
+# yaw in deg/sec being the rotation speed of the robot's static position
+walk_direction = [0] * 3
 
 header = Header()
 
@@ -91,6 +107,12 @@ button_names = {
 axis_map = []
 button_map = []
 
+EPSILON = 0.001  # for float comparisons
+
+
+def feq(a, b):  # floating point equal
+    return abs(a - b) < EPSILON
+
 
 def handle_js():
     while not rospy.is_shutdown():
@@ -109,32 +131,77 @@ def handle_js():
 
 
 def publisher():
+    global mode
+    global state
+    global walk_direction
+    global body_displacement
+    global prev_button_states
+    global prev_axis_states
+
+    height_change_timer = 0
+
+    prev_button_states = button_states
+    prev_axis_states = axis_states
     rate = rospy.Rate(50)
-    pub = rospy.Publisher("/control/usb_joystick", joystick, queue_size=1)
+    pub = rospy.Publisher("/control/usb_joystick", command, queue_size=1)
 
     while not rospy.is_shutdown():
+        if button_states['bb'] and prev_button_states['bb'] is False:  # joystick mode slection
+            mode = 'walk'
+            rospy.loginfo('mode set to walk')
+        elif button_states['ba'] and prev_button_states['ba'] is False:
+            mode = 'stand'
+            rospy.loginfo('mode set to stand')
+        elif button_states['bx'] and prev_button_states['bx'] is False:
+            mode = 'leg control'
+            rospy.loginfo('mode set to leg control')
+        prev_button_states['ba'] = button_states['ba']
+        prev_button_states['bb'] = button_states['bb']
+        prev_button_states['bx'] = button_states['bx']
+        prev_button_states['by'] = button_states['by']
+
+        if button_states['start'] and state == 'sleep' and prev_button_states['start'] is False:
+            state = 'stand'
+            rospy.loginfo('state set to stand')
+            height_displacement = 0
+        elif button_states['start'] and state == 'stand' and prev_button_states['start'] is False:
+            state = 'sleep'
+            rospy.loginfo('state set to sleep')
+            height_displacement = 0
+        prev_button_states['start'] = button_states['start']
+
+        if (feq(axis_states['ty'], -1) or feq(axis_states['ty'], 1)) and (time.time() - height_change_timer) > 0.5:
+            height_change_timer = time.time()
+            height_displacement += 0.5 * -axis_states['ty']  # increment by 0.5cm every 0.5s
+            if abs(height_displacement) > 1:  # if limit exceeded set to limit
+                height_displacement = -axis_states['ty']
+            rospy.loginfo(f"height set to {height_displacement}")
+
+        if mode == 'walk':
+            walk_direction = [axis_states['jlx'],
+                              -axis_states['jly'],
+                              axis_states['jrx']]  # for some reason my joystick gives inverted y
+            body_displacement = [0, 0, height_displacement, 0, 0, 0]
+        elif mode == 'stand':
+            walk_direction = [0, 0, 0]
+            body_displacement = [axis_states['jlx'],
+                                 axis_states['jly'],
+                                 height_displacement,
+                                 axis_states['jrx'],
+                                 axis_states['jry'],
+                                 0]
+
+        prev_axis_states = axis_states  # used for change detection
+        prev_button_states = button_states
+
         # If None is used as the header value, rospy will automatically
         # fill it in.
         header.stamp = rospy.Time.now()
-        pub.publish(joystick(header,
-                             axis_states['jlx'],
-                             axis_states['jly'],
-                             axis_states['jrx'],
-                             axis_states['jry'],
-                             axis_states['tx'],
-                             axis_states['ty'],
-                             button_states['bx'],
-                             button_states['by'],
-                             button_states['ba'],
-                             button_states['bb'],
-                             button_states['ltrigger'],
-                             button_states['rtrigger'],
-                             button_states['lbase'],
-                             button_states['rbase'],
-                             button_states['jlb'],
-                             button_states['jrb'],
-                             button_states['start'],
-                             button_states['select']))
+        pub.publish(command(header,
+                            body_displacement,
+                            walk_direction,
+                            state,
+                            'tripod'))  # TODO gait selector
         rate.sleep()
 
 
