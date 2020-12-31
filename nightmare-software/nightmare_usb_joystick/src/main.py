@@ -171,9 +171,9 @@ def publisher():
             height_displacement = 0
         prev_button_states['start'] = button_states['start']
 
-        if (feq(axis_states['ty'], -1) or feq(axis_states['ty'], 1)) and (time.time() - height_change_timer) > 0.5:
+        if (feq(axis_states['ty'], -1) or feq(axis_states['ty'], 1)) and (time.time() - height_change_timer) > 0.05:
             height_change_timer = time.time()
-            height_displacement += 0.5 * -axis_states['ty']  # increment by 0.5cm every 0.5s
+            height_displacement += 0.05 * -axis_states['ty']  # increment by 0.5cm every 0.5s
             if abs(height_displacement) > 1:  # if limit exceeded set to limit
                 height_displacement = -axis_states['ty']
             rospy.loginfo(f"height set to {height_displacement}")
@@ -192,8 +192,8 @@ def publisher():
                                  axis_states['jry'],
                                  0]
 
-        prev_axis_states = axis_states  # used for change detection
-        prev_button_states = button_states
+        prev_axis_states = axis_states.copy()  # used for change detection
+        prev_button_states = button_states.copy()
 
         # If None is used as the header value, rospy will automatically
         # fill it in.
