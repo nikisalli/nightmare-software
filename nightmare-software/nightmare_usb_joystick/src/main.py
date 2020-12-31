@@ -139,6 +139,7 @@ def publisher():
     global prev_axis_states
 
     height_change_timer = 0
+    height_displacement = 0
 
     prev_button_states = button_states
     prev_axis_states = axis_states
@@ -201,7 +202,7 @@ def publisher():
                             body_displacement,
                             walk_direction,
                             state,
-                            'tripod'))  # TODO gait selector
+                            'tripod'))
         rate.sleep()
 
 
