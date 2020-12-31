@@ -8,6 +8,9 @@
   <!-- start usb joystick parser node -->
   <include file="$(find nightmare_usb_joystick)/launch/joystick.launch" />
 
+  <!-- start model controllers node -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" ns="/nightmare" args="leg1coxa_position_controller leg1femur_position_controller leg1tibia_position_controller leg2coxa_position_controller leg2femur_position_controller leg2tibia_position_controller leg3coxa_position_controller leg3femur_position_controller leg3tibia_position_controller leg4coxa_position_controller leg4femur_position_controller leg4tibia_position_controller leg5coxa_position_controller leg5femur_position_controller leg5tibia_position_controller leg6coxa_position_controller leg6femur_position_controller leg6tibia_position_controller tail_joint_position_controller joint_state_controller"/>
+
   <!-- start rviz -->
   <node type="rviz" name="rviz" pkg="rviz" />
   <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find package_name)/rviz/config_file.rviz" /> -->
