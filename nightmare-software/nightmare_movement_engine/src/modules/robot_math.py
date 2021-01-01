@@ -10,8 +10,7 @@ EPSILON = 0.001
 def abs_ang2pos(ang):
     angles = np.reshape((ang - SERVO_OFFSET)[:-1], newshape=(6, 3))
     rel_pose = np.array([rel_ang2pos(ang, leg.dim) for ang, leg in zip(angles, legs)])
-    pose = (rel_pose * POSE_REL_CONVERT) + POSE_OFFSET
-    return pose
+    return (rel_pose * POSE_REL_CONVERT) + POSE_OFFSET
 
 
 def abs_pos2ang(pose):
