@@ -1,0 +1,16 @@
+<launch>
+	<arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
+	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
+
+	<!-- start hardware abstraction node -->
+	<node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py"/>
+
+	<!-- start robot state publisher to convert joint_states in tf-->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" required="true" type="robot_state_publisher"/>
+
+	<!-- start robot state broadcaster -->
+    <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py"/>
+
+	<!-- start movement engine -->
+    <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py"/>
+</launch>

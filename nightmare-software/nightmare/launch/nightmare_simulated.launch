@@ -1,0 +1,18 @@
+<launch>
+	<arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
+	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
+
+  <!-- remap engine's angles to robot angles to fool rviz into thinking those are the real robot's angles -->
+	<node pkg="robot_state_publisher" type="robot_state_publisher" required="true" name="robot_state_publisher" output="screen">
+      <remap from="joint_states" to="engine_angle_joint_states" />
+  </node>
+
+  <!-- start robot state broadcaster -->
+  <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py" output="screen"/>
+
+  <!-- start movement engine -->
+  <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py" output="screen" />
+
+  <!-- temporary fix for lack of odometry -->
+	<node pkg="tf" type="static_transform_publisher" name="base2world_broadcaster" args="0 0 0 0 0 0 world base_link 100" output="screen"/> <!-- TODO remove this when position approximation with kalman is done!-->
+</launch>
