@@ -1,4 +1,0 @@
-46a47,49
->     elif '/control/keyboard' in parsed_topic_list:
->         return ['/control/keyboard', command]  # return topic name and topic type
->     
