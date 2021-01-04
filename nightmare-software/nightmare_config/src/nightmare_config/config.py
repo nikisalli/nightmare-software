@@ -1,6 +1,22 @@
 import numpy as np
 from dataclasses import dataclass
 
+
+# =====================
+# === ABS CONSTANTS ===
+# =====================
+
+RIGHT = 1
+LEFT = 0
+PI = np.pi
+EPSILON = 0.0001
+
+
+# ===================================
+# === NIGHTMARE ENGINE PARAMETERS ===
+# ===================================
+
+# ROBOT DIMENSIONS
 STAND_MID_LEG_Y = 26.
 STAND_OUT_LEG_Y = 20.
 STAND_MID_LEG_X = 0.
@@ -11,13 +27,11 @@ BODY_OUT_WIDTH = 13.7  # Y
 LEG_COXA_LENGTH = 6.5
 LEG_FEMUR_LENGTH = 13.
 LEG_TIBIA_LENGTH = 17.
-RIGHT = 1
-LEFT = 0
-PI = np.pi
+
+DEFAULT_DIM = np.array([LEG_COXA_LENGTH, LEG_FEMUR_LENGTH, LEG_TIBIA_LENGTH])
 
 
-# engine params
-
+# ENGINE PARAMETERS
 STAND_HEIGTH = -12.
 SIT_HEIGHT = -0
 ENGINE_FPS = 60
@@ -25,10 +39,25 @@ STEP_HEIGHT = 6.
 TIME_STAND_UP = 2.
 TIME_SIT = 2.
 
+MAX_WALK_ROTATIONAL_SPEED = PI / 10  # in rad/sec
+MAX_WALK_SPEED_X = 10  # cm/s
+MAX_WALK_SPEED_Y = 10
 
+MAX_HEIGHT_DISPLACEMENT = 12
+MAX_X_DISPLACEMENT = 9
+MAX_Y_DISPLACEMENT = 9
+
+MAX_ROLL_DISPLACEMENT = PI / 10
+MAX_PITCH_DISPLACEMENT = PI / 10
+MAX_YAW_DISPLACEMENT = PI / 10
+
+
+# LEG ADJ SEQUENCES
 DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
                     [[3, 6], [1, 5], [2, 4]]]
-DEFAULT_DIM = np.array([LEG_COXA_LENGTH, LEG_FEMUR_LENGTH, LEG_TIBIA_LENGTH])
+
+
+# LEG CLASS
 
 
 @dataclass
@@ -86,6 +115,7 @@ legs = [
     )
 ]
 
+# POSES
 DEFAULT_POSE = np.array([leg.default_pose for leg in legs])
 DEFAULT_SIT_POSE = np.array([[pos[0], pos[1], SIT_HEIGHT] for pos in DEFAULT_POSE.copy()])
 SERVO_OFFSET = np.append(np.array([leg.servo_offset for leg in legs]).ravel(), 0)

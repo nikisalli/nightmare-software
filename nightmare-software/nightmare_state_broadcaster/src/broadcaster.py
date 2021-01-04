@@ -8,15 +8,21 @@ import os
 
 # ros imports
 import rospy
-from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
+from nightmare_state_broadcaster.msg import command
 from std_msgs.msg import Header
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
-from config import *
-
-
-EPSILON = 0.001  # for float comparisons
+from nightmare_config.config import (MAX_WALK_ROTATIONAL_SPEED,
+                                     MAX_WALK_SPEED_X,
+                                     MAX_WALK_SPEED_Y,
+                                     MAX_HEIGHT_DISPLACEMENT,
+                                     MAX_X_DISPLACEMENT,
+                                     MAX_Y_DISPLACEMENT,
+                                     MAX_ROLL_DISPLACEMENT,
+                                     MAX_PITCH_DISPLACEMENT,
+                                     MAX_YAW_DISPLACEMENT,
+                                     EPSILON)
 
 
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
