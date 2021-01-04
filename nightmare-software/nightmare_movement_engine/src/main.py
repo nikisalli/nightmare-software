@@ -8,17 +8,17 @@ import numpy as np
 # ros libs import
 import rospy
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Header
 
 # external package import
 from nightmare_config.config import DEFAULT_POSE
 from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
+from nightmare_math.math import abs_ang2pos, abs_pos2ang
 
 # same package import
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
 from modules import movements
-from modules.robot_math import abs_ang2pos, abs_pos2ang
-from std_msgs.msg import Header
 
 
 JOINTSTATE_MSG = JointState(header=Header(),
