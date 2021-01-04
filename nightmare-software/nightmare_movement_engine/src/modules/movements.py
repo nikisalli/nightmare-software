@@ -1,6 +1,9 @@
-import numpy as np
+from random import randint
 import time
-from .robot_math import asymmetrical_sigmoid, rotation_matrix
+import numpy as np
+from nightmare_math.math import (asymmetrical_sigmoid,
+                                 rotation_matrix)
+
 from nightmare_config.config import (DEFAULT_POSE,
                                      STEP_HEIGHT,
                                      ENGINE_FPS,
@@ -10,8 +13,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      STAND_HEIGTH,
                                      SIT_HEIGHT,
                                      TIME_SIT)
+
 import bezier
-from random import randint
 
 
 def stand_up(engine):

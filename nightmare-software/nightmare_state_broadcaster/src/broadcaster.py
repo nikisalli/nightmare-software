@@ -21,8 +21,7 @@ from nightmare_config.config import (MAX_WALK_ROTATIONAL_SPEED,
                                      MAX_Y_DISPLACEMENT,
                                      MAX_ROLL_DISPLACEMENT,
                                      MAX_PITCH_DISPLACEMENT,
-                                     MAX_YAW_DISPLACEMENT,
-                                     EPSILON)
+                                     MAX_YAW_DISPLACEMENT)
 
 
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
@@ -34,10 +33,6 @@ body_displacement = [0] * 6
 # x y in cm/sec being the resultants of a vector describing direction and modulo (speed) the robot should follow
 # yaw in deg/sec being the rotation speed of the robot's static position
 walk_direction = [0] * 3
-
-
-def feq(a, b):  # floating point equal
-    return abs(a - b) < EPSILON
 
 
 def find_talker():

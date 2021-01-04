@@ -13,10 +13,7 @@ from std_msgs.msg import Header
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
-from nightmare_config.config import *
-
-
-EPSILON = 0.001  # for float comparisons
+from nightmare_config.config import (EPSILON)
 
 
 def feq(a, b):  # floating point equal
