@@ -8,5 +8,4 @@ pyserial
 rospkg
 defusedxml
 scipy
-pybullet
 pynput
