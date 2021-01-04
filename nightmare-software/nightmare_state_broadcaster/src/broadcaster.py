@@ -46,7 +46,6 @@ def find_talker():
         return ['/control/usb_joystick', command]  # return topic name and topic type
     elif '/control/keyboard' in parsed_topic_list:
         return ['/control/keyboard', command]  # return topic name and topic type
-    
     else:
         rospy.loginfo("control method not yet implemented!")
         return [None, None]

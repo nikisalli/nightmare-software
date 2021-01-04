@@ -18,7 +18,7 @@
   <!-- start joint compatibility layer node -->
   <node name="joint_redirector" pkg="nightmare_gazebo" required="true" type="joint_state_redirector.py"/>
 
-  <!-- start usb joystick parser node -->
+  <!-- start keyboard parser node -->
   <include file="$(find nightmare_keyboard)/launch/keyboard.launch" />
 
 </launch>

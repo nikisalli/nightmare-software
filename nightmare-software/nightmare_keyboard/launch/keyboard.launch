@@ -1,4 +1,4 @@
-<!-- Start joystick node. -->
+<!-- Start keyboard node. -->
 <launch>
 
   <!-- start joint compatibility layer node -->
