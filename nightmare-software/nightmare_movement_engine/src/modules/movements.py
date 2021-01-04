@@ -1,15 +1,15 @@
 import numpy as np
 import time
 from .robot_math import asymmetrical_sigmoid, rotation_matrix
-from .config import (DEFAULT_POSE,
-                     STEP_HEIGHT,
-                     ENGINE_FPS,
-                     TIME_STAND_UP,
-                     DEFAULT_SIT_POSE,
-                     DOUBLE_SEQUENCES,
-                     STAND_HEIGTH,
-                     SIT_HEIGHT,
-                     TIME_SIT)
+from nightmare_config.config import (DEFAULT_POSE,
+                                     STEP_HEIGHT,
+                                     ENGINE_FPS,
+                                     TIME_STAND_UP,
+                                     DEFAULT_SIT_POSE,
+                                     DOUBLE_SEQUENCES,
+                                     STAND_HEIGTH,
+                                     SIT_HEIGHT,
+                                     TIME_SIT)
 import bezier
 from random import randint
 

@@ -26,10 +26,10 @@ def feq(a, b):  # floating point equal
 class stepPlannerNode():
     def __init__(self):
         self.state = 'sleep'  # actual engine state
+        self.gait = 'tripod'
         self.prev_state = 'sleep'  # previous engine state
         self.body_displacement = [0] * 6
         self.walk_direction = [0] * 3
-        self.rate = rospy.Rate(50)
 
     def run(self):
         pub_state = rospy.Publisher("/nightmare/footsteps", footsteps, queue_size=1)
@@ -38,18 +38,18 @@ class stepPlannerNode():
         while not rospy.is_shutdown():
             header.stamp = rospy.Time.now()
             pub_state.publish(footsteps(header, 'lol'))
-            self.rate.sleep()
 
     def set_state(self, msg):
         self.state = msg.state
         self.walk_direction = msg.walk_direction
         self.body_displacement = msg.body_displacement
+        self.gait = msg.gait
 
 
 if __name__ == '__main__':
     rospy.init_node('step_planner')
 
-    rospy.loginfo("starting state broadcaster")
+    rospy.loginfo("starting step planner")
     engine = stepPlannerNode()
 
     rospy.loginfo("subscribing to nodes")

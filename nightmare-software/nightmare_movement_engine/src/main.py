@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 
+# libs import
 import os
 import sys
 import numpy as np
 
+# ros libs import
+import rospy
+from sensor_msgs.msg import JointState
+
+# external package import
+from nightmare_config.config import DEFAULT_POSE
+from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
+
+# same package import
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
 from modules import movements
-from modules.config import DEFAULT_POSE
 from modules.robot_math import abs_ang2pos, abs_pos2ang
-from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
 from std_msgs.msg import Header
-
-import rospy
-from sensor_msgs.msg import JointState
 
 
 JOINTSTATE_MSG = JointState(header=Header(),

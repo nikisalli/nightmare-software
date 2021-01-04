@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import sin, cos, arccos, arctan2, sqrt
-from .config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
+from nightmare_config.config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
 from scipy.spatial.transform import Rotation as R
 
 PI = np.pi
