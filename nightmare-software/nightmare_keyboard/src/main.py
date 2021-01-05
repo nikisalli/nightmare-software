@@ -69,7 +69,7 @@ def publisher():
     prev_m = key_states[KeyCode.from_char('m')]
 
     walk_direction = [0] * 3
-    body_displacement = [0] * 3
+    body_displacement = [0] * 6
 
     while not rospy.is_shutdown():
         # If None is used as the header value, rospy will automatically fill it in.
