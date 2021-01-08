@@ -1,6 +1,9 @@
 from random import randint
 import time
 import numpy as np
+
+import tf_conversions
+
 from nightmare_math.math import (asymmetrical_sigmoid,
                                  rotation_matrix)
 
@@ -15,6 +18,10 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      TIME_SIT)
 
 import bezier
+
+
+def step(engine):
+    pass
 
 
 def stand_up(engine):
@@ -35,7 +42,9 @@ def stand_up(engine):
             time.sleep(TIME_STAND_UP / (3 * ENGINE_FPS))
     for i in range(int(TIME_STAND_UP * ENGINE_FPS)):
         engine.pose = DEFAULT_SIT_POSE.copy()
-        engine.pose[:, 2] += asymmetrical_sigmoid(i / (TIME_STAND_UP * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        pos = asymmetrical_sigmoid(i / (TIME_STAND_UP * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        engine.pose[:, 2] += pos
+        engine.engine_pos_publisher_msg.transform.translation.z = - SIT_HEIGHT - pos  # inverted because when legs go down, robot goes up
         engine.compute_ik()
         time.sleep(0.01)
 
@@ -58,20 +67,31 @@ def sit(engine):
             time.sleep(TIME_SIT / (3 * ENGINE_FPS))
     for i in range(int(TIME_SIT * ENGINE_FPS)):
         engine.pose = DEFAULT_POSE.copy()
-        engine.pose[:, 2] -= asymmetrical_sigmoid(i / (TIME_SIT * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        pos = asymmetrical_sigmoid(i / (TIME_SIT * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        engine.pose[:, 2] -= pos
+        engine.engine_pos_publisher_msg.transform.translation.z = - STAND_HEIGTH + pos  # inverted because when legs go down, robot goes up
         engine.compute_ik()
         time.sleep(0.01)
 
 
-def stand(engine, disp):
-    pose = rotation_matrix(DEFAULT_POSE.copy(), disp[-3:])
-    pose[:, 0] += disp[1]
-    pose[:, 1] += disp[0]
-    pose[:, 2] += disp[2]
+def stand(engine):
+    pose = rotation_matrix(DEFAULT_POSE.copy(), engine.body_displacement[-3:])
+    pose[:, 0] += engine.body_displacement[1]
+    pose[:, 1] += engine.body_displacement[0]
+    pose[:, 2] += engine.body_displacement[2]
     engine.pose = pose
+    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_displacement[0]
+    engine.engine_pos_publisher_msg.transform.translation.y = - engine.body_displacement[1]
+    engine.engine_pos_publisher_msg.transform.translation.z = - STAND_HEIGTH - engine.body_displacement[2]
+    q = tf_conversions.transformations.quaternion_from_euler(engine.body_displacement[3], - engine.body_displacement[4], 0)
+    engine.engine_pos_publisher_msg.transform.rotation.x = q[0]
+    engine.engine_pos_publisher_msg.transform.rotation.y = q[1]
+    engine.engine_pos_publisher_msg.transform.rotation.z = q[2]
+    engine.engine_pos_publisher_msg.transform.rotation.w = q[3]
     engine.compute_ik()
 
 
 def sleep(engine):
     engine.pose = DEFAULT_SIT_POSE.copy()
+    engine.engine_pos_publisher_msg.transform.translation.z = - SIT_HEIGHT
     engine.compute_ik()
