@@ -12,7 +12,4 @@
 
   <!-- start movement engine -->
   <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py" output="screen" />
-
-  <!-- temporary fix for lack of odometry -->
-	<node pkg="tf" type="static_transform_publisher" name="base2world_broadcaster" args="0 0 0 0 0 0 world base_link 100" output="screen"/> <!-- TODO remove this when position approximation with kalman is done!-->
 </launch>
