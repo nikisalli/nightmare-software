@@ -4,7 +4,7 @@
 
   <!-- remap engine's angles to robot angles to fool rviz into thinking those are the real robot's angles -->
 	<node pkg="robot_state_publisher" type="robot_state_publisher" required="true" name="robot_state_publisher" output="screen">
-      <remap from="joint_states" to="engine_angle_joint_states" />
+      <remap from="joint_states" to="/engine/angle_joint_states" />
   </node>
 
   <!-- start robot state broadcaster -->
