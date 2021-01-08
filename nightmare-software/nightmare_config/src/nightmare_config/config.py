@@ -17,16 +17,16 @@ EPSILON = 0.0001
 # ===================================
 
 # ROBOT DIMENSIONS
-STAND_MID_LEG_Y = 26.
-STAND_OUT_LEG_Y = 20.
-STAND_MID_LEG_X = 0.
-STAND_OUT_LEG_X = 20.
-BODY_LENGTH = 15.5  # X
-BODY_MID_WIDTH = 18.6  # Y
-BODY_OUT_WIDTH = 13.7  # Y
-LEG_COXA_LENGTH = 6.5
-LEG_FEMUR_LENGTH = 13.
-LEG_TIBIA_LENGTH = 17.
+STAND_MID_LEG_Y = 26.e-2
+STAND_OUT_LEG_Y = 20.e-2
+STAND_MID_LEG_X = 0.e-2
+STAND_OUT_LEG_X = 20.e-2
+BODY_LENGTH = 15.5e-2  # X
+BODY_MID_WIDTH = 18.6e-2  # Y
+BODY_OUT_WIDTH = 13.7e-2  # Y
+LEG_COXA_LENGTH = 6.5e-2
+LEG_FEMUR_LENGTH = 13.e-2
+LEG_TIBIA_LENGTH = 17.e-2
 
 DEFAULT_DIM = np.array([LEG_COXA_LENGTH, LEG_FEMUR_LENGTH, LEG_TIBIA_LENGTH])
 
@@ -38,20 +38,23 @@ TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
 
 
 # ENGINE PARAMETERS
-STAND_HEIGTH = -12.
-SIT_HEIGHT = -0
+STAND_HEIGTH = -12.e-2
+SIT_HEIGHT = -0e-2
 ENGINE_FPS = 60
-STEP_HEIGHT = 6.
 TIME_STAND_UP = 2.
 TIME_SIT = 2.
 
-MAX_WALK_ROTATIONAL_SPEED = PI / 10  # in rad/sec
-MAX_WALK_SPEED_X = 10  # cm/s
-MAX_WALK_SPEED_Y = 10
+STEP_HEIGHT = 6.e-2
+MIN_STEP_TIME = 1.
+MAX_STEP_LENGTH = 6.e-2
 
-MAX_HEIGHT_DISPLACEMENT = 12
-MAX_X_DISPLACEMENT = 9
-MAX_Y_DISPLACEMENT = 9
+MAX_WALK_ROTATIONAL_SPEED = PI / 10  # in rad/sec
+MAX_WALK_SPEED_X = 10e-2  # m/s
+MAX_WALK_SPEED_Y = 10e-2
+
+MAX_HEIGHT_DISPLACEMENT = 12e-2
+MAX_X_DISPLACEMENT = 9e-2
+MAX_Y_DISPLACEMENT = 9e-2
 
 MAX_ROLL_DISPLACEMENT = PI / 10
 MAX_PITCH_DISPLACEMENT = PI / 10
@@ -127,3 +130,7 @@ DEFAULT_SIT_POSE = np.array([[pos[0], pos[1], SIT_HEIGHT] for pos in DEFAULT_POS
 SERVO_OFFSET = np.append(np.array([leg.servo_offset for leg in legs]).ravel(), 0)
 POSE_OFFSET = np.array([leg.abs_offset for leg in legs])
 POSE_REL_CONVERT = np.array([[-1 if leg.side else 1, -1 if leg.side else 1, 1] for leg in legs])
+
+# GAITS
+GAIT_TRIPOD = np.array([[0, 2, 4],
+                        [1, 3, 5]])
