@@ -1,3 +1,4 @@
 .vscode
 __pycache__
 .Trash-1000
+bagfiles/*
