@@ -428,6 +428,24 @@
   </collision>
 </link>
 
+<link name="leg_1_tip">
+</link>
+
+<link name="leg_2_tip">
+</link>
+
+<link name="leg_3_tip">
+</link>
+
+<link name="leg_4_tip">
+</link>
+
+<link name="leg_5_tip">
+</link>
+
+<link name="leg_6_tip">
+</link>
+
 <joint name="base2body" type="fixed">
   <origin rpy="0 0 0" xyz="0 0 0"/>
   <parent link="base_link"/>
@@ -565,6 +583,42 @@
   <parent link="leg_6_femur_1"/>
   <child link="leg_6_tibia_1"/>
   <axis xyz="0.707107 0.707107 -0.0"/>
+</joint>
+
+<joint name="leg1tip" type="fixed">
+  <origin rpy="0 0 0" xyz="0.135 0.102 -0.015"/>
+  <parent link="leg_1_tibia_2"/>
+  <child link="leg_1_tip"/>
+</joint>
+
+<joint name="leg2tip" type="fixed">
+  <origin rpy="0 0 0" xyz="0.168 -0.022 -0.013"/>
+  <parent link="leg_2_tibia_1"/>
+  <child link="leg_2_tip"/>
+</joint>
+
+<joint name="leg3tip" type="fixed">
+  <origin rpy="0 0 0" xyz="0.103 -0.134 -0.013"/>
+  <parent link="leg_3_tibia_1"/>
+  <child link="leg_3_tip"/>
+</joint>
+
+<joint name="leg4tip" type="fixed">
+  <origin rpy="0 0 0" xyz="-0.105 -0.133 -0.013"/>
+  <parent link="leg_4_tibia_1"/>
+  <child link="leg_4_tip"/>
+</joint>
+
+<joint name="leg5tip" type="fixed">
+  <origin rpy="0 0 0" xyz="-0.168 -0.019 -0.013"/>
+  <parent link="leg_5_tibia_1"/>
+  <child link="leg_5_tip"/>
+</joint>
+
+<joint name="leg6tip" type="fixed">
+  <origin rpy="0 0 0" xyz="-0.133 0.105 -0.013"/>
+  <parent link="leg_6_tibia_1"/>
+  <child link="leg_6_tip"/>
 </joint>
 
 </robot>
