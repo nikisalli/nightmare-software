@@ -3,12 +3,15 @@
 # libs import
 import os
 import sys
+import json
 import numpy as np
 
 # ros libs import
 import rospy
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Header, Int32
+from std_msgs.msg import (Header,
+                          Int32,
+                          String)
 import tf_conversions
 import tf2_ros
 import geometry_msgs.msg
@@ -38,11 +41,13 @@ JOINTSTATE_MSG = JointState(header=Header(),
 
 class engineNode():
     def __init__(self):
+        # robot state
         self.state = 'sleep'  # actual engine state
         self.prev_state = 'sleep'  # previous engine state
         self.body_displacement = [0] * 6
         self.walk_direction = [0] * 3
 
+        # robot pos
         self.angles = np.zeros(shape=(6, 3))  # angle matrix
         self.angles_array = [0] * 19  # angle array
         self.hw_angles_array = [0] * 19
@@ -51,23 +56,29 @@ class engineNode():
         self.hw_pose = np.zeros(shape=(6, 3))  # initialize as empty and fill it later in set_hw_joint_state callback
         self.pose = DEFAULT_POSE.copy()  # init as empty to fill later in callbacks
         self.rate = rospy.Rate(ENGINE_FPS)
-
-        self.step_id = 0
         self.body_pos = np.array([0, 0, 0])
+
+        # step planner state
+        self.step_id = 0
+        self.steps = []
 
         # create publishers
         self.joint_angle_publisher = rospy.Publisher('/engine/angle_joint_states', JointState, queue_size=10)
         self.joint_angle_msg = JOINTSTATE_MSG  # joint angle topic structure
+
         self.joint_state_publisher = rospy.Publisher('/engine/state_joint_states', JointState, queue_size=10)
         self.joint_state_msg = JOINTSTATE_MSG  # joint state topic structure
+
         self.engine_step_id_publisher = rospy.Publisher('/engine/steps', Int32, queue_size=10)
         self.engine_step_id_msg = Int32  # engine current step id
+
         self.engine_pos_publisher = tf2_ros.TransformBroadcaster()
         self.engine_pos_publisher_msg = geometry_msgs.msg.TransformStamped()  # where the engine thinks the robot is
 
+        # create body to world odom transformation
         self.engine_pos_publisher_msg.header.stamp = rospy.Time.now()
         self.engine_pos_publisher_msg.header.frame_id = "world"
-        self.engine_pos_publisher_msg.child_frame_id = "body_link"
+        self.engine_pos_publisher_msg.child_frame_id = "base_link"
         self.engine_pos_publisher_msg.transform.translation.x = 0.0
         self.engine_pos_publisher_msg.transform.translation.y = 0.0
         self.engine_pos_publisher_msg.transform.translation.z = 0.0
@@ -80,10 +91,9 @@ class engineNode():
     def compute_ik(self):
         time = rospy.Time.now()
         self.angles_array = abs_pos2ang(self.pose)
-        self.publish_joints(time)  # publish engine output pose
 
-        self.engine_pos_publisher_msg.header.stamp = time
-        self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)  # publish engine transform for enhanced slam and odometry
+        self.publish_joints(time)  # publish engine output pose
+        self.publish_engine_odom(time)  # publish engine transform for enhanced slam and odometry
 
     def run(self):
         rospy.wait_for_message("/joint_states", JointState)  # at start wait for first hardware frame to know where to start
@@ -95,15 +105,24 @@ class engineNode():
             elif self.state == 'sleep' and self.prev_state == 'stand':
                 movements.sit(self)
             if self.state == 'stand':
-                movements.stand(self)
+                if len(self.steps == 0):  # if there are no steps to execute just stand
+                    movements.stand(self)
+                else:  # else execute them!
+                    self.publish_step_id()
+                    movements.step(self)
             elif self.state == 'sleep':
                 movements.sleep(self)
-            elif self.state == 'walk':
-                movements.step(self)
 
             self.prev_state = self.state
-
             self.rate.sleep()
+
+    def parse_footsteps(self, msg):
+        self.steps = json.loads(msg.data)
+        rospy.loginfo(str(self.steps))
+
+    def publish_engine_odom(self, time):
+        self.engine_pos_publisher_msg.header.stamp = time
+        self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)
 
     def publish_joints(self, time):
         self.joint_angle_msg.position = self.angles_array
@@ -139,5 +158,6 @@ if __name__ == '__main__':
     rospy.loginfo("subscribing to nodes")
     rospy.Subscriber("/nightmare/command", command, engine.set_state)
     rospy.Subscriber("/joint_states", JointState, engine.set_hw_joint_state)
+    rospy.Subscriber("/engine/footsteps", String, engine.parse_footsteps)
 
     engine.run()

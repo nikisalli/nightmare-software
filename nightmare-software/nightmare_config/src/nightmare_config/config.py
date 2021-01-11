@@ -34,8 +34,6 @@ NUMBER_OF_LEGS = 6
 NUMBER_OF_SERVOS = 19
 NUMBER_OF_SERVOS_PER_LEG = 3
 
-TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
-
 
 # ENGINE PARAMETERS
 STAND_HEIGTH = -12.e-2
@@ -134,3 +132,9 @@ POSE_REL_CONVERT = np.array([[-1 if leg.side else 1, -1 if leg.side else 1, 1] f
 # GAITS
 GAIT_TRIPOD = np.array([[0, 2, 4],
                         [1, 3, 5]])
+
+# NAMES
+# name of the link at the tip of each leg
+leg_tips = ['leg_1_tip', 'leg_2_tip', 'leg_3_tip', 'leg_4_tip', 'leg_5_tip', 'leg_6_tip']
+# used ttys to communicate with servos
+TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
