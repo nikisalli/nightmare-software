@@ -3,8 +3,7 @@ from numpy import sin, cos, arccos, arctan2, sqrt
 from scipy.spatial.transform import Rotation as R
 
 from nightmare_config.config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
-from nightmare_config.config import (PI,
-                                     EPSILON)
+from nightmare_config.config import PI, EPSILON
 
 
 def feq(a, b):  # floating point equal
@@ -55,11 +54,19 @@ def asymmetrical_sigmoid(val):
     return 1 / (1 + np.e**(-13 * (val - 0.5)))
 
 
-def rotation_matrix(pose, rot_vec):
-    y_rot = R.from_rotvec(np.array([0, 0, rot_vec[2]]))
-    x_rot = R.from_rotvec(np.array([0, rot_vec[0], 0]))
-    z_rot = R.from_rotvec(np.array([rot_vec[1], 0, 0]))
+def euler_rotation_matrix(pose, rot_vec):
+    r = R.from_rotvec(np.array([rot_vec[1], rot_vec[0], rot_vec[2]]))
+    return r.apply(pose)
 
-    r1 = x_rot.apply(pose)
-    r2 = y_rot.apply(r1)
-    return z_rot.apply(r2)
+
+def quaternion_transform(pose, transform, translation=True, rotation=True):
+    if translation:
+        pose[:, 0] += transform.translation.x
+        pose[:, 1] += transform.translation.y
+        pose[:, 2] += transform.translation.z
+
+    if rotation:
+        r = R.from_quat([transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w])
+        return r.apply(pose)
+    else:
+        return pose

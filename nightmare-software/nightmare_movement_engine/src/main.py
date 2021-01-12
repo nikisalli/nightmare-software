@@ -46,6 +46,7 @@ class engineNode():
         self.prev_state = 'sleep'  # previous engine state
         self.body_displacement = [0] * 6
         self.walk_direction = [0] * 3
+        self.gait = 'tripod'
 
         # robot pos
         self.angles = np.zeros(shape=(6, 3))  # angle matrix
@@ -54,7 +55,8 @@ class engineNode():
         self.hw_angles = np.zeros(shape=(6, 3))
         self.states = [0] * 19  # all servos disconnected at start
         self.hw_pose = np.zeros(shape=(6, 3))  # initialize as empty and fill it later in set_hw_joint_state callback
-        self.pose = DEFAULT_POSE.copy()  # init as empty to fill later in callbacks
+        self.pose = DEFAULT_POSE.copy()  # pose of the robot without transforms
+        self.final_pose = DEFAULT_POSE.copy()  # pose of the robot with transforms
         self.rate = rospy.Rate(ENGINE_FPS)
         self.body_pos = np.array([0, 0, 0])
 
@@ -69,8 +71,8 @@ class engineNode():
         self.joint_state_publisher = rospy.Publisher('/engine/state_joint_states', JointState, queue_size=10)
         self.joint_state_msg = JOINTSTATE_MSG  # joint state topic structure
 
-        self.engine_step_id_publisher = rospy.Publisher('/engine/steps', Int32, queue_size=10)
-        self.engine_step_id_msg = Int32  # engine current step id
+        self.engine_step_id_publisher = rospy.Publisher('/engine/step', Int32, queue_size=10)
+        self.engine_step_id_msg = Int32()  # engine current step id
 
         self.engine_pos_publisher = tf2_ros.TransformBroadcaster()
         self.engine_pos_publisher_msg = geometry_msgs.msg.TransformStamped()  # where the engine thinks the robot is
@@ -90,7 +92,7 @@ class engineNode():
 
     def compute_ik(self):
         time = rospy.Time.now()
-        self.angles_array = abs_pos2ang(self.pose)
+        self.angles_array = abs_pos2ang(self.final_pose)
 
         self.publish_joints(time)  # publish engine output pose
         self.publish_engine_odom(time)  # publish engine transform for enhanced slam and odometry
@@ -100,16 +102,19 @@ class engineNode():
         rospy.wait_for_message("/nightmare/command", command)
 
         while not rospy.is_shutdown():
+            # if changing sit or standup and adjust leg positions
             if self.state == 'stand' and self.prev_state == 'sleep':
                 movements.stand_up(self)
             elif self.state == 'sleep' and self.prev_state == 'stand':
                 movements.sit(self)
+
             if self.state == 'stand':
-                if len(self.steps == 0):  # if there are no steps to execute just stand
-                    movements.stand(self)
-                else:  # else execute them!
-                    self.publish_step_id()
+                if len(self.steps) > 0:  # if there are steps to execute, execute them
                     movements.step(self)
+                    self.publish_step_id()
+                else:
+                    movements.stand(self)
+
             elif self.state == 'sleep':
                 movements.sleep(self)
 

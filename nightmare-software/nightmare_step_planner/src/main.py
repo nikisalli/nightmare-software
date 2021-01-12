@@ -8,16 +8,11 @@ from numpy import sqrt
 import rospy
 import tf2_ros as tf
 from nightmare_step_planner.msg import command  # pylint: disable=no-name-in-module
-from std_msgs.msg import (Header,
-                          Int32,
-                          String)
-
+from std_msgs.msg import Header, Int32, String
 from visualization_msgs.msg import Marker
 
-from nightmare_math.math import (rotation_matrix)
-
-from nightmare_config.config import (GAIT_TRIPOD,
-                                     leg_tips)
+from nightmare_math.math import euler_rotation_matrix, quaternion_transform
+from nightmare_config.config import GAIT_TRIPOD, LEG_TIPS, DEFAULT_POSE, PI
 
 
 class stepPlannerNode():
@@ -37,7 +32,8 @@ class stepPlannerNode():
 
         # body state
         self.abs_body_pose = np.zeros(shape=(6, 3))
-        self.body_pos = np.array([0, 0, 0])
+        self.body_trans = 0
+        self.body_np_trans = np.ndarray((4, 4))  # 4x4 transform matrix to switch frame
 
         # tf listener
         self.tf_buffer = tf.Buffer()
@@ -82,12 +78,19 @@ class stepPlannerNode():
         header = Header()
 
         while not rospy.is_shutdown():
+            if self.parse_tf():
+                dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
+                new_pose = quaternion_transform(dpose, self.body_trans, rotation=False)
+                self.publish_pose_markers(new_pose, 1, self.green)
+
             mod = sqrt(self.walk_direction[0]**2 + self.walk_direction[1]**2)
-            if (self.engine_step > self.step_id - 1 and self.state == 'stand' and (abs(mod) > 0.01 or self.walk_direction[2] > 1)):
+            if (self.engine_step >= self.step_id and self.state == 'stand' and (abs(mod) > 0.01 or self.walk_direction[2] > 1)):
                 # check if:
                 # - a step is already present
                 # - check if the robot is standing to start walking
                 # - check if a command to walk is valid
+
+                rospy.loginfo(f"planner_step: {self.step_id} planner_gait_step: {self.gait_step} engine_step: {self.engine_step}")
 
                 if not self.parse_tf():
                     break
@@ -99,23 +102,34 @@ class stepPlannerNode():
             self.rate.sleep()
 
     def generate_next_steps(self):
+        self.step_id += 1
         if self.gait == 'tripod':
             step = []
+
+            dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
+            abs_target_pose = quaternion_transform(dpose, self.body_trans, rotation=False)
+
             for leg in GAIT_TRIPOD[self.gait_step]:
-                prev_pos = self.abs_body_pose[leg]
+                prev_pos = abs_target_pose[leg]
+
                 new_pos = np.array([prev_pos[0] + self.walk_direction[0], prev_pos[1] + self.walk_direction[1], 0.0])
-                new_pos = rotation_matrix(new_pos, [0, 0, self.walk_direction[2]])
-                step.append({'leg': int(leg), 'pos': new_pos.tolist()})
+                new_pos = euler_rotation_matrix(new_pos, [0, 0, self.walk_direction[2]])
+
+                trans = euler_rotation_matrix(new_pos - prev_pos, [0, 0, - PI / 2])
+
+                step.append({'leg': int(leg), 'pos': trans.tolist()})
+
                 self.publish_marker(new_pos, -1, self.red)
 
-            self.steps.append(step)
-            self.step_id += 1
+            self.steps.append({'id': int(self.step_id), 'steps': step})
+
+            if len(self.steps) > 1:
+                self.steps.pop(0)
+
             self.gait_step += 1
 
             if self.gait_step == len(GAIT_TRIPOD):  # check if gait cycle got to the end
                 self.gait_step = 0
-
-            rospy.loginfo(f"planner step: {self.step_id} planner gait step: {self.gait_step} gait: {self.gait}")
 
     def set_state(self, msg):
         self.state = msg.state
@@ -128,9 +142,15 @@ class stepPlannerNode():
 
     def parse_tf(self):
         try:
-            for i, leg in enumerate(leg_tips):
+            # get leg tip absolute transform
+            for i, leg in enumerate(LEG_TIPS):
                 trans = self.tf_buffer.lookup_transform('world', leg, rospy.Time.now(), rospy.Duration(3.0)).transform.translation
                 self.abs_body_pose[i] = [trans.x, trans.y, trans.z]
+
+            # get body transform
+            trans = self.tf_buffer.lookup_transform('world', 'body_link', rospy.Time.now(), rospy.Duration(3.0)).transform
+            self.body_trans = trans
+
             return 1
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             rospy.logwarn(str(e))
@@ -151,6 +171,10 @@ class stepPlannerNode():
 
         self.marker_publisher.publish(self.robotMarker)
 
+    def publish_pose_markers(self, pose, life, color):
+        for pos in pose:
+            self.publish_marker(pos, life, color)
+
 
 if __name__ == '__main__':
     rospy.init_node('step_planner')
@@ -160,6 +184,6 @@ if __name__ == '__main__':
 
     rospy.loginfo("subscribing to nodes")
     rospy.Subscriber("/nightmare/command", command, engine.set_state)
-    rospy.Subscriber("/engine/step", Int32, engine.set_state)
+    rospy.Subscriber("/engine/step", Int32, engine.set_engine_step)
 
     engine.run()

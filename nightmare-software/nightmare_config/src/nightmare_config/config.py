@@ -42,13 +42,14 @@ ENGINE_FPS = 60
 TIME_STAND_UP = 2.
 TIME_SIT = 2.
 
+STEP_TIME = .5
 STEP_HEIGHT = 6.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 6.e-2
 
 MAX_WALK_ROTATIONAL_SPEED = PI / 10  # in rad/sec
-MAX_WALK_SPEED_X = 10e-2  # m/s
-MAX_WALK_SPEED_Y = 10e-2
+MAX_WALK_SPEED_X = 8e-2  # m/s
+MAX_WALK_SPEED_Y = 5e-2
 
 MAX_HEIGHT_DISPLACEMENT = 12e-2
 MAX_X_DISPLACEMENT = 9e-2
@@ -135,6 +136,6 @@ GAIT_TRIPOD = np.array([[0, 2, 4],
 
 # NAMES
 # name of the link at the tip of each leg
-leg_tips = ['leg_1_tip', 'leg_2_tip', 'leg_3_tip', 'leg_4_tip', 'leg_5_tip', 'leg_6_tip']
+LEG_TIPS = ['leg_1_tip', 'leg_2_tip', 'leg_3_tip', 'leg_4_tip', 'leg_5_tip', 'leg_6_tip']
 # used ttys to communicate with servos
 TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
