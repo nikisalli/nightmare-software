@@ -111,7 +111,6 @@ class engineNode():
             if self.state == 'stand':
                 if len(self.steps) > 0:  # if there are steps to execute, execute them
                     movements.step(self)
-                    self.publish_step_id()
                 else:
                     movements.stand(self)
 
@@ -123,7 +122,7 @@ class engineNode():
 
     def parse_footsteps(self, msg):
         self.steps = json.loads(msg.data)
-        rospy.loginfo(str(self.steps))
+        # rospy.loginfo('\n' + str(engine.steps) + '\n')
 
     def publish_engine_odom(self, time):
         self.engine_pos_publisher_msg.header.stamp = time

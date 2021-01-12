@@ -1,6 +1,7 @@
 from random import randint
 import time
 import numpy as np
+import rospy
 
 import tf_conversions
 
@@ -23,9 +24,11 @@ import bezier
 
 
 def step(engine):
-    stp = engine.steps[0]  # get first step to execute
-    engine.steps.pop(0)  # remove it from the step stack
+    stp = engine.steps.pop(0)  # remove it from the step stack
     step_id = stp['id']  # save its id so we know what we did
+    rospy.loginfo(f"executing id {step_id}, steps in queue {len(engine.steps)}")
+    engine.step_id = step_id
+    engine.publish_step_id()
     curves = {}
     trsfs = {}
 
@@ -43,6 +46,11 @@ def step(engine):
             curve = bezier.Curve(nodes, degree=3)
             curves[leg] = curve
 
+    starttime = time.time()
+
+    if engine.gait == 'tripod':
+        duration = STEP_TIME / (ENGINE_FPS * 2)
+
     for i in range(int(STEP_TIME * ENGINE_FPS)):
         for leg in range(NUMBER_OF_LEGS):
             if leg in curves:
@@ -55,9 +63,7 @@ def step(engine):
         apply_transform(engine)
 
         engine.compute_ik()
-        time.sleep(1 / (STEP_TIME * ENGINE_FPS))
-
-    engine.step_id = step_id
+        time.sleep((i + 1) * duration - time.time() + starttime)
 
 
 def stand_up(engine):

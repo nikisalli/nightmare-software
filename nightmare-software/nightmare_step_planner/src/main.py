@@ -39,7 +39,7 @@ class stepPlannerNode():
         self.tf_buffer = tf.Buffer()
         self.tf_listener = tf.TransformListener(self.tf_buffer)
 
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(60)
 
         # marker settings
         self.robotMarker = Marker()
@@ -84,7 +84,7 @@ class stepPlannerNode():
                 self.publish_pose_markers(new_pose, 1, self.green)
 
             mod = sqrt(self.walk_direction[0]**2 + self.walk_direction[1]**2)
-            if (self.engine_step >= self.step_id and self.state == 'stand' and (abs(mod) > 0.01 or self.walk_direction[2] > 1)):
+            if (self.engine_step >= self.step_id - 1 and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_direction[2]) > 0.01)):
                 # check if:
                 # - a step is already present
                 # - check if the robot is standing to start walking
@@ -92,8 +92,6 @@ class stepPlannerNode():
 
                 rospy.loginfo(f"planner_step: {self.step_id} planner_gait_step: {self.gait_step} engine_step: {self.engine_step}")
 
-                if not self.parse_tf():
-                    break
                 self.generate_next_steps()
 
                 header.stamp = rospy.Time.now()
@@ -123,9 +121,6 @@ class stepPlannerNode():
 
             self.steps.append({'id': int(self.step_id), 'steps': step})
 
-            if len(self.steps) > 1:
-                self.steps.pop(0)
-
             self.gait_step += 1
 
             if self.gait_step == len(GAIT_TRIPOD):  # check if gait cycle got to the end
@@ -139,6 +134,7 @@ class stepPlannerNode():
 
     def set_engine_step(self, msg):
         self.engine_step = msg.data
+        self.steps.pop(0)
 
     def parse_tf(self):
         try:
