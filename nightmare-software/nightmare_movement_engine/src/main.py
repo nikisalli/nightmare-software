@@ -58,7 +58,8 @@ class engineNode():
         self.pose = DEFAULT_POSE.copy()  # pose of the robot without transforms
         self.final_pose = DEFAULT_POSE.copy()  # pose of the robot with transforms
         self.rate = rospy.Rate(ENGINE_FPS)
-        self.body_pos = np.array([0, 0, 0])
+        self.body_trasl = [0, 0, 0]
+        self.body_rot = [0, 0, 0]
 
         # step planner state
         self.step_id = 0

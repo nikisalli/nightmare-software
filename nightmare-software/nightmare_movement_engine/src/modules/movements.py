@@ -1,6 +1,8 @@
 from random import randint
 import time
 import numpy as np
+from numpy import sin, cos
+
 import rospy
 
 import tf_conversions
@@ -48,8 +50,12 @@ def step(engine):
 
     starttime = time.time()
 
+    divider = 0
+
     if engine.gait == 'tripod':
-        duration = STEP_TIME / (ENGINE_FPS * 2)
+        divider = 2
+
+    duration = 1 / (ENGINE_FPS * STEP_TIME * divider)
 
     for i in range(int(STEP_TIME * ENGINE_FPS)):
         for leg in range(NUMBER_OF_LEGS):
@@ -57,8 +63,13 @@ def step(engine):
                 engine.pose[leg] = np.array(curves[leg].evaluate(i / (STEP_TIME * ENGINE_FPS))).flatten()
             else:
                 new_pose = engine.pose[leg].copy() + (np.asarray([engine.walk_direction[1], - engine.walk_direction[0], 0.0]) / - (STEP_TIME * ENGINE_FPS))
-                new_pose = euler_rotation_matrix(new_pose, [0, 0, engine.walk_direction[2] / - (STEP_TIME * ENGINE_FPS)])
+                new_pose = euler_rotation_matrix(new_pose, [0, 0, engine.walk_direction[2] / (STEP_TIME * ENGINE_FPS)])
                 engine.pose[leg] = new_pose
+
+        # generate odom
+        engine.body_rot[2] += - engine.walk_direction[2] / (STEP_TIME * ENGINE_FPS)
+        engine.body_trasl[0] += - (engine.walk_direction[1] / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2]) + (engine.walk_direction[0] / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2])
+        engine.body_trasl[1] += (engine.walk_direction[1] / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2]) + (engine.walk_direction[0] / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2])
 
         apply_transform(engine)
 
@@ -136,11 +147,11 @@ def apply_transform(engine):
     engine.final_pose = pose
 
     # generate odom
-    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_displacement[0]
-    engine.engine_pos_publisher_msg.transform.translation.y = - engine.body_displacement[1]
+    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_displacement[0] + engine.body_trasl[0]
+    engine.engine_pos_publisher_msg.transform.translation.y = - engine.body_displacement[1] + engine.body_trasl[1]
     engine.engine_pos_publisher_msg.transform.translation.z = - STAND_HEIGTH - engine.body_displacement[2]
     # convert rpy to ros friendly quaternion
-    q = tf_conversions.transformations.quaternion_from_euler(engine.body_displacement[3], - engine.body_displacement[4], 0)
+    q = tf_conversions.transformations.quaternion_from_euler(engine.body_displacement[3], - engine.body_displacement[4], engine.body_rot[2])
     engine.engine_pos_publisher_msg.transform.rotation.x = q[0]
     engine.engine_pos_publisher_msg.transform.rotation.y = q[1]
     engine.engine_pos_publisher_msg.transform.rotation.z = q[2]
@@ -152,11 +163,11 @@ def sleep(engine):
     engine.engine_pos_publisher_msg.transform.translation.z = - SIT_HEIGHT
 
     # generate odom
-    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_displacement[0]
-    engine.engine_pos_publisher_msg.transform.translation.y = - engine.body_displacement[1]
-    engine.engine_pos_publisher_msg.transform.translation.z = - engine.body_displacement[2]
+    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_trasl[0]
+    engine.engine_pos_publisher_msg.transform.translation.y = engine.body_trasl[1]
+    engine.engine_pos_publisher_msg.transform.translation.z = engine.body_trasl[2]
     # convert rpy to ros friendly quaternion
-    q = tf_conversions.transformations.quaternion_from_euler(engine.body_displacement[3], - engine.body_displacement[4], 0)
+    q = tf_conversions.transformations.quaternion_from_euler(0, 0, engine.body_rot[2])
     engine.engine_pos_publisher_msg.transform.rotation.x = q[0]
     engine.engine_pos_publisher_msg.transform.rotation.y = q[1]
     engine.engine_pos_publisher_msg.transform.rotation.z = q[2]

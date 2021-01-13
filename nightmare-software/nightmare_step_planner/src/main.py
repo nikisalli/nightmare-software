@@ -3,6 +3,7 @@
 import json
 import numpy as np
 from numpy import sqrt
+from scipy.spatial.transform import Rotation as R
 
 # ros imports
 import rospy
@@ -11,7 +12,7 @@ from nightmare_step_planner.msg import command  # pylint: disable=no-name-in-mod
 from std_msgs.msg import Header, Int32, String
 from visualization_msgs.msg import Marker
 
-from nightmare_math.math import euler_rotation_matrix, quaternion_transform
+from nightmare_math.math import euler_rotation_matrix
 from nightmare_config.config import GAIT_TRIPOD, LEG_TIPS, DEFAULT_POSE, PI
 
 
@@ -78,21 +79,19 @@ class stepPlannerNode():
         header = Header()
 
         while not rospy.is_shutdown():
-            if self.parse_tf():
-                dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
-                new_pose = quaternion_transform(dpose, self.body_trans, rotation=False)
-                self.publish_pose_markers(new_pose, 1, self.green)
+            self.parse_tf()
 
             mod = sqrt(self.walk_direction[0]**2 + self.walk_direction[1]**2)
+
             if (self.engine_step >= self.step_id - 1 and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_direction[2]) > 0.01)):
                 # check if:
                 # - a step is already present
                 # - check if the robot is standing to start walking
                 # - check if a command to walk is valid
 
-                rospy.loginfo(f"planner_step: {self.step_id} planner_gait_step: {self.gait_step} engine_step: {self.engine_step}")
-
                 self.generate_next_steps()
+
+                rospy.loginfo(f"planner_step: {self.step_id} planner_gait_step: {self.gait_step} engine_step: {self.engine_step}")
 
                 header.stamp = rospy.Time.now()
                 self.pub_steps.publish(String(json.dumps(self.steps)))
@@ -105,15 +104,20 @@ class stepPlannerNode():
             step = []
 
             dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
-            abs_target_pose = quaternion_transform(dpose, self.body_trans, rotation=False)
+            translation = [self.body_trans.translation.x, self.body_trans.translation.y, self.body_trans.translation.z]
+            rotation = [self.body_trans.rotation.x, self.body_trans.rotation.y, self.body_trans.rotation.z, self.body_trans.rotation.w]
+            rotation_matrix = R.from_quat(rotation)
+            abs_target_pose = rotation_matrix.apply(dpose)
+            abs_target_pose += translation
+
+            self.publish_pose_markers(abs_target_pose, 1, self.green)
 
             for leg in GAIT_TRIPOD[self.gait_step]:
                 prev_pos = abs_target_pose[leg]
 
                 new_pos = np.array([prev_pos[0] + self.walk_direction[0], prev_pos[1] + self.walk_direction[1], 0.0])
-                new_pos = euler_rotation_matrix(new_pos, [0, 0, self.walk_direction[2]])
 
-                trans = euler_rotation_matrix(new_pos - prev_pos, [0, 0, - PI / 2])
+                trans = euler_rotation_matrix(new_pos - prev_pos, [0, 0, self.walk_direction[2]])
 
                 step.append({'leg': int(leg), 'pos': trans.tolist()})
 
@@ -140,11 +144,11 @@ class stepPlannerNode():
         try:
             # get leg tip absolute transform
             for i, leg in enumerate(LEG_TIPS):
-                trans = self.tf_buffer.lookup_transform('world', leg, rospy.Time.now(), rospy.Duration(3.0)).transform.translation
+                trans = self.tf_buffer.lookup_transform('world', leg, rospy.Time.now(), rospy.Duration(.1)).transform.translation
                 self.abs_body_pose[i] = [trans.x, trans.y, trans.z]
 
             # get body transform
-            trans = self.tf_buffer.lookup_transform('world', 'body_link', rospy.Time.now(), rospy.Duration(3.0)).transform
+            trans = self.tf_buffer.lookup_transform('world', 'body_link', rospy.Time.now(), rospy.Duration(.1)).transform
             self.body_trans = trans
 
             return 1
