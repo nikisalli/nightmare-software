@@ -15,6 +15,7 @@ from std_msgs.msg import (Header,
 import tf_conversions
 import tf2_ros
 import geometry_msgs.msg
+from visualization_msgs.msg import Marker
 
 # external package import
 from nightmare_config.config import (DEFAULT_POSE,
@@ -78,6 +79,8 @@ class engineNode():
         self.engine_pos_publisher = tf2_ros.TransformBroadcaster()
         self.engine_pos_publisher_msg = geometry_msgs.msg.TransformStamped()  # where the engine thinks the robot is
 
+        self.marker_publisher = rospy.Publisher("/engine/markers", Marker, queue_size=100)
+
         # create body to world odom transformation
         self.engine_pos_publisher_msg.header.stamp = rospy.Time.now()
         self.engine_pos_publisher_msg.header.frame_id = "world"
@@ -90,6 +93,35 @@ class engineNode():
         self.engine_pos_publisher_msg.transform.rotation.y = q[1]
         self.engine_pos_publisher_msg.transform.rotation.z = q[2]
         self.engine_pos_publisher_msg.transform.rotation.w = q[3]
+
+        # marker settings
+        self.robotMarker = Marker()
+        self.robotMarker.header.frame_id = "world"
+        self.robotMarker.ns = "engine"
+        self.robotMarker.id = 0
+        self.robotMarker.type = 2  # sphere
+        self.robotMarker.action = 0
+        self.robotMarker.pose.position.x = 0
+        self.robotMarker.pose.position.y = 0
+        self.robotMarker.pose.position.z = 0
+        self.robotMarker.pose.orientation.x = 0
+        self.robotMarker.pose.orientation.y = 0
+        self.robotMarker.pose.orientation.z = 0
+        self.robotMarker.pose.orientation.w = 1.0
+        self.robotMarker.scale.x = 0.01
+        self.robotMarker.scale.y = 0.01
+        self.robotMarker.scale.z = 0.01
+
+        self.robotMarker.color.r = 1.0
+        self.robotMarker.color.g = 0.0
+        self.robotMarker.color.b = 0.0
+        self.robotMarker.color.a = 1.0
+
+        self.robotMarker.lifetime = 5.0
+
+        self.red = [1, 0, 0]
+        self.green = [0, 1, 0]
+        self.blue = [0, 0, 1]
 
     def compute_ik(self):
         time = rospy.Time.now()
@@ -152,6 +184,25 @@ class engineNode():
         self.hw_angles_array = msg.position
         self.hw_angles = np.reshape(self.hw_angles_array[:-1], newshape=(6, 3))
         self.hw_pose = abs_ang2pos(self.hw_angles_array)
+
+    def publish_marker(self, pos, life, color):
+        self.robotMarker.id += 1
+
+        self.robotMarker.pose.position.x = pos[0]
+        self.robotMarker.pose.position.y = pos[1]
+        self.robotMarker.pose.position.z = pos[2]
+
+        self.robotMarker.color.r = color[0]
+        self.robotMarker.color.g = color[1]
+        self.robotMarker.color.b = color[2]
+
+        self.robotMarker.lifetime = rospy.Duration(life)
+
+        self.marker_publisher.publish(self.robotMarker)
+
+    def publish_pose_markers(self, pose, life, color):
+        for pos in pose:
+            self.publish_marker(pos, life, color)
 
 
 if __name__ == '__main__':

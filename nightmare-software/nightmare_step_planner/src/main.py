@@ -2,7 +2,7 @@
 
 import json
 import numpy as np
-from numpy import sqrt
+from numpy import sqrt, sin, cos
 from scipy.spatial.transform import Rotation as R
 
 # ros imports
@@ -107,6 +107,8 @@ class stepPlannerNode():
             translation = [self.body_trans.translation.x, self.body_trans.translation.y, self.body_trans.translation.z]
             rotation = [self.body_trans.rotation.x, self.body_trans.rotation.y, self.body_trans.rotation.z, self.body_trans.rotation.w]
             rotation_matrix = R.from_quat(rotation)
+            rotation_euler = rotation_matrix.as_euler('xyz')
+            inverse_rotation_matrix = rotation_matrix.inv()
             abs_target_pose = rotation_matrix.apply(dpose)
             abs_target_pose += translation
 
@@ -114,14 +116,26 @@ class stepPlannerNode():
 
             for leg in GAIT_TRIPOD[self.gait_step]:
                 prev_pos = abs_target_pose[leg]
+                new_pos = prev_pos
 
-                new_pos = np.array([prev_pos[0] + self.walk_direction[0], prev_pos[1] + self.walk_direction[1], 0.0])
+                #  =======================
+                # rotate command with the body or you end up with messed matrices!
+                new_pos[0] += - self.walk_direction[1] * sin(rotation_euler[2]) + self.walk_direction[0] * cos(rotation_euler[2])
+                new_pos[1] += self.walk_direction[1] * cos(rotation_euler[2]) + self.walk_direction[0] * sin(rotation_euler[2])
 
-                trans = euler_rotation_matrix(new_pos - prev_pos, [0, 0, self.walk_direction[2]])
+                # can't be bothered TODO
+                new_pos -= translation
+                new_pos = euler_rotation_matrix(prev_pos, [0, 0, self.walk_direction[2]])
+                new_pos += translation
+                #  =======================
+
+                self.publish_marker(new_pos, 1, self.red)
+
+                new_pos -= translation
+                new_pos = inverse_rotation_matrix.apply(new_pos)
+                trans = new_pos - dpose[leg]
 
                 step.append({'leg': int(leg), 'pos': trans.tolist()})
-
-                self.publish_marker(new_pos, -1, self.red)
 
             self.steps.append({'id': int(self.step_id), 'steps': step})
 

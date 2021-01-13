@@ -20,7 +20,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      STAND_HEIGTH,
                                      SIT_HEIGHT,
                                      TIME_SIT,
-                                     NUMBER_OF_LEGS)
+                                     NUMBER_OF_LEGS,
+                                     PI)
 
 import bezier
 
@@ -38,10 +39,13 @@ def step(engine):
     for substp in stp['steps']:
         trsfs[substp['leg']] = substp['pos']
 
+    dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
+
     # generate curve going from prev pos to new pos using bezier
     for leg, start_pose in enumerate(engine.hw_pose.copy()):
         if leg in trsfs:
-            end_pose = DEFAULT_POSE[leg].copy() + trsfs[leg]
+            end_pose = dpose[leg] + trsfs[leg]
+            end_pose = euler_rotation_matrix(end_pose, [0, 0, -PI / 2])
             nodes = [[start_pose[0], start_pose[0], end_pose[0], end_pose[0]],
                      [start_pose[1], start_pose[1], end_pose[1], end_pose[1]],
                      [start_pose[2], start_pose[2] + STEP_HEIGHT, end_pose[2] + STEP_HEIGHT, end_pose[2]]]
