@@ -2,18 +2,18 @@
 
 import json
 import numpy as np
-from numpy import sqrt, sin, cos
+from numpy import sqrt
 from scipy.spatial.transform import Rotation as R
 
 # ros imports
 import rospy
 import tf2_ros as tf
 from nightmare_step_planner.msg import command  # pylint: disable=no-name-in-module
-from std_msgs.msg import Header, Int32, String
+from std_msgs.msg import Header, Int32, String, Float32
 from visualization_msgs.msg import Marker
 
 from nightmare_math.math import euler_rotation_matrix
-from nightmare_config.config import GAIT_TRIPOD, LEG_TIPS, DEFAULT_POSE, PI
+from nightmare_config.config import GAIT_TRIPOD, LEG_TIPS, DEFAULT_POSE, PI, MAX_STEP_LENGTH
 
 
 class stepPlannerNode():
@@ -24,12 +24,14 @@ class stepPlannerNode():
         self.prev_state = 'sleep'  # previous engine state
         self.body_displacement = [0] * 6
         self.walk_direction = [0] * 3
+        self.walk_direction_derivative = [0] * 3
 
         # step planner state
         self.steps = []
         self.gait_step = 0
         self.step_id = 0
         self.engine_step = 0
+        self.attenuation = 0
 
         # body state
         self.abs_body_pose = np.zeros(shape=(6, 3))
@@ -74,6 +76,8 @@ class stepPlannerNode():
         # publishers
         self.pub_steps = rospy.Publisher("/engine/footsteps", String, queue_size=1)
         self.marker_publisher = rospy.Publisher("/engine/markers", Marker, queue_size=100)
+        self.engine_attenuation_publisher = rospy.Publisher('/engine/attenuation', Float32, queue_size=10)
+        self.engine_attenuation_msg = Float32()  # engine current step id
 
     def run(self):
         header = Header()
@@ -114,18 +118,32 @@ class stepPlannerNode():
 
             self.publish_pose_markers(abs_target_pose, 1, self.green)
 
+            # find max displacement
+            npose = abs_target_pose.copy()
+            npose += euler_rotation_matrix([self.walk_direction[0], self.walk_direction[1], 0], [0, 0, rotation_euler[2]])
+            npose -= translation
+            npose = euler_rotation_matrix(npose, [0, 0, - self.walk_direction[2]])
+            npose = inverse_rotation_matrix.apply(npose)
+            tr = np.subtract(npose, dpose)
+            displ = max([sqrt(leg[0]**2 + leg[1]**2 + leg[2]**2) for leg in tr])
+
+            if displ > MAX_STEP_LENGTH:
+                self.attenuation = MAX_STEP_LENGTH / displ
+            else:
+                self.attenuation = 1
+
+            # generate steps
             for leg in GAIT_TRIPOD[self.gait_step]:
                 prev_pos = abs_target_pose[leg]
-                new_pos = prev_pos
+                new_pos = prev_pos.copy()
 
                 #  =======================
                 # rotate command with the body or you end up with messed matrices!
-                new_pos[0] += - self.walk_direction[1] * sin(rotation_euler[2]) + self.walk_direction[0] * cos(rotation_euler[2])
-                new_pos[1] += self.walk_direction[1] * cos(rotation_euler[2]) + self.walk_direction[0] * sin(rotation_euler[2])
+                new_pos += euler_rotation_matrix([self.walk_direction[0] * self.attenuation, self.walk_direction[1] * self.attenuation, 0], [0, 0, rotation_euler[2]])
 
                 # can't be bothered TODO
                 new_pos -= translation
-                new_pos = euler_rotation_matrix(prev_pos, [0, 0, self.walk_direction[2]])
+                new_pos = euler_rotation_matrix(new_pos, [0, 0, - self.walk_direction[2] * self.attenuation])
                 new_pos += translation
                 #  =======================
 
@@ -140,6 +158,8 @@ class stepPlannerNode():
             self.steps.append({'id': int(self.step_id), 'steps': step})
 
             self.gait_step += 1
+
+            self.publish_attenuation()
 
             if self.gait_step == len(GAIT_TRIPOD):  # check if gait cycle got to the end
                 self.gait_step = 0
@@ -169,6 +189,10 @@ class stepPlannerNode():
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             rospy.logwarn(str(e))
             return 0
+
+    def publish_attenuation(self):
+        self.engine_attenuation_msg.data = self.attenuation
+        self.engine_attenuation_publisher.publish(self.engine_attenuation_msg)
 
     def publish_marker(self, pos, life, color):
         self.robotMarker.id += 1

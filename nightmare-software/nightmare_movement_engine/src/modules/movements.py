@@ -66,14 +66,14 @@ def step(engine):
             if leg in curves:
                 engine.pose[leg] = np.array(curves[leg].evaluate(i / (STEP_TIME * ENGINE_FPS))).flatten()
             else:
-                new_pose = engine.pose[leg].copy() + (np.asarray([engine.walk_direction[1], - engine.walk_direction[0], 0.0]) / - (STEP_TIME * ENGINE_FPS))
-                new_pose = euler_rotation_matrix(new_pose, [0, 0, engine.walk_direction[2] / (STEP_TIME * ENGINE_FPS)])
+                new_pose = engine.pose[leg].copy() + ((np.asarray([engine.walk_direction[1] * engine.attenuation, - engine.walk_direction[0] * engine.attenuation, 0.0]) * 2) / - (STEP_TIME * ENGINE_FPS))
+                new_pose = euler_rotation_matrix(new_pose, [0, 0, (engine.walk_direction[2] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * 2])
                 engine.pose[leg] = new_pose
 
         # generate odom
-        engine.body_rot[2] += - engine.walk_direction[2] / (STEP_TIME * ENGINE_FPS)
-        engine.body_trasl[0] += - (engine.walk_direction[1] / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2]) + (engine.walk_direction[0] / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2])
-        engine.body_trasl[1] += (engine.walk_direction[1] / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2]) + (engine.walk_direction[0] / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2])
+        engine.body_rot[2] += 2 * (- engine.walk_direction[2] * engine.attenuation / (STEP_TIME * ENGINE_FPS))
+        engine.body_trasl[0] += 2 * (- (engine.walk_direction[1] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2]) + (engine.walk_direction[0] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2]))
+        engine.body_trasl[1] += 2 * ((engine.walk_direction[1] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2]) + (engine.walk_direction[0] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2]))
 
         apply_transform(engine)
 

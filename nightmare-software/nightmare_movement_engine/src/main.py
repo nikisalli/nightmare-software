@@ -9,9 +9,7 @@ import numpy as np
 # ros libs import
 import rospy
 from sensor_msgs.msg import JointState
-from std_msgs.msg import (Header,
-                          Int32,
-                          String)
+from std_msgs.msg import Header, Int32, String, Float32
 import tf_conversions
 import tf2_ros
 import geometry_msgs.msg
@@ -65,6 +63,7 @@ class engineNode():
         # step planner state
         self.step_id = 0
         self.steps = []
+        self.attenuation = 0
 
         # create publishers
         self.joint_angle_publisher = rospy.Publisher('/engine/angle_joint_states', JointState, queue_size=10)
@@ -175,6 +174,9 @@ class engineNode():
         self.engine_step_id_msg.data = self.step_id
         self.engine_step_id_publisher.publish(self.engine_step_id_msg)
 
+    def set_attenuation(self, msg):
+        self.attenuation = msg.data
+
     def set_state(self, msg):
         self.state = msg.state
         self.walk_direction = msg.walk_direction
@@ -215,5 +217,6 @@ if __name__ == '__main__':
     rospy.Subscriber("/nightmare/command", command, engine.set_state)
     rospy.Subscriber("/joint_states", JointState, engine.set_hw_joint_state)
     rospy.Subscriber("/engine/footsteps", String, engine.parse_footsteps)
+    rospy.Subscriber("/engine/attenuation", Float32, engine.set_attenuation)
 
     engine.run()
