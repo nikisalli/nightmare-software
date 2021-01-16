@@ -36,6 +36,8 @@ NUMBER_OF_SERVOS_PER_LEG = 3
 
 
 # ENGINE PARAMETERS
+LEG_KEEPOUT = 4
+
 STAND_HEIGTH = -12.e-2
 SIT_HEIGHT = -0e-2
 ENGINE_FPS = 30
@@ -131,8 +133,9 @@ POSE_OFFSET = np.array([leg.abs_offset for leg in legs])
 POSE_REL_CONVERT = np.array([[-1 if leg.side else 1, -1 if leg.side else 1, 1] for leg in legs])
 
 # GAITS
-GAIT_TRIPOD = np.array([[0, 2, 4],
-                        [1, 3, 5]])
+GAIT = {'tripod': np.array([[0, 2, 4], [1, 3, 5]]),
+        'ripple': np.array([[0, 4], [1, 3], [2, 5]]),
+        'wave': np.array([[0], [1], [2], [3], [4], [5]])}
 
 # NAMES
 # name of the link at the tip of each leg

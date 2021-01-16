@@ -1,7 +1,6 @@
 from random import randint
 import time
 import numpy as np
-from numpy import sin, cos
 
 import rospy
 
@@ -21,7 +20,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      SIT_HEIGHT,
                                      TIME_SIT,
                                      NUMBER_OF_LEGS,
-                                     PI)
+                                     PI,
+                                     GAIT)
 
 import bezier
 
@@ -52,33 +52,31 @@ def step(engine):
             curve = bezier.Curve(nodes, degree=3)
             curves[leg] = curve
 
-    starttime = time.time()
+    divider = len(GAIT[engine.gait])
+    frames = int((STEP_TIME / divider) * ENGINE_FPS)
 
-    divider = 0
-
-    if engine.gait == 'tripod':
-        divider = 2
-
-    duration = 1 / (ENGINE_FPS * STEP_TIME * divider)
-
-    for i in range(int(STEP_TIME * ENGINE_FPS)):
+    for i in range(frames):
+        timer = time.time()
         for leg in range(NUMBER_OF_LEGS):
             if leg in curves:
-                engine.pose[leg] = np.array(curves[leg].evaluate(i / (STEP_TIME * ENGINE_FPS))).flatten()
+                engine.pose[leg] = np.array(curves[leg].evaluate(i / frames)).flatten()
             else:
-                new_pose = engine.pose[leg].copy() + ((np.asarray([engine.walk_direction[1] * engine.attenuation, - engine.walk_direction[0] * engine.attenuation, 0.0]) * 2) / - (STEP_TIME * ENGINE_FPS))
-                new_pose = euler_rotation_matrix(new_pose, [0, 0, (engine.walk_direction[2] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * 2])
+                new_pose = engine.pose[leg].copy()
+                cmd = np.asarray([engine.walk_direction[1] * engine.attenuation, - engine.walk_direction[0] * engine.attenuation, 0.0])
+                new_pose += ((cmd * 2) / - frames) / divider
+                new_pose = euler_rotation_matrix(new_pose, [0, 0, ((engine.walk_direction[2] * engine.attenuation / frames) * 2) / divider])
                 engine.pose[leg] = new_pose
 
         # generate odom
-        engine.body_rot[2] += 2 * (- engine.walk_direction[2] * engine.attenuation / (STEP_TIME * ENGINE_FPS))
-        engine.body_trasl[0] += 2 * (- (engine.walk_direction[1] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2]) + (engine.walk_direction[0] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2]))
-        engine.body_trasl[1] += 2 * ((engine.walk_direction[1] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * cos(engine.body_rot[2]) + (engine.walk_direction[0] * engine.attenuation / (STEP_TIME * ENGINE_FPS)) * sin(engine.body_rot[2]))
+        engine.body_rot[2] += 2 * (- engine.walk_direction[2] * engine.attenuation / (frames * divider))
+        comm = [(engine.walk_direction[0] * engine.attenuation * 2) / (frames * divider),
+                (engine.walk_direction[1] * engine.attenuation * 2) / (frames * divider), 0]
+        engine.body_trasl += euler_rotation_matrix(comm, [0, 0, engine.body_rot[2]])
 
         apply_transform(engine)
 
         engine.compute_ik()
-        time.sleep((i + 1) * duration - time.time() + starttime)
+        time.sleep((1 / ENGINE_FPS) - (time.time() - timer))
 
 
 def stand_up(engine):

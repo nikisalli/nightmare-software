@@ -181,6 +181,7 @@ class engineNode():
         self.state = msg.state
         self.walk_direction = msg.walk_direction
         self.body_displacement = msg.body_displacement
+        self.gait = msg.gait
 
     def set_hw_joint_state(self, msg):
         self.hw_angles_array = msg.position

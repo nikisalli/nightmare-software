@@ -97,7 +97,7 @@ class ListenerThread(Thread):
 
 
 def handle_state():
-    rate = rospy.Rate(50)
+    rate = rospy.Rate(60)
     pub_state = rospy.Publisher("/nightmare/command", command, queue_size=1)
     header = Header()
 

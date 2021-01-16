@@ -11,12 +11,15 @@ from nightmare_usb_joystick.msg import command  # noqa
 from std_msgs.msg import Header
 import rospy
 
+from nightmare_config.config import GAIT
+
 # joystick vars #
 
 axis_states = {}
 button_states = {}
 prev_axis_states = {}
 prev_button_states = {}
+gait = 'tripod'
 mode = 'stand'  # joystick command mode
 
 
@@ -137,9 +140,13 @@ def publisher():
     global body_displacement
     global prev_button_states
     global prev_axis_states
+    global gait
 
     height_change_timer = 0
     height_displacement = 0
+
+    gait_change_timer = 0
+    gait_num = 0
 
     prev_button_states = button_states.copy()
     prev_axis_states = axis_states.copy()
@@ -160,6 +167,7 @@ def publisher():
         prev_button_states['bb'] = button_states['bb']
         prev_button_states['bx'] = button_states['bx']
         prev_button_states['by'] = button_states['by']
+
         if button_states['start'] and state == 'sleep' and prev_button_states['start'] is False:
             state = 'stand'
             rospy.loginfo('state set to stand')
@@ -176,6 +184,16 @@ def publisher():
             if abs(height_displacement) > 1:  # if limit exceeded set to limit
                 height_displacement = -axis_states['ty']
             rospy.loginfo(f"height set to {height_displacement}")
+
+        if (feq(axis_states['tx'], -1) or feq(axis_states['tx'], 1)) and (time.time() - gait_change_timer) > 0.5:
+            gait_change_timer = time.time()
+            gait_num += int(-axis_states['tx'])
+            if gait_num < 0:  # if limit exceeded set to limit
+                gait_num = len(GAIT) - 1
+            elif gait_num > len(GAIT) - 1:
+                gait_num = 0
+            gait = list(GAIT.keys())[gait_num]
+            rospy.loginfo(f"gait set to {gait}")
 
         if mode == 'walk':
             walk_direction = [axis_states['jlx'],
@@ -198,7 +216,7 @@ def publisher():
                             body_displacement,
                             walk_direction,
                             state,
-                            'tripod'))
+                            gait))
         rate.sleep()
 
 
