@@ -22,6 +22,7 @@ class stepPlannerNode():
         # robot state
         self.state = 'sleep'  # actual engine state
         self.gait = 'tripod'
+        self.prev_gait = 'tripod'
         self.prev_state = 'sleep'  # previous engine state
         self.body_displacement = [0] * 6
         self.walk_direction = [0] * 3
@@ -166,6 +167,9 @@ class stepPlannerNode():
         self.walk_direction = msg.walk_direction
         self.body_displacement = msg.body_displacement
         self.gait = msg.gait
+        if self.gait != self.prev_gait:
+            self.gait_step = 0
+        self.prev_gait = self.gait
 
     def set_engine_step(self, msg):
         self.engine_step = msg.data
