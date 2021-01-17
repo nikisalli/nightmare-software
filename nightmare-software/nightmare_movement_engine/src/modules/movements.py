@@ -53,7 +53,7 @@ def step(engine):
             curves[leg] = curve
 
     divider = len(GAIT[engine.gait])
-    frames = int((STEP_TIME / divider) * ENGINE_FPS)
+    frames = int(STEP_TIME * 0.5 * ENGINE_FPS)
 
     for i in range(frames):
         timer = time.time()
