@@ -6,6 +6,7 @@ import array
 from fcntl import ioctl
 from threading import Thread
 import time
+import numpy as np
 
 from nightmare_usb_joystick.msg import command  # noqa
 from std_msgs.msg import Header
@@ -19,20 +20,19 @@ axis_states = {}
 button_states = {}
 prev_axis_states = {}
 prev_button_states = {}
-gait = 'tripod'
+
 mode = 'stand'  # joystick command mode
 
+# robot command vars #
 
-# robot vars #
-
+gait = 'tripod'
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
 
-# roll pitch yaw x y z body displacement
-body_displacement = [0] * 6
+body_trasl = np.array([0, 0, 0])
+body_rot = np.array([0, 0, 0])
+walk_trasl = np.array([0, 0, 0])
+walk_rot = np.array([0, 0, 0])
 
-# x y in cm/sec being the resultants of a vector describing direction and modulo (speed) the robot should follow
-# yaw in deg/sec being the rotation speed of the robot's static position
-walk_direction = [0] * 3
 
 header = Header()
 
@@ -134,12 +134,17 @@ def handle_js():
 
 
 def publisher():
+    # joystick
     global mode
-    global state
-    global walk_direction
-    global body_displacement
     global prev_button_states
     global prev_axis_states
+
+    # robot
+    global state
+    global walk_trasl
+    global walk_rot
+    global body_trasl
+    global body_rot
     global gait
 
     height_change_timer = 0
@@ -196,27 +201,23 @@ def publisher():
             rospy.loginfo(f"gait set to {gait}")
 
         if mode == 'walk':
-            walk_direction = [axis_states['jlx'],
-                              -axis_states['jly'],
-                              axis_states['jrx']]  # for some reason my joystick gives inverted y
-            body_displacement = [0, 0, height_displacement, 0, 0, 0]
+            walk_trasl = [- axis_states['jly'], - axis_states['jlx'], 0]
+            walk_rot = [0, 0, axis_states['jrx']]
+
+            body_trasl = [0, 0, height_displacement]
+            body_rot = [0, 0, 0]
+
         elif mode == 'stand':
-            walk_direction = [0, 0, 0]
-            body_displacement = [axis_states['jlx'],
-                                 axis_states['jly'],
-                                 height_displacement,
-                                 axis_states['jrx'],
-                                 axis_states['jry'],
-                                 0]
+            walk_trasl = [0, 0, 0]
+            walk_rot = [0, 0, 0]
+
+            body_trasl = [- axis_states['jly'], - axis_states['jlx'], height_displacement]
+            body_rot = [axis_states['jrx'], - axis_states['jry'], 0]
 
         # If None is used as the header value, rospy will automatically
         # fill it in.
         header.stamp = rospy.Time.now()
-        pub.publish(command(header,
-                            body_displacement,
-                            walk_direction,
-                            state,
-                            gait))
+        pub.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, state, gait))
         rate.sleep()
 
 

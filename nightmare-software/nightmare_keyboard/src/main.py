@@ -68,14 +68,14 @@ def publisher():
     prev_spacebar = key_states[Key.space]
     prev_m = key_states[KeyCode.from_char('m')]
 
-    walk_direction = [0] * 3
+    walk_direction = np.array([0, 0, 0])
     body_displacement = [0] * 6
 
     while not rospy.is_shutdown():
         # If None is used as the header value, rospy will automatically fill it in.
         header.stamp = rospy.Time.now()
 
-        walk_direction = [0] * 3
+        walk_direction = np.array([0, 0, 0])
         body_displacement = [0] * 6
 
         if key_states[Key.space] and state == 'sleep' and prev_spacebar is False:
