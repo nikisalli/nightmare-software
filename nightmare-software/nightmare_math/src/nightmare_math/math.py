@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import sin, cos, arccos, arctan2, sqrt
 from scipy.spatial.transform import Rotation as R
+import tf_conversions
 
 from nightmare_config.config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
 from nightmare_config.config import PI, EPSILON
@@ -54,19 +55,41 @@ def asymmetrical_sigmoid(val):
     return 1 / (1 + np.e**(-13 * (val - 0.5)))
 
 
-def euler_rotation_matrix(pose, rot_vec):
-    r = R.from_rotvec(np.array([rot_vec[1], rot_vec[0], rot_vec[2]]))
-    return r.apply(pose)
+def rotate(pose, rot, pivot=None, inverse=False):
+    # check if the argument contains an euler rotation vector or a quaternion
+    if len(rot) == 3:  # euler
+        r = R.from_rotvec(rot)
+    elif len(rot) == 4:  # quaternion
+        r = R.from_quat(rot)
 
+    if inverse:
+        r = r.inv()
 
-def quaternion_transform(pose, transform, translation=True, rotation=True):
-    if translation:
-        pose[:, 0] += transform.translation.x
-        pose[:, 1] += transform.translation.y
-        pose[:, 2] += transform.translation.z
-
-    if rotation:
-        r = R.from_quat([transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w])
-        return r.apply(pose)
+    if pivot is not None:  # check if we have a pivot to rotate around
+        p = pose - pivot
+        p = r.apply(p)
+        return pose + pivot
     else:
-        return pose
+        return r.apply(pose)
+
+
+def abs2relpos(abs_pose, trasl, rot):
+    rel_pose = abs_pose
+    rel_pose -= trasl
+    rel_pose = rotate(rel_pose, rot, inverse=True)
+    return rel_pose
+
+
+def rel2abspos(rel_pose, trasl, rot):
+    abs_pose = rel_pose
+    abs_pose = rotate(rel_pose, rot)
+    abs_pose += trasl
+    return abs_pose
+
+
+def quat2euler(quat):
+    return tf_conversions.transformations.euler_from_quaternion(quat)
+
+
+def euler2quat(euler):
+    return tf_conversions.transformations.quaternion_from_euler(euler[0], euler[1], euler[2])
