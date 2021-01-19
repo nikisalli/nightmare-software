@@ -202,7 +202,7 @@ def publisher():
 
         if mode == 'walk':
             walk_trasl = [- axis_states['jly'], - axis_states['jlx'], 0]
-            walk_rot = [0, 0, axis_states['jrx']]
+            walk_rot = [0, 0, - axis_states['jrx']]
 
             body_trasl = [0, 0, height_displacement]
             body_rot = [0, 0, 0]
