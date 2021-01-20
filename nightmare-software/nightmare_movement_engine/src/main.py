@@ -19,7 +19,7 @@ from visualization_msgs.msg import Marker
 from nightmare_config.config import (DEFAULT_POSE,
                                      ENGINE_FPS)
 from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
-from nightmare_math.math import abs_ang2pos, abs_pos2ang
+from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
 
 # same package import
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
@@ -43,9 +43,11 @@ class engineNode():
         # robot state
         self.state = 'sleep'  # actual engine state
         self.prev_state = 'sleep'  # previous engine state
-        self.body_displacement = [0] * 6
-        self.walk_direction = [0] * 3
         self.gait = 'tripod'
+        self.body_trasl = np.array([0, 0, 0])
+        self.body_rot = np.array([0, 0, 0])
+        self.walk_trasl = np.array([0, 0, 0])
+        self.walk_rot = np.array([0, 0, 0])
 
         # robot pos
         self.angles = np.zeros(shape=(6, 3))  # angle matrix
@@ -53,16 +55,18 @@ class engineNode():
         self.hw_angles_array = [0] * 19
         self.hw_angles = np.zeros(shape=(6, 3))
         self.states = [0] * 19  # all servos disconnected at start
-        self.hw_pose = np.zeros(shape=(6, 3))  # initialize as empty and fill it later in set_hw_joint_state callback
-        self.pose = DEFAULT_POSE.copy()  # pose of the robot without transforms
-        self.final_pose = DEFAULT_POSE.copy()  # pose of the robot with transforms
+        self.hw_pose = np.zeros(shape=(6, 3))  # body frame initialize as empty and fill it later in set_hw_joint_state callback
+        self.pose = DEFAULT_POSE.copy()  # body frame pose of the robot without transforms
+        self.final_pose = DEFAULT_POSE.copy()  # body frame pose of the robot with transforms
         self.rate = rospy.Rate(ENGINE_FPS)
-        self.body_trasl = [0, 0, 0]
-        self.body_rot = [0, 0, 0]
+        self.body_abs_trasl = [0, 0, 0]  # world frame
+        self.body_abs_rot = [0, 0, 0]  # world frame
+        self.final_body_abs_trasl = [0, 0, 0]  # world frame
+        self.final_body_abs_rot = [0, 0, 0]  # world frame
 
         # step planner state
         self.step_id = 0
-        self.steps = []
+        self.steps = []  # world frame
         self.attenuation = 0
 
         # create publishers
@@ -142,7 +146,7 @@ class engineNode():
 
             if self.state == 'stand':
                 if len(self.steps) > 0:  # if there are steps to execute, execute them
-                    movements.step(self)
+                    movements.execute_step(self)
                 else:
                     movements.stand(self)
 
@@ -157,6 +161,16 @@ class engineNode():
         # rospy.loginfo('\n' + str(engine.steps) + '\n')
 
     def publish_engine_odom(self, time):
+        self.engine_pos_publisher_msg.transform.translation.x = self.final_body_abs_trasl[0]
+        self.engine_pos_publisher_msg.transform.translation.y = self.final_body_abs_trasl[1]
+        self.engine_pos_publisher_msg.transform.translation.z = self.final_body_abs_trasl[2]
+
+        q = euler2quat([self.final_body_abs_rot[0], self.final_body_abs_rot[1], self.final_body_abs_rot[2]])
+        self.engine_pos_publisher_msg.transform.rotation.x = q[0]
+        self.engine_pos_publisher_msg.transform.rotation.y = q[1]
+        self.engine_pos_publisher_msg.transform.rotation.z = q[2]
+        self.engine_pos_publisher_msg.transform.rotation.w = q[3]
+
         self.engine_pos_publisher_msg.header.stamp = time
         self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)
 
@@ -178,9 +192,11 @@ class engineNode():
         self.attenuation = msg.data
 
     def set_state(self, msg):
+        self.body_trasl = np.array(msg.body_trasl)
+        self.body_rot = np.array(msg.body_rot)
+        self.walk_trasl = np.array(msg.walk_trasl)
+        self.walk_rot = np.array(msg.walk_rot)
         self.state = msg.state
-        self.walk_direction = msg.walk_direction
-        self.body_displacement = msg.body_displacement
         self.gait = msg.gait
 
     def set_hw_joint_state(self, msg):

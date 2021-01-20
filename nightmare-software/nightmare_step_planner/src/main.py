@@ -4,7 +4,6 @@ import json
 import time
 import numpy as np
 from numpy import sqrt
-from scipy.spatial.transform import Rotation as R
 
 # ros imports
 import rospy
@@ -13,19 +12,22 @@ from nightmare_step_planner.msg import command  # pylint: disable=no-name-in-mod
 from std_msgs.msg import Header, Int32, String, Float32
 from visualization_msgs.msg import Marker
 
-from nightmare_math.math import euler_rotation_matrix
-from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, PI, MAX_STEP_LENGTH
+from nightmare_math.math import rotate
+from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, MAX_STEP_LENGTH
+from nightmare_math.math import quat2euler
 
 
 class stepPlannerNode():
     def __init__(self):
         # robot state
         self.state = 'sleep'  # actual engine state
+        self.prev_state = 'sleep'  # previous engine state
         self.gait = 'tripod'
         self.prev_gait = 'tripod'
-        self.prev_state = 'sleep'  # previous engine state
-        self.body_displacement = [0] * 6
-        self.walk_direction = [0] * 3
+        self.body_trasl = np.array([0, 0, 0])
+        self.body_rot = np.array([0, 0, 0])
+        self.walk_trasl = np.array([0, 0, 0])
+        self.walk_rot = np.array([0, 0, 0])
 
         # step planner state
         self.steps = []
@@ -84,8 +86,9 @@ class stepPlannerNode():
     def run(self):
         while not rospy.is_shutdown():
             self.parse_tf()
-            mod = sqrt(self.walk_direction[0]**2 + self.walk_direction[1]**2)
-            if (self.engine_step >= self.step_id - (len(GAIT[self.gait]) / 2) and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_direction[2]) > 0.01)):
+            mod = sqrt(self.walk_trasl[0]**2 + self.walk_trasl[1]**2)
+            # if (self.engine_step >= self.step_id - (len(GAIT[self.gait]) / 2) and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_rot[2]) > 0.01)):
+            if (self.engine_step >= self.step_id and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_rot[2]) > 0.01)):
                 # check if:
                 # - a step is already present
                 # - check if the robot is standing to start walking
@@ -99,24 +102,21 @@ class stepPlannerNode():
         self.step_id += 1
         step = []
 
-        dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
-        translation = [self.body_trans.translation.x, self.body_trans.translation.y, self.body_trans.translation.z]
-        rotation = [self.body_trans.rotation.x, self.body_trans.rotation.y, self.body_trans.rotation.z, self.body_trans.rotation.w]
-        rotation_matrix = R.from_quat(rotation)
-        rotation_euler = rotation_matrix.as_euler('xyz')
-        inverse_rotation_matrix = rotation_matrix.inv()
-        abs_target_pose = rotation_matrix.apply(dpose)
-        abs_target_pose += translation
+        if len(self.steps) == 0:
+            translation = [self.body_trans.translation.x, self.body_trans.translation.y, self.body_trans.translation.z]
+            rotation = quat2euler([self.body_trans.rotation.x, self.body_trans.rotation.y, self.body_trans.rotation.z, self.body_trans.rotation.w])
+        # else:
+            # translation = self.steps[-1]['trans']
+            # rotation = self.steps[-1]['rot']
 
-        self.publish_pose_markers(abs_target_pose, 1, self.green)
+        abs_pose = rotate(DEFAULT_POSE, rotation)
+        abs_pose += translation
+        rotated_command = rotate(self.walk_trasl, self.walk_rot)
 
         # find absolute max displacement
-        npose = abs_target_pose.copy()
-        npose += euler_rotation_matrix([self.walk_direction[0] * 0.5, self.walk_direction[1] * 0.5, 0], [0, 0, rotation_euler[2]])
-        npose -= translation
-        npose = euler_rotation_matrix(npose, [0, 0, - self.walk_direction[2] * 0.5])
-        npose = inverse_rotation_matrix.apply(npose)
-        tr = np.subtract(npose, dpose)
+        tr = rotate(DEFAULT_POSE.copy(), self.walk_rot)
+        tr += rotated_command
+        tr -= DEFAULT_POSE
         displ = max([sqrt(leg[0]**2 + leg[1]**2 + leg[2]**2) for leg in tr])
 
         # generate a coefficient to scale the step so that is stays in the defined limits
@@ -125,32 +125,29 @@ class stepPlannerNode():
         else:
             self.attenuation = 1
 
+        new_rot = rotation + (self.walk_rot * self.attenuation)
+        new_rotated_command = rotate(self.walk_trasl * self.attenuation, new_rot)
+        new_trans = translation + new_rotated_command  # abs target pose translation
+        abs_target_pose = abs_pose.copy()
+        abs_target_pose += new_rotated_command
+        abs_target_pose = rotate(abs_target_pose, self.walk_rot * self.attenuation, pivot=new_trans)
+
         # generate steps
         for leg in GAIT[self.gait][self.gait_step]:
-            prev_pos = abs_target_pose[leg]
-            new_pos = prev_pos.copy()
+            new_pos = abs_pose[leg]
 
             #  =======================
-            # rotate command with the body or you end up with messed matrices!
-            comtrans = euler_rotation_matrix([self.walk_direction[0] * self.attenuation * 0.5, self.walk_direction[1] * self.attenuation * 0.5, 0], [0, 0, rotation_euler[2]])
-            new_pos += comtrans
-            abs_trans = comtrans + translation
+            # generate new absolute pose from previous pose
+            new_pos += new_rotated_command
+            new_pos = rotate(new_pos, self.walk_rot * self.attenuation, pivot=new_trans)
 
-            # can't be bothered TODO
-            new_pos -= translation
-            new_pos = euler_rotation_matrix(new_pos, [0, 0, - self.walk_direction[2] * self.attenuation * 0.5])
-            new_pos += translation
             #  =======================
 
-            self.publish_marker(new_pos, 1, self.red)
+            self.publish_marker(new_pos, 1, self.red)  # -----------------------------------------------
 
-            new_pos -= translation
-            new_pos = inverse_rotation_matrix.apply(new_pos)
-            trans = new_pos - dpose[leg]
+            step.append({'leg': int(leg), 'pos': new_pos.tolist()})
 
-            step.append({'leg': int(leg), 'pos': trans.tolist()})
-
-        self.steps.append({'id': int(self.step_id), 'trans': abs_trans.tolist(), 'steps': step})
+        self.steps.append({'id': int(self.step_id), 'rot': new_rot.tolist(), 'trans': new_trans.tolist(), 'steps': step})
         self.gait_step += 1
         self.publish_attenuation()
 
@@ -163,17 +160,20 @@ class stepPlannerNode():
         rospy.loginfo(f"generation took: {time.time() - t}s planner_step: {self.step_id} planner_gait_step: {self.gait_step} engine_step: {self.engine_step}")
 
     def set_state(self, msg):
+        self.body_trasl = np.array(msg.body_trasl)
+        self.body_rot = np.array(msg.body_rot)
+        self.walk_trasl = np.array(msg.walk_trasl)
+        self.walk_rot = np.array(msg.walk_rot)
         self.state = msg.state
-        self.walk_direction = msg.walk_direction
-        self.body_displacement = msg.body_displacement
         self.gait = msg.gait
+        # check if gait changed because different gaits have different number of steps and it may generate out of bounds exceptions
         if self.gait != self.prev_gait:
-            self.gait_step = 0
+            self.gait_step = 0  # if it changed start from the beginning of the new gait
         self.prev_gait = self.gait
 
     def set_engine_step(self, msg):
         self.engine_step = msg.data
-        self.steps.pop(0)
+        self.steps.pop(0)  # if the engine sent us a step_id update it means it executed a step so we pop one from the stack
 
     def parse_tf(self):
         try:
@@ -183,7 +183,7 @@ class stepPlannerNode():
                 self.abs_body_pose[i] = [trans.x, trans.y, trans.z]
 
             # get body transform
-            trans = self.tf_buffer.lookup_transform('world', 'body_link', rospy.Time(0), rospy.Duration(.1)).transform
+            trans = self.tf_buffer.lookup_transform('world', 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
             self.body_trans = trans
 
             return 1

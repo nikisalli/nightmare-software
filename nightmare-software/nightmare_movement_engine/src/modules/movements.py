@@ -4,10 +4,10 @@ import numpy as np
 
 import rospy
 
-import tf_conversions
-
 from nightmare_math.math import (asymmetrical_sigmoid,
-                                 euler_rotation_matrix)
+                                 rotate,
+                                 abs2relpos,
+                                 rel2abspos)
 
 from nightmare_config.config import (DEFAULT_POSE,
                                      STEP_HEIGHT,
@@ -20,58 +20,58 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      SIT_HEIGHT,
                                      TIME_SIT,
                                      NUMBER_OF_LEGS,
-                                     PI,
                                      GAIT)
 
 import bezier
 
 
-def step(engine):
-    stp = engine.steps.pop(0)  # remove it from the step stack
-    step_id = stp['id']  # save its id so we know what we did
-    rospy.loginfo(f"executing id {step_id}, steps in queue {len(engine.steps)}")
-    engine.step_id = step_id
+def execute_step(engine):
+    step = engine.steps.pop(0)  # remove it from the step stack
+
+    engine.step_id = step['id']  # save its id so we know what we did
+    # rospy.loginfo(f"executing id {engine.step_id}, steps in queue {len(engine.steps)}")
     engine.publish_step_id()
+
+    start_trasl = engine.body_abs_trasl.copy()
+    start_rot = engine.body_abs_rot.copy()
+    abs_pose = rel2abspos(engine.hw_pose, start_trasl, start_rot)  # put this in main engine class and handle it TODO
     curves = {}
-    trsfs = {}
 
-    # find legs involved in the new step by iterating over the step array
-    for substp in stp['steps']:
-        trsfs[substp['leg']] = substp['pos']
+    for substep in step['steps']:
+        leg = substep['leg']
+        start_pose = abs_pose[leg]
+        end_pose = np.array(substep['pos'])
 
-    dpose = euler_rotation_matrix(DEFAULT_POSE, [0, 0, PI / 2])
-
-    # generate curve going from prev pos to new pos using bezier
-    for leg, start_pose in enumerate(engine.hw_pose.copy()):
-        if leg in trsfs:
-            end_pose = dpose[leg] + trsfs[leg]
-            end_pose = euler_rotation_matrix(end_pose, [0, 0, -PI / 2])
-            nodes = [[start_pose[0], start_pose[0], end_pose[0], end_pose[0]],
-                     [start_pose[1], start_pose[1], end_pose[1], end_pose[1]],
-                     [start_pose[2], start_pose[2] + STEP_HEIGHT, end_pose[2] + STEP_HEIGHT, end_pose[2]]]
-            curve = bezier.Curve(nodes, degree=3)
-            curves[leg] = curve
+        nodes = [[start_pose[0], start_pose[0], end_pose[0], end_pose[0]],
+                 [start_pose[1], start_pose[1], end_pose[1], end_pose[1]],
+                 [start_pose[2], start_pose[2] + STEP_HEIGHT, end_pose[2] + STEP_HEIGHT, end_pose[2]]]
+        curves[leg] = bezier.Curve(nodes, degree=3)
 
     divider = len(GAIT[engine.gait])
     frames = int(STEP_TIME * 0.5 * ENGINE_FPS)
 
     for i in range(frames):
         timer = time.time()
+
+        trasl_command = (engine.walk_trasl * engine.attenuation) / (frames * divider)  # TODO attenuation
+        rot_command = (engine.walk_rot * engine.attenuation) / (frames * divider)
+        rel_rotated_command = rotate(trasl_command, rot_command)
+        abs_rotated_command = rotate(trasl_command, rot_command + engine.body_abs_rot)
+
         for leg in range(NUMBER_OF_LEGS):
             if leg in curves:
-                engine.pose[leg] = np.array(curves[leg].evaluate(i / frames)).flatten()
+                pose = np.array(curves[leg].evaluate(i / frames)).flatten()
+                pose = abs2relpos(pose, start_trasl, start_rot)
+                engine.pose[leg] = pose
             else:
-                new_pose = engine.pose[leg].copy()
-                cmd = np.asarray([engine.walk_direction[1] * engine.attenuation, - engine.walk_direction[0] * engine.attenuation, 0.0])
-                new_pose += ((cmd * 2) / - frames) / divider
-                new_pose = euler_rotation_matrix(new_pose, [0, 0, ((engine.walk_direction[2] * engine.attenuation / frames) * 2) / divider])
-                engine.pose[leg] = new_pose
+                pose = engine.pose[leg].copy()
+                pose = rotate(pose, rot_command, inverse=True)
+                pose -= rel_rotated_command
+                engine.pose[leg] = pose
 
         # generate odom
-        engine.body_rot[2] += 2 * (- engine.walk_direction[2] * engine.attenuation / (frames * divider))
-        comm = [(engine.walk_direction[0] * engine.attenuation * 2) / (frames * divider),
-                (engine.walk_direction[1] * engine.attenuation * 2) / (frames * divider), 0]
-        engine.body_trasl += euler_rotation_matrix(comm, [0, 0, engine.body_rot[2]])
+        engine.body_abs_rot += rot_command
+        engine.body_abs_trasl += abs_rotated_command
 
         apply_transform(engine)
 
@@ -99,10 +99,10 @@ def stand_up(engine):
             time.sleep(TIME_STAND_UP / (3 * ENGINE_FPS))
     for i in range(int(TIME_STAND_UP * ENGINE_FPS)):
         engine.final_pose = DEFAULT_SIT_POSE.copy()
-        pos = asymmetrical_sigmoid(i / (TIME_STAND_UP * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        pos = asymmetrical_sigmoid(i / (TIME_STAND_UP * ENGINE_FPS)) * (- STAND_HEIGTH - SIT_HEIGHT)
         engine.final_pose[:, 2] += pos
 
-        engine.engine_pos_publisher_msg.transform.translation.z = - SIT_HEIGHT - pos  # inverted because when legs go down, robot goes up
+        engine.final_body_abs_trasl[2] = - SIT_HEIGHT - pos  # inverted because when legs go down, robot goes up
 
         engine.compute_ik()
         time.sleep(0.01)
@@ -126,53 +126,35 @@ def sit(engine):
             time.sleep(TIME_SIT / (3 * ENGINE_FPS))
     for i in range(int(TIME_SIT * ENGINE_FPS)):
         engine.final_pose = DEFAULT_POSE.copy()
-        pos = asymmetrical_sigmoid(i / (TIME_SIT * ENGINE_FPS)) * (STAND_HEIGTH - SIT_HEIGHT)
+        pos = asymmetrical_sigmoid(i / (TIME_SIT * ENGINE_FPS)) * (- STAND_HEIGTH - SIT_HEIGHT)
         engine.final_pose[:, 2] -= pos
 
-        engine.engine_pos_publisher_msg.transform.translation.z = - STAND_HEIGTH + pos  # inverted because when legs go down, robot goes up
+        engine.final_body_abs_trasl[2] = STAND_HEIGTH + pos  # inverted because when legs go down, robot goes up
 
         engine.compute_ik()
         time.sleep(0.01)
 
 
 def stand(engine):
+    engine.body_abs_trasl[2] = STAND_HEIGTH
     apply_transform(engine)
     engine.compute_ik()
 
 
 def apply_transform(engine):
     # apply transform
-    pose = euler_rotation_matrix(engine.pose.copy(), engine.body_displacement[-3:])
-    pose[:, 0] += engine.body_displacement[1]
-    pose[:, 1] += engine.body_displacement[0]
-    pose[:, 2] += engine.body_displacement[2]
+    pose = rotate(engine.pose.copy(), engine.body_rot, inverse=True)
+    pose -= engine.body_trasl
     engine.final_pose = pose
 
     # generate odom
-    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_displacement[0] + engine.body_trasl[0]
-    engine.engine_pos_publisher_msg.transform.translation.y = - engine.body_displacement[1] + engine.body_trasl[1]
-    engine.engine_pos_publisher_msg.transform.translation.z = - STAND_HEIGTH - engine.body_displacement[2]
-    # convert rpy to ros friendly quaternion
-    q = tf_conversions.transformations.quaternion_from_euler(engine.body_displacement[3], - engine.body_displacement[4], engine.body_rot[2])
-    engine.engine_pos_publisher_msg.transform.rotation.x = q[0]
-    engine.engine_pos_publisher_msg.transform.rotation.y = q[1]
-    engine.engine_pos_publisher_msg.transform.rotation.z = q[2]
-    engine.engine_pos_publisher_msg.transform.rotation.w = q[3]
+    engine.final_body_abs_rot = engine.body_abs_rot + engine.body_rot
+    rotated_command = rotate(engine.body_trasl, engine.body_rot + engine.body_abs_rot)
+    engine.final_body_abs_trasl = engine.body_abs_trasl + rotated_command
 
 
 def sleep(engine):
     engine.final_pose = DEFAULT_SIT_POSE.copy()
-    engine.engine_pos_publisher_msg.transform.translation.z = - SIT_HEIGHT
-
-    # generate odom
-    engine.engine_pos_publisher_msg.transform.translation.x = engine.body_trasl[0]
-    engine.engine_pos_publisher_msg.transform.translation.y = engine.body_trasl[1]
-    engine.engine_pos_publisher_msg.transform.translation.z = engine.body_trasl[2]
-    # convert rpy to ros friendly quaternion
-    q = tf_conversions.transformations.quaternion_from_euler(0, 0, engine.body_rot[2])
-    engine.engine_pos_publisher_msg.transform.rotation.x = q[0]
-    engine.engine_pos_publisher_msg.transform.rotation.y = q[1]
-    engine.engine_pos_publisher_msg.transform.rotation.z = q[2]
-    engine.engine_pos_publisher_msg.transform.rotation.w = q[3]
+    engine.body_abs_trasl[2] = - SIT_HEIGHT
 
     engine.compute_ik()
