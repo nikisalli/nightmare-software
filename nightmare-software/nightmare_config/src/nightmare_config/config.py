@@ -49,7 +49,7 @@ STEP_HEIGHT = 6.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 6.e-2
 
-MAX_WALK_TRASL_SPEED = np.array([12e-2, 8e-2, 0])  # m/s
+MAX_WALK_TRASL_SPEED = np.array([18e-2, 12e-2, 0])  # m/s
 MAX_WALK_ROT_SPEED = np.array([0, 0, PI / 10])  # in rad/sec
 
 MAX_BODY_TRASL = np.array([9e-2, 9e-2, 12e-2])

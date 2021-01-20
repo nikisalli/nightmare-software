@@ -53,8 +53,8 @@ def execute_step(engine):
     for i in range(frames):
         timer = time.time()
 
-        trasl_command = (engine.walk_trasl * engine.attenuation) / (frames * divider)  # TODO attenuation
-        rot_command = (engine.walk_rot * engine.attenuation) / (frames * divider)
+        trasl_command = (engine.walk_trasl * engine.attenuation * 2) / (frames * divider)
+        rot_command = (engine.walk_rot * engine.attenuation * 2) / (frames * divider)
         rel_rotated_command = rotate(trasl_command, rot_command)
         abs_rotated_command = rotate(trasl_command, rot_command + engine.body_abs_rot)
 
