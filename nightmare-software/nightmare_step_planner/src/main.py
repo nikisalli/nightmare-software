@@ -157,7 +157,7 @@ class stepPlannerNode():
         self.header.stamp = rospy.Time.now()
         self.pub_steps.publish(String(json.dumps(self.steps)))
 
-        rospy.loginfo(f"generation took: {time.time() - t}s planner_step: {self.step_id} planner_gait_step: {self.gait_step} engine_step: {self.engine_step}")
+        rospy.loginfo(f"generation took: {round((time.time() - t) * 1e3, 2)}ms step: {self.step_id} gait_step: {self.gait_step} engine_step: {self.engine_step} atten:{self.attenuation}")
 
     def set_state(self, msg):
         self.body_trasl = np.array(msg.body_trasl)
