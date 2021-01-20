@@ -68,7 +68,7 @@ def rotate(pose, rot, pivot=None, inverse=False):
     if pivot is not None:  # check if we have a pivot to rotate around
         p = pose - pivot
         p = r.apply(p)
-        return pose + pivot
+        return p + pivot
     else:
         return r.apply(pose)
 
