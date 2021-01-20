@@ -14,17 +14,12 @@ import tf.transformations
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 
-# robot servo serial ports
-TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
-NUMBER_OF_LEGS = 6
-NUMBER_OF_SERVOS = 19
-NUMBER_OF_SERVOS_PER_LEG = 3
-PI = 3.14159265359
+from nightmare_math.math import (fmap)
 
-
-# simple range mapping function
-def fmap(x: float, in_min, in_max, out_min, out_max):
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+from nightmare_config.config import (PI,
+                                     NUMBER_OF_LEGS,
+                                     NUMBER_OF_SERVOS,
+                                     TTY_LIST)
 
 
 @dataclass

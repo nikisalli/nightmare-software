@@ -1,17 +1,24 @@
 import numpy as np
 from numpy import sin, cos, arccos, arctan2, sqrt
-from .config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
 from scipy.spatial.transform import Rotation as R
+import tf_conversions
 
-PI = np.pi
-EPSILON = 0.001
+from nightmare_config.config import legs, SERVO_OFFSET, POSE_OFFSET, POSE_REL_CONVERT
+from nightmare_config.config import PI, EPSILON
+
+
+def feq(a, b):  # floating point equal
+    return abs(a - b) < EPSILON
+
+
+def fmap(x: float, in_min, in_max, out_min, out_max):
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 
 def abs_ang2pos(ang):
     angles = np.reshape((ang - SERVO_OFFSET)[:-1], newshape=(6, 3))
     rel_pose = np.array([rel_ang2pos(ang, leg.dim) for ang, leg in zip(angles, legs)])
-    pose = (rel_pose * POSE_REL_CONVERT) + POSE_OFFSET
-    return pose
+    return (rel_pose * POSE_REL_CONVERT) + POSE_OFFSET
 
 
 def abs_pos2ang(pose):
@@ -48,11 +55,41 @@ def asymmetrical_sigmoid(val):
     return 1 / (1 + np.e**(-13 * (val - 0.5)))
 
 
-def rotation_matrix(pose, rot_vec):
-    y_rot = R.from_rotvec(np.array([0, 0, rot_vec[2]]))
-    x_rot = R.from_rotvec(np.array([0, rot_vec[0], 0]))
-    z_rot = R.from_rotvec(np.array([rot_vec[1], 0, 0]))
+def rotate(pose, rot, pivot=None, inverse=False):
+    # check if the argument contains an euler rotation vector or a quaternion
+    if len(rot) == 3:  # euler
+        r = R.from_rotvec(rot)
+    elif len(rot) == 4:  # quaternion
+        r = R.from_quat(rot)
 
-    r1 = x_rot.apply(pose)
-    r2 = y_rot.apply(r1)
-    return z_rot.apply(r2)
+    if inverse:
+        r = r.inv()
+
+    if pivot is not None:  # check if we have a pivot to rotate around
+        p = pose - pivot
+        p = r.apply(p)
+        return p + pivot
+    else:
+        return r.apply(pose)
+
+
+def abs2relpos(abs_pose, trasl, rot):
+    rel_pose = abs_pose
+    rel_pose -= trasl
+    rel_pose = rotate(rel_pose, rot, inverse=True)
+    return rel_pose
+
+
+def rel2abspos(rel_pose, trasl, rot):
+    abs_pose = rel_pose
+    abs_pose = rotate(rel_pose, rot)
+    abs_pose += trasl
+    return abs_pose
+
+
+def quat2euler(quat):
+    return tf_conversions.transformations.euler_from_quaternion(quat)
+
+
+def euler2quat(euler):
+    return tf_conversions.transformations.quaternion_from_euler(euler[0], euler[1], euler[2])
