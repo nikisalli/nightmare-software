@@ -5,7 +5,7 @@
   <!-- start nightmare engine node, robot state publisher and state broadcaster -->
   <include file="$(find nightmare)/launch/nightmare_simulated.launch" />
 
-  <!-- start usb joystick parser node -->
+  <!-- start keyboard node -->
   <include file="$(find nightmare_keyboard)/launch/keyboard.launch" />
 
   <!-- start joint compatibility layer node -->
