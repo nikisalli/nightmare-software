@@ -5,33 +5,28 @@ import time
 from threading import Thread
 import sys
 import os
+import numpy as np
 
 # ros imports
 import rospy
-from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
+from nightmare_state_broadcaster.msg import command
 from std_msgs.msg import Header
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
-from config import *
-
-
-EPSILON = 0.001  # for float comparisons
+from nightmare_config.config import (MAX_BODY_TRASL,
+                                     MAX_BODY_ROT,
+                                     MAX_WALK_TRASL_SPEED,
+                                     MAX_WALK_ROT_SPEED)
 
 
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
 gait = 'tripod'  # string containing the robot's walking gait
 
-# x y z  roll pitch yaw body displacement
-body_displacement = [0] * 6
-
-# x y in cm/sec being the resultants of a vector describing direction and modulo (speed) the robot should follow
-# yaw in deg/sec being the rotation speed of the robot's static position
-walk_direction = [0] * 3
-
-
-def feq(a, b):  # floating point equal
-    return abs(a - b) < EPSILON
+body_trasl = np.array([0, 0, 0])
+body_rot = np.array([0, 0, 0])
+walk_trasl = np.array([0, 0, 0])
+walk_rot = np.array([0, 0, 0])
 
 
 def find_talker():
@@ -44,6 +39,8 @@ def find_talker():
     # in future more options will be here (one for each control method)
     if '/control/usb_joystick' in parsed_topic_list:
         return ['/control/usb_joystick', command]  # return topic name and topic type
+    elif '/control/keyboard' in parsed_topic_list:
+        return ['/control/keyboard', command]  # return topic name and topic type
     else:
         rospy.loginfo("control method not yet implemented!")
         return [None, None]
@@ -74,33 +71,30 @@ class ListenerThread(Thread):
 
     def callback_joystick(self, msg):  # joystick control logic
         global state
-        global walk_direction
-        global body_displacement
+        global walk_trasl
+        global walk_rot
+        global body_trasl
+        global body_rot
         global gait
 
-        walk_direction = [msg.walk_direction[0] * MAX_WALK_SPEED_X,
-                          msg.walk_direction[1] * MAX_WALK_SPEED_Y,
-                          msg.walk_direction[2] * MAX_WALK_ROTATIONAL_SPEED]
+        body_trasl = np.array(msg.body_trasl) * MAX_BODY_TRASL
+        body_rot = np.array(msg.body_rot) * MAX_BODY_ROT
 
-        body_displacement = [msg.body_displacement[0] * MAX_X_DISPLACEMENT,
-                             msg.body_displacement[1] * MAX_Y_DISPLACEMENT,
-                             msg.body_displacement[2] * MAX_HEIGHT_DISPLACEMENT,
-                             msg.body_displacement[4] * MAX_PITCH_DISPLACEMENT,
-                             msg.body_displacement[3] * MAX_ROLL_DISPLACEMENT,
-                             msg.body_displacement[5] * MAX_YAW_DISPLACEMENT]
+        walk_trasl = np.array(msg.walk_trasl) * MAX_WALK_TRASL_SPEED
+        walk_rot = np.array(msg.walk_rot) * MAX_WALK_ROT_SPEED
 
         state = msg.state
         gait = msg.gait
 
 
 def handle_state():
-    rate = rospy.Rate(50)
+    rate = rospy.Rate(60)
     pub_state = rospy.Publisher("/nightmare/command", command, queue_size=1)
     header = Header()
 
     while not rospy.is_shutdown():
         header.stamp = rospy.Time.now()
-        pub_state.publish(command(header, body_displacement, walk_direction, state, gait))
+        pub_state.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, state, gait))
         rate.sleep()
 
 

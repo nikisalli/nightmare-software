@@ -1,0 +1,7 @@
+<!-- Start keyboard node. -->
+<launch>
+
+  <!-- start joint compatibility layer node -->
+  <node name="keyboard" pkg="nightmare_keyboard" required="true" type="main.py" output="screen"/>
+
+</launch> 

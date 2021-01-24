@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(nightmare_step_planner)
+project(nightmare_keyboard)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp

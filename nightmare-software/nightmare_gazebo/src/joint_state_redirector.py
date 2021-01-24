@@ -71,6 +71,6 @@ if __name__ == '__main__':
     engine = Node()
 
     rospy.loginfo("subscribing to nodes")
-    rospy.Subscriber("/engine_angle_joint_states", JointState, engine.publish_engine_joint_state)
+    rospy.Subscriber("/engine/angle_joint_states", JointState, engine.publish_engine_joint_state)
 
     engine.run()
