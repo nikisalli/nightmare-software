@@ -1,6 +1,7 @@
 import os
 from threading import Thread
 from pynput.keyboard import Key, Listener, KeyCode
+import numpy as np
 
 from nightmare_keyboard.msg import command  # noqa
 from std_msgs.msg import Header
@@ -40,6 +41,9 @@ keys = [KeyCode.from_char('w'),
         Key.shift,
         Key.ctrl]
 
+state = 'sleep'
+mode = 'stand'
+gait = 'tripod'
 
 header = Header()
 
@@ -62,21 +66,27 @@ def handle_release(key):
 def publisher():
     rate = rospy.Rate(50)
     pub = rospy.Publisher('/control/keyboard', command, queue_size=1)
-    state = 'sleep'
-    mode = 'stand'
-    gait = 'tripod'
+    
+    global state
+    global mode
+    global gait
+    
     prev_spacebar = key_states[Key.space]
     prev_m = key_states[KeyCode.from_char('m')]
-
-    walk_direction = np.array([0, 0, 0])
-    body_displacement = [0] * 6
+    
+    body_trasl = np.array([0, 0, 0])
+    body_rot = np.array([0, 0, 0])
+    walk_trasl = np.array([0, 0, 0])
+    walk_rot = np.array([0, 0, 0])
 
     while not rospy.is_shutdown():
         # If None is used as the header value, rospy will automatically fill it in.
         header.stamp = rospy.Time.now()
 
-        walk_direction = np.array([0, 0, 0])
-        body_displacement = [0] * 6
+        body_trasl = np.array([0, 0, 0])
+        body_rot = np.array([0, 0, 0])
+        walk_trasl = np.array([0, 0, 0])
+        walk_rot = np.array([0, 0, 0])
 
         if key_states[Key.space] and state == 'sleep' and prev_spacebar is False:
             state = 'stand'
@@ -97,50 +107,52 @@ def publisher():
         if state == 'stand':
             if mode == 'walk':
                 if key_states[KeyCode.from_char('w')]:
-                    walk_direction[1] -= 1
+                    walk_trasl[0] += 1
                 if key_states[KeyCode.from_char('s')]:
-                    walk_direction[1] += 1
+                    walk_trasl[0] -= 1
                 if key_states[KeyCode.from_char('a')]:
-                    walk_direction[0] -= 1
+                    walk_trasl[1] += 1
                 if key_states[KeyCode.from_char('d')]:
-                    walk_direction[0] += 1
+                    walk_trasl[1] -= 1
                 if key_states[KeyCode.from_char('q')]:
-                    walk_direction[2] -= 1
+                    walk_rot[2] += 1
                 if key_states[KeyCode.from_char('e')]:
-                    walk_direction[2] += 1
+                    walk_rot[2] -= 1
             elif mode == 'stand':
                 if key_states[KeyCode.from_char('w')]:
-                    body_displacement[1] -= 1
+                    body_trasl[0] += 1
                 if key_states[KeyCode.from_char('s')]:
-                    body_displacement[1] += 1
+                    body_trasl[0] -= 1
                 if key_states[KeyCode.from_char('a')]:
-                    body_displacement[0] -= 1
+                    body_trasl[1] += 1
                 if key_states[KeyCode.from_char('d')]:
-                    body_displacement[0] += 1
+                    body_trasl[1] -= 1
                 if key_states[KeyCode.from_char('q')]:
-                    body_displacement[5] -= 1
+                    body_rot[2] += 1
                 if key_states[KeyCode.from_char('e')]:
-                    body_displacement[5] += 1
+                    body_rot[2] -= 1
                 if key_states[KeyCode.from_char('i')]:
-                    body_displacement[4] -= 1
+                    body_rot[1] += 1
                 if key_states[KeyCode.from_char('k')]:
-                    body_displacement[4] += 1
+                    body_rot[1] -= 1
                 if key_states[KeyCode.from_char('j')]:
-                    body_displacement[3] += 1
+                    body_rot[0] -= 1
                 if key_states[KeyCode.from_char('l')]:
-                    body_displacement[3] -= 1
+                    body_rot[0] += 1
                 if key_states[KeyCode.from_char('u')]:
-                    body_displacement[5] -= 1
+                    body_rot[2] += 1
                 if key_states[KeyCode.from_char('o')]:
-                    body_displacement[5] += 1
+                    body_rot[2] -= 1
             if key_states[Key.shift]:
-                body_displacement[2] += 1
+                body_trasl[2] += 1
             if key_states[Key.ctrl]:
-                body_displacement[2] -= 1
+                body_trasl[2] -= 1
 
         pub.publish(command(header,
-                            body_displacement,
-                            walk_direction,
+                            body_trasl,
+                            body_rot,
+                            walk_trasl,
+                            walk_rot,
                             state,
                             gait))
 
