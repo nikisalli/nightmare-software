@@ -1,4 +1,4 @@
-FROM osrf/ros:noetic-robot
+FROM osrf/ros:noetic-desktop
 
 ## install things
 RUN apt-get update && apt-get install -y \
