@@ -9,15 +9,6 @@ RUN apt-get update && apt-get install -y \
     wget \
     # ros things
     python3-catkin-tools \
-    # video things
-    libglvnd0 \
-    libgl1 \
-    libglx0 \
-    libegl1 \
-    libxext6 \
-    libx11-6 \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
     && rm -rf /var/lib/apt/lists/*
 
 ## create ros workspace
@@ -36,7 +27,7 @@ RUN apt-get update && \
         src/nightmare-software \
       --ignore-src && \
     rm -rf /var/lib/apt/lists/*
-RUN pip3 install osrf-pycommon pybullet
+RUN pip3 install osrf-pycommon
 RUN pip3 install -r src/nightmare-software/requirements.txt
 RUN pip3 install py-spy
 
@@ -50,9 +41,8 @@ RUN sed --in-place --expression \
       '$isource "$ROS_WS/devel/setup.bash"' \
       /ros_entrypoint.sh
 
-## Env vars for the nvidia-container-runtime.
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
+## delete everything in the current ws to let you mount your own for easier development workflow!
+RUN rm -rf $ROS_WS/*
 
 ## run system upgrade to solve ros bugs https://answers.ros.org/question/360537/unknown-error-handler-name-rosmsg/?answer=360643#post-id-360643
 RUN apt-get update && \
