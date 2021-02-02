@@ -2,8 +2,6 @@ from random import randint
 import time
 import numpy as np
 
-import rospy
-
 from nightmare_math.math import (asymmetrical_sigmoid,
                                  rotate,
                                  abs2relpos,

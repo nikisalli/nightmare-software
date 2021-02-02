@@ -49,11 +49,22 @@ STEP_HEIGHT = 6.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 10.e-2
 
-MAX_WALK_TRASL_SPEED = np.array([10e-2, 8e-2, 0])  # m/s
-MAX_WALK_ROT_SPEED = np.array([0, 0, PI / 10])  # in rad/sec
+# walk settings
+MAX_WALK_TRASL_VEL = np.array([10e-2, 8e-2, 0])  # m/s
+MAX_WALK_ROT_VEL = np.array([0, 0, PI / 10])  # rad/s
 
-MAX_BODY_TRASL = np.array([9e-2, 9e-2, 12e-2])
-MAX_BODY_ROT = np.array([PI / 10, PI / 10, PI / 10])
+MAX_WALK_TRASL_CMD_ACC = np.array([5e-2, 5e-2, 5e-2])  # m/s^2
+MAX_WALK_ROT_CMD_ACC = np.array([PI / 10, PI / 10, PI / 10])  # rad/s^2
+
+# body displacement settings
+MAX_BODY_TRASL = np.array([9e-2, 9e-2, 12e-2])  # m
+MAX_BODY_ROT = np.array([PI / 10, PI / 10, PI / 10])  # rad
+
+MAX_BODY_TRASL_CMD_VEL = np.array([20e-5, 20e-5, 20e-5])  # m/s
+MAX_BODY_ROT_CMD_VEL = np.array([PI / 100, PI / 100, PI / 100])  # rad/s
+
+MAX_BODY_TRASL_CMD_ACC = np.array([20e-6, 20e-6, 20e-6])  # m/s^2
+MAX_BODY_ROT_CMD_ACC = np.array([PI / 1000, PI / 1000, PI / 1000])  # rad/s^2
 
 # LEG ADJ SEQUENCES
 DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
@@ -61,8 +72,6 @@ DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
 
 
 # LEG CLASS
-
-
 @dataclass
 class leg_class():
     dim: np.ndarray

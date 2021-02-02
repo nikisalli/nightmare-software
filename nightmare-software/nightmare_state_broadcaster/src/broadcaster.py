@@ -16,8 +16,14 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))  # noqa
 
 from nightmare_config.config import (MAX_BODY_TRASL,
                                      MAX_BODY_ROT,
-                                     MAX_WALK_TRASL_SPEED,
-                                     MAX_WALK_ROT_SPEED)
+                                     MAX_WALK_TRASL_VEL,
+                                     MAX_WALK_ROT_VEL,
+                                     MAX_BODY_TRASL_CMD_VEL,
+                                     MAX_BODY_ROT_CMD_VEL,
+                                     MAX_BODY_TRASL_CMD_ACC,
+                                     MAX_BODY_ROT_CMD_ACC,
+                                     MAX_WALK_TRASL_CMD_ACC,
+                                     MAX_WALK_ROT_CMD_ACC)
 
 
 state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
@@ -80,8 +86,8 @@ class ListenerThread(Thread):
         body_trasl = np.array(msg.body_trasl) * MAX_BODY_TRASL
         body_rot = np.array(msg.body_rot) * MAX_BODY_ROT
 
-        walk_trasl = np.array(msg.walk_trasl) * MAX_WALK_TRASL_SPEED
-        walk_rot = np.array(msg.walk_rot) * MAX_WALK_ROT_SPEED
+        walk_trasl = np.array(msg.walk_trasl) * MAX_WALK_TRASL_VEL
+        walk_rot = np.array(msg.walk_rot) * MAX_WALK_ROT_VEL
 
         state = msg.state
         gait = msg.gait
@@ -92,9 +98,21 @@ def handle_state():
     pub_state = rospy.Publisher("/nightmare/command", command, queue_size=1)
     header = Header()
 
+    final_body_trasl = np.array([0., 0., 0.])
+    final_body_rot = np.array([0., 0., 0.])
+    final_walk_trasl = np.array([0., 0., 0.])
+    final_walk_rot = np.array([0., 0., 0.])
+
     while not rospy.is_shutdown():
         header.stamp = rospy.Time.now()
-        pub_state.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, state, gait))
+
+        # TODO remove this bs because c'mon you can do better
+        final_body_trasl += (body_trasl - final_body_trasl) * 0.1
+        final_body_rot += (body_rot - final_body_rot) * 0.1
+        final_walk_trasl += (walk_trasl - final_walk_trasl) * 0.1
+        final_walk_rot += (walk_rot - final_walk_rot) * 0.1
+
+        pub_state.publish(command(header, final_body_trasl, final_body_rot, final_walk_trasl, final_walk_rot, state, gait))
         rate.sleep()
 
 
