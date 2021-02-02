@@ -25,7 +25,7 @@ ENV ROS_WS /root/catkin_ws
 RUN mkdir -p $ROS_WS/src
 WORKDIR $ROS_WS
 RUN git -C src clone \
-    --branch features/movements \
+    --branch dev \
     https://github.com/nikisalli/nightmare-software.git
 
 ## install ros package dependencies
@@ -38,6 +38,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 RUN pip3 install osrf-pycommon
 RUN pip3 install -r src/nightmare-software/requirements.txt
+RUN pip3 install py-spy
 
 ## build ros package source
 RUN catkin config \
