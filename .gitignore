@@ -3,3 +3,4 @@ __pycache__
 .Trash-1000
 bagfiles/*
 examples
+dockerfiles/robot-core-dev/Dockerfile_nik
