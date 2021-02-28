@@ -130,6 +130,7 @@ class engineNode():
         time = rospy.Time.now()
         self.angles_array = abs_pos2ang(self.final_pose)
 
+        self.publish_states(time)
         self.publish_joints(time)  # publish engine output pose
         self.publish_engine_odom(time)  # publish engine transform for enhanced slam and odometry
 
@@ -140,17 +141,21 @@ class engineNode():
         while not rospy.is_shutdown():
             # if changing sit or standup and adjust leg positions
             if self.state == 'stand' and self.prev_state == 'sleep':
+                self.states = [1] * 19
                 movements.stand_up(self)
             elif self.state == 'sleep' and self.prev_state == 'stand':
                 movements.sit(self)
+                self.states = [1] * 19
 
             if self.state == 'stand':
+                self.states = [1] * 19
                 if len(self.steps) > 0:  # if there are steps to execute, execute them
                     movements.execute_step(self)
                 else:
                     movements.stand(self)
 
             elif self.state == 'sleep':
+                self.states = [1] * 19
                 movements.sleep(self)
 
             self.prev_state = self.state
@@ -179,9 +184,9 @@ class engineNode():
         self.joint_angle_msg.header.stamp = time
         self.joint_angle_publisher.publish(self.joint_angle_msg)
 
-    def publish_states(self):
+    def publish_states(self, time):
         self.joint_state_msg.position = self.states
-        self.joint_state_msg.header.stamp = rospy.Time.now()
+        self.joint_state_msg.header.stamp = time
         self.joint_state_publisher.publish(self.joint_state_msg)
 
     def publish_step_id(self):

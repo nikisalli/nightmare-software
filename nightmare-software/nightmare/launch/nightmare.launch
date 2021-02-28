@@ -3,14 +3,17 @@
 	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
 
 	<!-- start hardware abstraction node -->
-	<node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py"/>
+	<node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py" output="screen"/>
 
 	<!-- start robot state publisher to convert joint_states in tf-->
-	<node name="robot_state_publisher" pkg="robot_state_publisher" required="true" type="robot_state_publisher"/>
+	<node name="robot_state_publisher" pkg="robot_state_publisher" required="true" type="robot_state_publisher" output="screen"/>
 
 	<!-- start robot state broadcaster -->
-    <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py"/>
+    <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py" output="screen"/>
+
+	<!-- start step planner -->
+    <node name="step_planner" pkg="nightmare_step_planner" required="true" type="main.py" output="screen"/>
 
 	<!-- start movement engine -->
-    <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py"/>
+    <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py" output="screen"/>
 </launch>

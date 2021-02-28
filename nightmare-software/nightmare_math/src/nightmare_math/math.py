@@ -37,7 +37,7 @@ def rel_pos2ang(rel_pos, leg_dim):
     d = sqrt(z**2 + (d1)**2)
     alpha = arctan2(x, y)
     beta = arccos((z**2 + d**2 - d1**2) / (2 * (-z) * d)) + arccos((FM**2 + d**2 - TB**2) / (2 * FM * d))
-    gamma = - arccos((FM**2 + TB**2 - d**2) / (2 * FM * TB))
+    gamma = - arccos((FM**2 + TB**2 - d**2) / (2 * FM * TB)) + 2 * PI
     return np.array([alpha, beta - PI / 2, PI - gamma])
 
 

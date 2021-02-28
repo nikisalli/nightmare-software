@@ -29,6 +29,9 @@ class Servo:
     tty: str
     angle: int = 0
     pos: int = 0
+    command: int = 0
+    enabled: bool = False
+    prev_enabled: bool = False
 
 
 @dataclass
@@ -83,12 +86,25 @@ class ListenerThread(Thread):
         while not rospy.is_shutdown():
             for servo in self.servos:
                 try:
-                    pos = self.controller.get_position(servo.id, timeout=0.02)
-                    servo.pos = pos
-                    servo.angle = round(fmap(pos, 0, 1000, -2.0944, 2.0944), 4)
-                except TimeoutError:
+                    # read servo
+                    # pos = self.controller.get_position(servo.id, timeout=0.02)
+                    # servo.pos = pos
+                    # servo.angle = round(fmap(pos, 0, 1000, -2.0944, 2.0944), 4)
+
+                    # write servo
+                    if servo.enabled and not servo.prev_enabled:
+                        self.controller.motor_on(servo.id)
+                        servo.prev_enabled = True
+                    elif not servo.enabled and servo.prev_enabled:
+                        self.controller.motor_off(servo.id)
+                        servo.prev_enabled = False
+                    
+                    if servo.enabled:
+                        self.controller.move(servo.id, fmap(servo.command, -2.0944, 2.0944, 0, 1000))
+
+                except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read servo position. ID: {servo.id} port: {servo.tty}")
-            time.sleep(0.05)  # execute every 0.05s
+            time.sleep(0.01)  # execute every 0.05s
 
 
 class HardwareHandlerNode:
@@ -128,6 +144,22 @@ class HardwareHandlerNode:
         self.joint_msg.header.stamp = rospy.Time.now()
         self.publisher.publish(self.joint_msg)
 
+    """a = - b - c 
+    a + c = - b 
+    b = - a - c"""
+
+    def get_states(self, msg):
+        for i, leg in enumerate(self.legs):
+            leg.servos[0].enabled = msg.position[i * 3]
+            leg.servos[1].enabled = msg.position[i * 3 + 1]
+            leg.servos[2].enabled = msg.position[i * 3 + 2]
+
+    def get_angles(self, msg):
+        for i, leg in enumerate(self.legs):
+            leg.servos[0].command = msg.position[i * 3]
+            leg.servos[1].command = - msg.position[i * 3 + 1]
+            leg.servos[2].command = - msg.position[i * 3 + 2] - PI / 2
+
     def on_shutdown(self):
         rospy.loginfo(f"shutting down {type(self).__name__}")
 
@@ -137,28 +169,16 @@ if __name__ == '__main__':
     rospy.loginfo("starting hardware handler node")
     rospy.init_node('hardware_handler')
 
-    # -------------------------------------------
-
     set_tty_to_low_latency()
-
-    # -------------------------------------------
 
     rospy.loginfo("creating controller objects")
     controller_dict = {tty: lewansoul_lx16a.ServoController(serial.Serial(tty, 115200, timeout=1)) for tty in TTY_LIST}
 
-    # -------------------------------------------
-
     rospy.loginfo("indexing servos")
-
     servo_list = [Servo(servo_id, get_servo_tty(servo_id, controller_dict)) for servo_id in range(1, NUMBER_OF_SERVOS + 1)]
-
     leg_list = [Leg(leg_id, servo_list[leg_id * 3:leg_id * 3 + 3]) for leg_id in range(NUMBER_OF_LEGS)]
 
-    # -------------------------------------------
-
     spawn_reading_threads(servo_list, controller_dict)
-
-    # -------------------------------------------
 
     node = HardwareHandlerNode(
         legs=leg_list,
@@ -176,6 +196,9 @@ if __name__ == '__main__':
                              velocity=[],
                              effort=[])  # joint topic structure
     )
+
+    rospy.Subscriber("/engine/angle_joint_states", JointState, node.get_angles)
+    rospy.Subscriber("/engine/state_joint_states", JointState, node.get_states)
 
     try:
         rate = rospy.Rate(50)

@@ -10,7 +10,7 @@
   <!-- start robot state broadcaster -->
   <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py" output="screen"/>
 
-  <!-- start robot state broadcaster -->
+  <!-- start step planner -->
   <node name="step_planner" pkg="nightmare_step_planner" required="true" type="main.py" output="screen"/>
 
   <!-- start movement engine -->
