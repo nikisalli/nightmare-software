@@ -428,6 +428,9 @@
   </collision>
 </link>
 
+<link name="camera_link">
+</link>
+
 <link name="leg_1_tip">
 </link>
 
@@ -583,6 +586,12 @@
   <parent link="leg_6_femur_1"/>
   <child link="leg_6_tibia_1"/>
   <axis xyz="0.707107 0.707107 -0.0"/>
+</joint>
+
+<joint name="body2camera" type="fixed">
+  <origin rpy="0 0 1.57079632679" xyz="0.0 0.1 0.025"/>
+  <parent link="body_link"/>
+  <child link="camera_link"/>
 </joint>
 
 <joint name="leg1tip" type="fixed">
