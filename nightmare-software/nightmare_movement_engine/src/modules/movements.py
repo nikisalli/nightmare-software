@@ -103,7 +103,7 @@ def stand_up(engine):
         engine.final_body_abs_trasl[2] = - SIT_HEIGHT - pos  # inverted because when legs go down, robot goes up
 
         engine.compute_ik()
-        time.sleep(0.01)
+        time.sleep(0.05)
 
 
 def sit(engine):
@@ -130,7 +130,7 @@ def sit(engine):
         engine.final_body_abs_trasl[2] = STAND_HEIGTH + pos  # inverted because when legs go down, robot goes up
 
         engine.compute_ik()
-        time.sleep(0.01)
+        time.sleep(0.05)
 
 
 def stand(engine):

@@ -9,8 +9,6 @@ from typing import List, Any
 import lewansoul_lx16a
 import rospy
 import serial
-import tf
-import tf.transformations
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 
@@ -83,13 +81,15 @@ class ListenerThread(Thread):
         self.controller = controller
 
     def run(self):
+        counter = 0
         while not rospy.is_shutdown():
-            for servo in self.servos:
+            for i, servo in enumerate(self.servos):
                 try:
                     # read servo
-                    # pos = self.controller.get_position(servo.id, timeout=0.02)
-                    # servo.pos = pos
-                    # servo.angle = round(fmap(pos, 0, 1000, -2.0944, 2.0944), 4)
+                    if(counter == i):
+                        pos = self.controller.get_position(servo.id, timeout=0.02)
+                        servo.pos = pos
+                        servo.angle = round(fmap(pos, 0, 1000, -2.0944, 2.0944), 4)
 
                     # write servo
                     if servo.enabled and not servo.prev_enabled:
@@ -98,25 +98,26 @@ class ListenerThread(Thread):
                     elif not servo.enabled and servo.prev_enabled:
                         self.controller.motor_off(servo.id)
                         servo.prev_enabled = False
-                    
+
                     if servo.enabled:
                         self.controller.move(servo.id, fmap(servo.command, -2.0944, 2.0944, 0, 1000))
 
                 except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read servo position. ID: {servo.id} port: {servo.tty}")
             time.sleep(0.01)  # execute every 0.05s
+            counter += 1
+            if (counter == len(self.servos)):
+                counter = 0
 
 
 class HardwareHandlerNode:
     """main node class"""
 
-    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher,
-                 broadcaster: tf.TransformBroadcaster, joint_msg: JointState):
+    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher, joint_msg: JointState):
         self.legs = legs
         self.fixed_frame = fixed_frame
         self.frame = frame
         self.publisher = publisher
-        self.broadcaster = broadcaster
         self.joint_msg = joint_msg
 
         rospy.on_shutdown(self.on_shutdown)
@@ -124,11 +125,6 @@ class HardwareHandlerNode:
         rospy.loginfo("Ready for publishing")
 
     def publish(self):
-        self.broadcaster.sendTransform((0, 0, 0),
-                                       tf.transformations.quaternion_from_euler(0, 0, 0),
-                                       rospy.Time.now(),
-                                       self.frame,
-                                       self.fixed_frame)
         self._publish_jnt()
 
     def _publish_jnt(self):
@@ -143,10 +139,6 @@ class HardwareHandlerNode:
 
         self.joint_msg.header.stamp = rospy.Time.now()
         self.publisher.publish(self.joint_msg)
-
-    """a = - b - c 
-    a + c = - b 
-    b = - a - c"""
 
     def get_states(self, msg):
         for i, leg in enumerate(self.legs):
@@ -175,7 +167,7 @@ if __name__ == '__main__':
     controller_dict = {tty: lewansoul_lx16a.ServoController(serial.Serial(tty, 115200, timeout=1)) for tty in TTY_LIST}
 
     rospy.loginfo("indexing servos")
-    servo_list = [Servo(servo_id, get_servo_tty(servo_id, controller_dict)) for servo_id in range(1, NUMBER_OF_SERVOS + 1)]
+    servo_list = [Servo(servo_id, get_servo_tty(servo_id, controller_dict)) for servo_id in range(1, NUMBER_OF_SERVOS)]
     leg_list = [Leg(leg_id, servo_list[leg_id * 3:leg_id * 3 + 3]) for leg_id in range(NUMBER_OF_LEGS)]
 
     spawn_reading_threads(servo_list, controller_dict)
@@ -185,7 +177,6 @@ if __name__ == '__main__':
         fixed_frame=rospy.get_param('~fixed_frame', 'world'),  # set fixed frame relative to world to apply the transform
         frame=rospy.get_param('~frame', "base_link"),  # set frame name
         publisher=rospy.Publisher('joint_states', JointState, queue_size=10),  # joint state publisher
-        broadcaster=tf.TransformBroadcaster(),
         joint_msg=JointState(header=Header(),
                              name=['leg1coxa', 'leg1femur', 'leg1tibia',
                                    'leg2coxa', 'leg2femur', 'leg2tibia',
