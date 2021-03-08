@@ -46,7 +46,7 @@ class stepPlannerNode():
         self.tf_buffer = tf.Buffer()
         self.tf_listener = tf.TransformListener(self.tf_buffer)
 
-        self.rate = rospy.Rate(60)
+        self.rate = rospy.Rate(15)
 
         # marker settings
         self.robotMarker = Marker()
@@ -95,7 +95,6 @@ class stepPlannerNode():
 
         # main loop
         while not rospy.is_shutdown():
-            self.parse_tf()
             mod = sqrt(self.walk_trasl[0]**2 + self.walk_trasl[1]**2)
             # if (self.engine_step >= self.step_id - (len(GAIT[self.gait]) / 2) and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_rot[2]) > 0.01)):
             if (self.engine_step >= self.step_id and self.state == 'stand' and (abs(mod) > 0.01 or abs(self.walk_rot[2]) > 0.01)):
@@ -103,6 +102,7 @@ class stepPlannerNode():
                 # - a step is already present
                 # - check if the robot is standing to start walking
                 # - check if a command to walk is valid
+                self.parse_tf()
                 self.generate_next_steps()
             self.rate.sleep()
 
