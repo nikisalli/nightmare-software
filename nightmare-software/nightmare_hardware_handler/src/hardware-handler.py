@@ -104,9 +104,9 @@ class ListenerThread(Thread):
 
                 except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read servo position. ID: {servo.id} port: {servo.tty}")
-            time.sleep(0.01)  # execute every 0.05s
+            time.sleep(0.02)  # execute every 0.05s
             counter += 1
-            if (counter == len(self.servos)):
+            if (counter > len(self.servos) * 2):  # multiplied by 2 so that only one read cycle over 2 is executed
                 counter = 0
 
 
