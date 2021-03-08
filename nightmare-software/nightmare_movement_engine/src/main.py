@@ -18,7 +18,9 @@ from visualization_msgs.msg import Marker
 
 # external package import
 from nightmare_config.config import (DEFAULT_POSE,
-                                     ENGINE_FPS)
+                                     ENGINE_FPS,
+                                     ENGINE_REFERENCE_FRAME,
+                                     ENGINE_OUTPUT_FRAME)
 from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
 from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
 
@@ -86,14 +88,14 @@ class engineNode():
         self.marker_publisher = rospy.Publisher("/engine/markers", Marker, queue_size=100)
 
         # setup body to world odometry
-        self.odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
+        self.odom_pub = rospy.Publisher(ENGINE_OUTPUT_FRAME, Odometry, queue_size=50)
         self.odom_pub_msg = Odometry()
-        self.odom_pub_msg.header.frame_id = "odom"
+        self.odom_pub_msg.header.frame_id = ENGINE_OUTPUT_FRAME
         self.odom_pub_msg.child_frame_id = "base_link"
 
         # setup body to world odom transformation
         self.engine_pos_publisher_msg.header.stamp = rospy.Time.now()
-        self.engine_pos_publisher_msg.header.frame_id = "world"
+        self.engine_pos_publisher_msg.header.frame_id = ENGINE_REFERENCE_FRAME
         self.engine_pos_publisher_msg.child_frame_id = "base_link"
         self.engine_pos_publisher_msg.transform.translation.x = 0.0
         self.engine_pos_publisher_msg.transform.translation.y = 0.0
@@ -106,7 +108,7 @@ class engineNode():
 
         # setup marker
         self.robotMarker = Marker()
-        self.robotMarker.header.frame_id = "world"
+        self.robotMarker.header.frame_id = ENGINE_REFERENCE_FRAME
         self.robotMarker.ns = "engine"
         self.robotMarker.id = 0
         self.robotMarker.type = 2  # sphere
@@ -152,7 +154,7 @@ class engineNode():
                 movements.stand_up(self)
             elif self.state == 'sleep' and self.prev_state == 'stand':
                 movements.sit(self)
-                self.states = [1] * 19
+                self.states = [0] * 19
 
             if self.state == 'stand':
                 self.states = [1] * 19
@@ -162,7 +164,7 @@ class engineNode():
                     movements.stand(self)
 
             elif self.state == 'sleep':
-                self.states = [1] * 19
+                self.states = [0] * 19
                 movements.sleep(self)
 
             self.prev_state = self.state
@@ -189,7 +191,7 @@ class engineNode():
         self.engine_pos_publisher_msg.transform.rotation.w = q[3]
 
         self.engine_pos_publisher_msg.header.stamp = time
-        self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)
+        # self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)
 
         # odom
         self.odom_pub_msg.header.stamp = time

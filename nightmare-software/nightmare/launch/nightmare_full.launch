@@ -1,0 +1,10 @@
+<launch>
+    <!-- MAIN HARDWARE NODES -->
+    <include file="$(find nightmare)/launch/nightmare.launch"/>
+
+    <!-- LOCALIZATION -->
+    <include file="$(find nightmare)/launch/nightmare_localization.launch"/>
+
+    <!-- SLAM -->
+    <include file="$(find nightmare)/launch/nightmare_rtabmap.launch"/>
+</launch>

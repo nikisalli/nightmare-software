@@ -25,13 +25,6 @@
 		<arg name="enable_sync"             value="true"/>
   		<arg name="align_depth"             value="true"/>
 		<arg name="unite_imu_method" 		value="linear_interpolation"/>
+		<arg name="initial_reset" 			value="true"/>
 	</include>
-
-	<!-- start camera imu filter -->
-	<node pkg="imu_filter_madgwick" type="imu_filter_node" 		name="ImuFilter">
-        <param name="use_mag" 		type="bool" 				value="false" />
-        <param name="_publish_tf" 	type="bool" 				value="false" />
-        <param name="_world_frame" 	type="string" 				value="enu" />
-        <remap from="/imu/data_raw" to="/camera/imu"/>
-    </node>
 </launch>

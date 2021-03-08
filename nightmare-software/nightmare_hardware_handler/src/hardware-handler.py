@@ -44,13 +44,17 @@ class ServoNotFoundError(EnvironmentError):
 
 
 def get_servo_tty(servo_id, controllers):
-    for tty, controller in controllers.items():
-        try:
-            controller.get_servo_id(servo_id, timeout=0.05)
-            rospy.loginfo(f"found servo id {servo_id} on {tty}")
-            return tty
-        except lewansoul_lx16a.TimeoutError:
-            pass
+    t = time.time()
+    while (time.time() - t < 30):
+        for tty, controller in controllers.items():
+            try:
+                controller.get_servo_id(servo_id, timeout=0.05)
+                rospy.loginfo(f"found servo id {servo_id} on {tty}")
+                return tty
+            except lewansoul_lx16a.TimeoutError:
+                pass
+        time.sleep(1)
+        rospy.loginfo(f"couldn't find servo id {servo_id}. retrying...")
 
     rospy.logerr(f"couldn't find a servo with ID: {servo_id} on any serial bus!")
     raise ServoNotFoundError
@@ -85,28 +89,27 @@ class ListenerThread(Thread):
         while not rospy.is_shutdown():
             for i, servo in enumerate(self.servos):
                 try:
-                    # read servo
+                    # read servo and write state less frequently (one servo per full servo iteration)
                     if(counter == i):
+                        # read servo position
                         pos = self.controller.get_position(servo.id, timeout=0.02)
                         servo.pos = pos
                         servo.angle = round(fmap(pos, 0, 1000, -2.0944, 2.0944), 4)
 
-                    # write servo
-                    if servo.enabled and not servo.prev_enabled:
-                        self.controller.motor_on(servo.id)
-                        servo.prev_enabled = True
-                    elif not servo.enabled and servo.prev_enabled:
-                        self.controller.motor_off(servo.id)
-                        servo.prev_enabled = False
+                        # write servo state
+                        if servo.enabled:
+                            self.controller.motor_on(servo.id)
+                        else:
+                            self.controller.motor_off(servo.id)
 
                     if servo.enabled:
                         self.controller.move(servo.id, fmap(servo.command, -2.0944, 2.0944, 0, 1000))
 
                 except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read servo position. ID: {servo.id} port: {servo.tty}")
-            time.sleep(0.02)  # execute every 0.05s
+            time.sleep(0.01)  # execute every 0.05s
             counter += 1
-            if (counter > len(self.servos) * 2):  # multiplied by 2 so that only one read cycle over 2 is executed
+            if (counter > len(self.servos)):
                 counter = 0
 
 

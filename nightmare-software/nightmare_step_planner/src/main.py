@@ -14,7 +14,7 @@ from std_msgs.msg import Header, Int32, String, Float32
 from visualization_msgs.msg import Marker
 
 from nightmare_math.math import rotate
-from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, MAX_STEP_LENGTH
+from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, MAX_STEP_LENGTH, ENGINE_REFERENCE_FRAME
 from nightmare_math.math import quat2euler
 
 
@@ -87,7 +87,7 @@ class stepPlannerNode():
     def run(self):
         # wait for tf
         t = time.time()
-        while(not self.tf_buffer.can_transform('world', 'base_link', rospy.Time(0))):
+        while(not self.tf_buffer.can_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0))):
             if time.time() - t > 30:
                 rospy.logerr("step planner - wait for transform timeout!")
                 # os.exit(0)
@@ -189,11 +189,11 @@ class stepPlannerNode():
         try:
             # get leg tip absolute transform
             for i, leg in enumerate(LEG_TIPS):
-                trans = self.tf_buffer.lookup_transform('world', leg, rospy.Time(0), rospy.Duration(.1)).transform.translation
+                trans = self.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, leg, rospy.Time(0), rospy.Duration(.1)).transform.translation
                 self.abs_body_pose[i] = [trans.x, trans.y, trans.z]
 
             # get body transform
-            trans = self.tf_buffer.lookup_transform('world', 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
+            trans = self.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
             self.body_trans = trans
 
             return 1
