@@ -12,7 +12,8 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Header, Int32, String, Float32
 import tf_conversions
 import tf2_ros
-import geometry_msgs.msg
+from geometry_msgs.msg import TransformStamped, Point, Pose, Quaternion, Twist, Vector3
+from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker
 
 # external package import
@@ -80,11 +81,17 @@ class engineNode():
         self.engine_step_id_msg = Int32()  # engine current step id
 
         self.engine_pos_publisher = tf2_ros.TransformBroadcaster()
-        self.engine_pos_publisher_msg = geometry_msgs.msg.TransformStamped()  # where the engine thinks the robot is
+        self.engine_pos_publisher_msg = TransformStamped()  # where the engine thinks the robot is
 
         self.marker_publisher = rospy.Publisher("/engine/markers", Marker, queue_size=100)
 
-        # create body to world odom transformation
+        # setup body to world odometry
+        self.odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
+        self.odom_pub_msg = Odometry()
+        self.odom_pub_msg.header.frame_id = "odom"
+        self.odom_pub_msg.child_frame_id = "base_link"
+
+        # setup body to world odom transformation
         self.engine_pos_publisher_msg.header.stamp = rospy.Time.now()
         self.engine_pos_publisher_msg.header.frame_id = "world"
         self.engine_pos_publisher_msg.child_frame_id = "base_link"
@@ -97,7 +104,7 @@ class engineNode():
         self.engine_pos_publisher_msg.transform.rotation.z = q[2]
         self.engine_pos_publisher_msg.transform.rotation.w = q[3]
 
-        # marker settings
+        # setup marker
         self.robotMarker = Marker()
         self.robotMarker.header.frame_id = "world"
         self.robotMarker.ns = "engine"
@@ -166,11 +173,16 @@ class engineNode():
         # rospy.loginfo('\n' + str(engine.steps) + '\n')
 
     def publish_engine_odom(self, time):
-        self.engine_pos_publisher_msg.transform.translation.x = self.final_body_abs_trasl[0]
-        self.engine_pos_publisher_msg.transform.translation.y = self.final_body_abs_trasl[1]
-        self.engine_pos_publisher_msg.transform.translation.z = self.final_body_abs_trasl[2]
-
+        # tf transformation
+        x = self.final_body_abs_trasl[0]
+        y = self.final_body_abs_trasl[1]
+        z = self.final_body_abs_trasl[2]
         q = euler2quat([self.final_body_abs_rot[0], self.final_body_abs_rot[1], self.final_body_abs_rot[2]])
+
+        self.engine_pos_publisher_msg.transform.translation.x = x
+        self.engine_pos_publisher_msg.transform.translation.y = y
+        self.engine_pos_publisher_msg.transform.translation.z = z
+
         self.engine_pos_publisher_msg.transform.rotation.x = q[0]
         self.engine_pos_publisher_msg.transform.rotation.y = q[1]
         self.engine_pos_publisher_msg.transform.rotation.z = q[2]
@@ -178,6 +190,12 @@ class engineNode():
 
         self.engine_pos_publisher_msg.header.stamp = time
         self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)
+
+        # odom
+        self.odom_pub_msg.header.stamp = time
+        self.odom_pub_msg.pose.pose = Pose(Point(x, y, z), Quaternion(*q))
+        self.odom_pub_msg.twist.twist = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
+        self.odom_pub.publish(self.odom_pub_msg)
 
     def publish_joints(self, time):
         self.joint_angle_msg.position = self.angles_array

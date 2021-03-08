@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=broad-except
 
 import json
 import time
@@ -84,6 +85,15 @@ class stepPlannerNode():
         self.engine_attenuation_msg = Float32()  # engine current step id
 
     def run(self):
+        # wait for tf
+        t = time.time()
+        while(not self.tf_buffer.can_transform('world', 'base_link', rospy.Time(0))):
+            if time.time() - t > 30:
+                rospy.logerr("step planner - wait for transform timeout!")
+                # os.exit(0)
+            time.sleep(0.1)
+
+        # main loop
         while not rospy.is_shutdown():
             self.parse_tf()
             mod = sqrt(self.walk_trasl[0]**2 + self.walk_trasl[1]**2)
@@ -187,7 +197,7 @@ class stepPlannerNode():
             self.body_trans = trans
 
             return 1
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+        except Exception as e:  # noqa
             rospy.logwarn(str(e))
             return 0
 
