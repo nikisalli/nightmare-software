@@ -155,17 +155,15 @@ class engineNode():
             elif self.state == 'sleep' and self.prev_state == 'stand':
                 movements.sit(self)
                 self.states = [0] * 19
-
-            if self.state == 'stand':
+            elif self.state == 'stand':
                 self.states = [1] * 19
                 if len(self.steps) > 0:  # if there are steps to execute, execute them
                     movements.execute_step(self)
                 else:
                     movements.stand(self)
-
             elif self.state == 'sleep':
-                self.states = [0] * 19
                 movements.sleep(self)
+                self.states = [0] * 19
 
             self.prev_state = self.state
             self.rate.sleep()
