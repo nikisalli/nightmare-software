@@ -119,8 +119,11 @@ class stepPlannerNode():
             # translation = self.steps[-1]['trans']
             # rotation = self.steps[-1]['rot']
 
+        # find absolute pose
         abs_pose = rotate(DEFAULT_POSE, rotation)
         abs_pose += translation
+
+        # find rotated command
         rotated_command = rotate(self.walk_trasl, self.walk_rot)
 
         # find absolute max displacement
@@ -138,9 +141,6 @@ class stepPlannerNode():
         new_rot = rotation + (self.walk_rot * self.attenuation)
         new_rotated_command = rotate(self.walk_trasl * self.attenuation, new_rot)
         new_trans = translation + new_rotated_command  # abs target pose translation
-        abs_target_pose = abs_pose.copy()
-        abs_target_pose += new_rotated_command
-        abs_target_pose = rotate(abs_target_pose, self.walk_rot * self.attenuation, pivot=new_trans)
 
         # generate steps
         for leg in GAIT[self.gait][self.gait_step]:
