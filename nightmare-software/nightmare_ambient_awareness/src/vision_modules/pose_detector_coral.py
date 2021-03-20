@@ -1,6 +1,6 @@
-import cv2
 import os
 import sys
+import cv2
 
 from edgetpu.basic import edgetpu_utils
 
@@ -47,7 +47,6 @@ def draw_pose(img, pose, threshold=0.2):
         if keypoint.score < threshold:
             continue
         xys[label] = (int(keypoint.yx[1]), int(keypoint.yx[0]))
-        print(keypoint.yx[0])
         img = cv2.circle(img, (int(keypoint.yx[1]), int(keypoint.yx[0])), 5, (0, 255, 0), -1)
 
     for a, b in EDGES:
@@ -60,9 +59,6 @@ def draw_pose(img, pose, threshold=0.2):
 
 def overlay_on_image(frames, result):
     color_image = frames
-
-    # if isinstance(result, type(None)):
-    #     return color_image
     img_cp = color_image.copy()
 
     for pose in result:
@@ -75,10 +71,4 @@ def detect_poses(frame):
     color_image = cv2.resize(frame, (model_width, model_height))
     prepimg = color_image[:, :, ::-1].copy()
 
-    res = engine.DetectPosesInImage(prepimg)[0]
-
-    if res:
-        imdraw = overlay_on_image(color_image, res)
-    else:
-        imdraw = color_image
-    return imdraw
+    return engine.DetectPosesInImage(prepimg)[0]

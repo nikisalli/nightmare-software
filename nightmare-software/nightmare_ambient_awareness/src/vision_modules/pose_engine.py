@@ -15,8 +15,7 @@
 import numpy as np
 from pkg_resources import parse_version
 from edgetpu import __version__ as edgetpu_version
-assert parse_version(edgetpu_version) >= parse_version('2.11.1'), \
-        'This demo requires Edge TPU version >= 2.11.1'
+assert parse_version(edgetpu_version) >= parse_version('2.11.1'), 'This demo requires Edge TPU version >= 2.11.1'
 
 from edgetpu.basic.basic_engine import BasicEngine
 
