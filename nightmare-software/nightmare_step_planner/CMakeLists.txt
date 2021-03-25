@@ -27,5 +27,5 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS 
-  src/main.py
+  src/nightmare_step_planner/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

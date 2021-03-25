@@ -27,5 +27,5 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS 
-  src/main.py
+  src/nightmare_usb_joystick/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

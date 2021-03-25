@@ -27,5 +27,5 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS 
-  src/broadcaster.py
+  src/nightmare_state_broadcaster/broadcaster.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

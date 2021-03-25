@@ -18,5 +18,5 @@ include_directories(
 catkin_python_setup()
 
 catkin_install_python(PROGRAMS 
-  src/hardware-handler.py
+  src/nightmare_hardware_handler/hardware-handler.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
