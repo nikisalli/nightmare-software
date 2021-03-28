@@ -35,6 +35,15 @@ NUMBER_OF_SERVOS = 19
 NUMBER_OF_SERVOS_PER_LEG = 3
 
 
+# HARDWARE PARAMS
+# used ttys to communicate with servos
+TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
+# onboard microcontroller communication port
+STAT_TTY = "/dev/ttyACM0"
+# hardware handler params
+STAT_HEADER = [0x55, 0x55, 0x55, 0x55, 0x55]
+
+
 # ENGINE PARAMETERS
 LEG_KEEPOUT = 4
 
@@ -145,5 +154,3 @@ GAIT = {'tripod': np.array([[0, 2, 4], [1, 3, 5]]),
 # NAMES
 # name of the link at the tip of each leg
 LEG_TIPS = ['leg_1_tip', 'leg_2_tip', 'leg_3_tip', 'leg_4_tip', 'leg_5_tip', 'leg_6_tip']
-# used ttys to communicate with servos
-TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]

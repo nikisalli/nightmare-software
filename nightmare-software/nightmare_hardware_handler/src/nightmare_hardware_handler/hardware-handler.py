@@ -5,19 +5,22 @@ import time
 from dataclasses import dataclass
 from threading import Thread
 from typing import List, Any
+import json
 
 import lewansoul_lx16a
 import rospy
 import serial
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Float32
 
 from nightmare_math.math import (fmap)
 
 from nightmare_config.config import (PI,
                                      NUMBER_OF_LEGS,
                                      NUMBER_OF_SERVOS,
-                                     TTY_LIST)
+                                     TTY_LIST,
+                                     STAT_TTY,
+                                     STAT_HEADER)
 
 
 @dataclass
@@ -65,6 +68,7 @@ def set_tty_to_low_latency():
 
     for tty in TTY_LIST:
         os.system(f"setserial {tty} low_latency")
+    os.system(f"setserial {STAT_TTY} low_latency")
 
 
 def spawn_reading_threads(servos, controllers):
@@ -113,15 +117,52 @@ class ListenerThread(Thread):
                 counter = 0
 
 
+class statListenerThread(Thread):
+    def __init__(self, node_stats: List[Any]):
+        Thread.__init__(self)
+        self.stats = node_stats
+        self.port = serial.Serial(STAT_TTY, 921600, timeout=1)
+        rospy.loginfo("stat thread started")
+
+    def run(self):
+        while not rospy.is_shutdown():
+            header_buf = []
+            # rolling header match
+            while header_buf != STAT_HEADER:
+                while self.port.in_waiting < 1:
+                    time.sleep(0.1)
+                header_buf.append(int.from_bytes(self.port.read(), "big"))
+                if(len(header_buf) > len(STAT_HEADER)):
+                    header_buf.pop(0)
+            # read length
+            length = int.from_bytes(self.port.read(2), "big")
+            while self.port.in_waiting < length:
+                time.sleep(0.1)
+            # read packet id
+            packet_id = int.from_bytes(self.port.read(), "big")
+            # read data chunk
+            data_chunk = self.port.read(length - 1)
+            if(packet_id == 0):
+                data = json.loads(data_chunk)
+                self.stats[0] = max(0, data['c1'])  # 0 if negative
+                self.stats[1] = max(0, data['c'])
+                self.stats[2] = max(0, data['v'])
+
+
 class HardwareHandlerNode:
     """main node class"""
 
-    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher, joint_msg: JointState):
+    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher, joint_msg: JointState, node_stats: List[Any]):
         self.legs = legs
         self.fixed_frame = fixed_frame
         self.frame = frame
         self.publisher = publisher
         self.joint_msg = joint_msg
+        self.stats = node_stats
+        self.publisher_servo_current = rospy.Publisher('servo_current', Float32, queue_size=10)
+        self.publisher_computer_current = rospy.Publisher('computer_current', Float32, queue_size=10)
+        self.publisher_voltage = rospy.Publisher('voltage', Float32, queue_size=10)
+        self.publisher_current = rospy.Publisher('current', Float32, queue_size=10)
 
         rospy.on_shutdown(self.on_shutdown)
 
@@ -129,6 +170,7 @@ class HardwareHandlerNode:
 
     def publish(self):
         self._publish_jnt()
+        self._publish_stat()
 
     def _publish_jnt(self):
         ang = [servo.angle for leg in self.legs for servo in leg.servos]
@@ -142,6 +184,12 @@ class HardwareHandlerNode:
 
         self.joint_msg.header.stamp = rospy.Time.now()
         self.publisher.publish(self.joint_msg)
+
+    def _publish_stat(self):
+        self.publisher_servo_current.publish(self.stats[0])
+        self.publisher_computer_current.publish(self.stats[1])
+        self.publisher_voltage.publish(self.stats[2])
+        self.publisher_current.publish(self.stats[0] + self.stats[1])
 
     def get_states(self, msg):
         for i, leg in enumerate(self.legs):
@@ -175,6 +223,11 @@ if __name__ == '__main__':
 
     spawn_reading_threads(servo_list, controller_dict)
 
+    stats = [0, 0, 0]
+
+    stat_thread = statListenerThread(stats)
+    stat_thread.start()
+
     node = HardwareHandlerNode(
         legs=leg_list,
         fixed_frame=rospy.get_param('~fixed_frame', 'world'),  # set fixed frame relative to world to apply the transform
@@ -188,7 +241,8 @@ if __name__ == '__main__':
                                    'leg5coxa', 'leg5femur', 'leg5tibia',
                                    'leg6coxa', 'leg6femur', 'leg6tibia', 'tail_joint'],
                              velocity=[],
-                             effort=[])  # joint topic structure
+                             effort=[]),  # joint topic structure
+        node_stats=stats
     )
 
     rospy.Subscriber("/engine/angle_joint_states", JointState, node.get_angles)

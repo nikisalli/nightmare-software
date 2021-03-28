@@ -1,4 +1,5 @@
 <launch>
+    <arg name="depth_camera_info_topic" value="/camera/depth/camera_info"/>
     <group ns="rtabmap">
         <node pkg="nodelet" type="nodelet" name="rgbd_sync" args="standalone rtabmap_ros/rgbd_sync" output="screen">
             <remap from="rgb/image"       to="/camera/color/image_raw"/>
