@@ -9,3 +9,4 @@ rospkg
 defusedxml
 scipy
 pynput
+wmi

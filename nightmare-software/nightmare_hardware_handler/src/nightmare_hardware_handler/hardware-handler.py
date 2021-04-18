@@ -13,14 +13,8 @@ import serial
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header, Float32
 
-from nightmare_math.math import (fmap)
-
-from nightmare_config.config import (PI,
-                                     NUMBER_OF_LEGS,
-                                     NUMBER_OF_SERVOS,
-                                     TTY_LIST,
-                                     STAT_TTY,
-                                     STAT_HEADER)
+from nightmare_math.math import fmap
+from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER)
 
 
 @dataclass

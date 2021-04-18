@@ -37,7 +37,7 @@ NUMBER_OF_SERVOS_PER_LEG = 3
 
 # HARDWARE PARAMS
 # used ttys to communicate with servos
-TTY_LIST = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"]
+TTY_LIST = ["/dev/ttySERVO0", "/dev/ttySERVO1", "/dev/ttySERVO2", "/dev/ttySERVO3"]
 # onboard microcontroller communication port
 STAT_TTY = "/dev/ttyACM0"
 # hardware handler params
