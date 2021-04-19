@@ -18,7 +18,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      SIT_HEIGHT,
                                      TIME_SIT,
                                      NUMBER_OF_LEGS,
-                                     GAIT)
+                                     GAIT,
+                                     EPSILON)
 
 import bezier
 
@@ -74,7 +75,8 @@ def execute_step(engine):
         apply_transform(engine)
 
         engine.compute_ik()
-        time.sleep((1 / ENGINE_FPS) - (time.time() - timer))
+        if (1 / ENGINE_FPS) - (time.time() - timer) > EPSILON:
+            time.sleep((1 / ENGINE_FPS) - (time.time() - timer))
 
 
 def stand_up(engine):

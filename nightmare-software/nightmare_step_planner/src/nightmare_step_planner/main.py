@@ -50,7 +50,7 @@ class stepPlannerNode():
 
         # marker settings
         self.robotMarker = Marker()
-        self.robotMarker.header.frame_id = "world"
+        self.robotMarker.header.frame_id = ENGINE_REFERENCE_FRAME
         self.robotMarker.ns = "engine"
         self.robotMarker.id = 0
         self.robotMarker.type = 2  # sphere

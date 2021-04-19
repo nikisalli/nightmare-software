@@ -20,7 +20,8 @@ from visualization_msgs.msg import Marker
 from nightmare_config.config import (DEFAULT_POSE,
                                      ENGINE_FPS,
                                      ENGINE_REFERENCE_FRAME,
-                                     ENGINE_OUTPUT_FRAME)
+                                     ENGINE_OUTPUT_FRAME,
+                                     ENGINE_OUTPUT_ODOM_TOPIC)
 from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
 from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
 
@@ -87,15 +88,15 @@ class engineNode():
 
         self.marker_publisher = rospy.Publisher("/engine/markers", Marker, queue_size=100)
 
-        # setup body to world odometry
-        self.odom_pub = rospy.Publisher(ENGINE_OUTPUT_FRAME, Odometry, queue_size=50)
+        # setup body to map odometry
+        self.odom_pub = rospy.Publisher(ENGINE_OUTPUT_ODOM_TOPIC, Odometry, queue_size=50)
         self.odom_pub_msg = Odometry()
-        self.odom_pub_msg.header.frame_id = ENGINE_OUTPUT_FRAME
+        self.odom_pub_msg.header.frame_id = ENGINE_REFERENCE_FRAME  # odom
         self.odom_pub_msg.child_frame_id = "base_link"
 
         # setup body to world odom transformation
         self.engine_pos_publisher_msg.header.stamp = rospy.Time.now()
-        self.engine_pos_publisher_msg.header.frame_id = ENGINE_REFERENCE_FRAME
+        self.engine_pos_publisher_msg.header.frame_id = ENGINE_REFERENCE_FRAME  # odom
         self.engine_pos_publisher_msg.child_frame_id = "base_link"
         self.engine_pos_publisher_msg.transform.translation.x = 0.0
         self.engine_pos_publisher_msg.transform.translation.y = 0.0
