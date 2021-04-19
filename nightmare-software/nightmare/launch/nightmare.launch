@@ -19,11 +19,11 @@
 
 	<!-- start camera node -->
 	<include file="$(find realsense2_camera)/launch/rs_camera.launch">
-		<arg name="clip_distance"          	value="5"/>
+		<arg name="clip_distance"          	value="3"/>
   		<arg name="align_depth"             value="true"/>
 		<arg name="linear_accel_cov" 		value="1.0"/>
 		<arg name="unite_imu_method" 		value="linear_interpolation"/>
-		<arg name="initial_reset" 			value="true"/>                  <!-- mitigate imu hardware problems -->
+		<arg name="initial_reset" 			value="true"/>                 <!-- mitigate imu hardware problems -->
 	</include>
 
 	<!-- start web server node -->

@@ -3,7 +3,7 @@
 	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
 
   <!-- start usb joystick parser node -->
-  <include file="$(find nightmare_usb_joystick)/launch/joystick.launch" output="screen" />
+  <include file="$(find nightmare_usb_joystick)/launch/joystick.launch"/>
 
   <!-- start rviz -->
   <node type="rviz" name="rviz" pkg="rviz" />
