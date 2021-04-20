@@ -26,6 +26,7 @@
             <param name="OdomF2M/MaxSize"           type="string" value="1000"/> <!-- default: 2000 -->
             <param name="Vis/MaxFeatures"           type="string" value="500" /> <!-- default: 1000 -->
             <param name="Odom/Strategy"                           value="0"/> <!-- 0 F2M 1 F2F -->
+            <param name="GFTT/MinDistance"          type="string" value="10"/> <!-- Min distance between features -->
         </node> 
 
         <!-- RTABmap slam -->
@@ -52,7 +53,7 @@
 
             <param name="Rtabmap/StartNewMapOnLoopClosure"        value="true"/> 
 
-            <param name="Vis/MaxDepth"              type="string" value="3.0"/>
+            <param name="Vis/MaxDepth"              type="string" value="3.5"/>
             <param name="Grid/MaxGroundHeight"                    value="0.1"/>
             <param name="Grid/MaxObstacleHeight"                  value="0.3"/>
             <param name="Grid/CellSize"                           value="0.05" />
