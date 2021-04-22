@@ -152,10 +152,8 @@ class statListenerThread(Thread):
 class HardwareHandlerNode:
     """main node class"""
 
-    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher, joint_msg: JointState, node_stats: List[Any], imu: Any):
+    def __init__(self, legs: List[Leg], publisher: rospy.Publisher, joint_msg: JointState, node_stats: List[Any], imu: Any):
         self.legs = legs
-        self.fixed_frame = fixed_frame
-        self.frame = frame
         self.publisher = publisher
         self.joint_msg = joint_msg
         self.stats = node_stats
@@ -252,8 +250,6 @@ if __name__ == '__main__':
 
     node = HardwareHandlerNode(
         legs=leg_list,
-        fixed_frame=rospy.get_param('~fixed_frame', 'world'),  # set fixed frame relative to world to apply the transform
-        frame=rospy.get_param('~frame', "base_link"),  # set frame name
         publisher=rospy.Publisher('joint_states', JointState, queue_size=10),  # joint state publisher
         joint_msg=JointState(header=Header(),
                              name=['leg1coxa', 'leg1femur', 'leg1tibia',
