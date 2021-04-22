@@ -6,12 +6,14 @@ from dataclasses import dataclass
 from threading import Thread
 from typing import List, Any
 import json
+import math
 
 import lewansoul_lx16a
 import rospy
 import serial
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, Imu
 from std_msgs.msg import Header, Float32
+import tf_conversions
 
 from nightmare_math.math import fmap
 from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER)
@@ -112,9 +114,10 @@ class ListenerThread(Thread):
 
 
 class statListenerThread(Thread):
-    def __init__(self, node_stats: List[Any]):
+    def __init__(self, node_stats: List[Any], imu: Any):
         Thread.__init__(self)
         self.stats = node_stats
+        self.imu = imu
         self.port = serial.Serial(STAT_TTY, 921600, timeout=1)
         rospy.loginfo("stat thread started")
 
@@ -139,24 +142,36 @@ class statListenerThread(Thread):
             if(packet_id == 0):
                 data = json.loads(data_chunk)
                 self.stats[0] = max(0, data['c1'])  # 0 if negative
-                self.stats[1] = max(0, data['c'])
+                self.stats[1] = data['c']
                 self.stats[2] = max(0, data['v'])
+                self.imu[1] = data['R'] / -100.  # the imu sends data as degrees * 100 so we scale it down
+                self.imu[2] = data['P'] / -100.
+                self.imu[0] = data['Y'] / 100.
 
 
 class HardwareHandlerNode:
     """main node class"""
 
-    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher, joint_msg: JointState, node_stats: List[Any]):
+    def __init__(self, legs: List[Leg], fixed_frame: Any, frame: Any, publisher: rospy.Publisher, joint_msg: JointState, node_stats: List[Any], imu: Any):
         self.legs = legs
         self.fixed_frame = fixed_frame
         self.frame = frame
         self.publisher = publisher
         self.joint_msg = joint_msg
         self.stats = node_stats
+        self.imu = imu
+        self.imu_msg = Imu()
+        self.imu_msg.linear_acceleration_covariance[0] = -1  # we don't have acc data
+        self.imu_msg.angular_velocity_covariance[0] = -1  # we don't have gyro data
+        self.imu_msg.orientation_covariance[0] = 0.00017  # imu orientation covariance
+        self.imu_msg.orientation_covariance[4] = 0.00017
+        self.imu_msg.orientation_covariance[8] = 0.00017
+        self.imu_msg.header.frame_id = 'body_imu'  # set imu frame
         self.publisher_servo_current = rospy.Publisher('servo_current', Float32, queue_size=10)
         self.publisher_computer_current = rospy.Publisher('computer_current', Float32, queue_size=10)
         self.publisher_voltage = rospy.Publisher('voltage', Float32, queue_size=10)
         self.publisher_current = rospy.Publisher('current', Float32, queue_size=10)
+        self.publisher_imu = rospy.Publisher('body_imu', Imu, queue_size=10)
 
         rospy.on_shutdown(self.on_shutdown)
 
@@ -165,6 +180,7 @@ class HardwareHandlerNode:
     def publish(self):
         self._publish_jnt()
         self._publish_stat()
+        self._publish_imu()
 
     def _publish_jnt(self):
         ang = [servo.angle for leg in self.legs for servo in leg.servos]
@@ -184,6 +200,17 @@ class HardwareHandlerNode:
         self.publisher_computer_current.publish(self.stats[1])
         self.publisher_voltage.publish(self.stats[2])
         self.publisher_current.publish(self.stats[0] + self.stats[1])
+
+    def _publish_imu(self):
+        self.imu_msg.header.stamp = rospy.Time.now()
+        q = tf_conversions.transformations.quaternion_from_euler(math.radians(self.imu[0]),
+                                                                 math.radians(self.imu[1]),
+                                                                 math.radians(self.imu[2]))
+        self.imu_msg.orientation.w = q[0]
+        self.imu_msg.orientation.x = q[1]
+        self.imu_msg.orientation.y = q[2]
+        self.imu_msg.orientation.z = q[3]
+        self.publisher_imu.publish(self.imu_msg)
 
     def get_states(self, msg):
         for i, leg in enumerate(self.legs):
@@ -218,8 +245,9 @@ if __name__ == '__main__':
     spawn_reading_threads(servo_list, controller_dict)
 
     stats = [0, 0, 0]
+    imu_rpy = [0, 0, 0]
 
-    stat_thread = statListenerThread(stats)
+    stat_thread = statListenerThread(stats, imu_rpy)
     stat_thread.start()
 
     node = HardwareHandlerNode(
@@ -236,7 +264,8 @@ if __name__ == '__main__':
                                    'leg6coxa', 'leg6femur', 'leg6tibia', 'tail_joint'],
                              velocity=[],
                              effort=[]),  # joint topic structure
-        node_stats=stats
+        node_stats=stats,
+        imu=imu_rpy
     )
 
     rospy.Subscriber("/engine/angle_joint_states", JointState, node.get_angles)
