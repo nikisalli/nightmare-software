@@ -87,7 +87,7 @@ class stepPlannerNode():
     def run(self):
         # wait for tf
         t = time.time()
-        while(not self.tf_buffer.can_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0))):
+        while(not self.tf_buffer.can_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0)) and not rospy.is_shutdown()):
             if time.time() - t > 30:
                 rospy.logerr("step planner - wait for transform timeout!")
                 # os.exit(0)
