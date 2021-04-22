@@ -449,6 +449,9 @@
 <link name="leg_6_tip">
 </link>
 
+<link name="body_imu">
+</link>
+
 <joint name="base2body" type="fixed">
   <origin rpy="0 0 -1.57079632679" xyz="0 0 0"/>
   <parent link="base_link"/>
@@ -592,6 +595,12 @@
   <origin rpy="0 0 1.57079632679" xyz="0.0 0.1 0.025"/>
   <parent link="body_link"/>
   <child link="camera_link"/>
+</joint>
+
+<joint name="body2body_imu" type="fixed">
+  <origin rpy="0 0 0" xyz="-0.012 0.036 0.025"/>
+  <parent link="body_link"/>
+  <child link="body_imu"/>
 </joint>
 
 <joint name="leg1tip" type="fixed">
