@@ -24,6 +24,8 @@
 		<arg name="linear_accel_cov" 		value="1.0"/>
 		<arg name="unite_imu_method" 		value="linear_interpolation"/>
 		<arg name="initial_reset" 			value="true"/>                 <!-- mitigate imu hardware problems -->
+		<arg name="depth_fps"               value="30"/>
+  		<arg name="color_fps"               value="30"/>
 	</include>
 
 	<!-- start web server node -->
