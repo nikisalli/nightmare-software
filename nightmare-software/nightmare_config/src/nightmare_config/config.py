@@ -59,7 +59,6 @@ MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 10.e-2
 
 ENGINE_REFERENCE_FRAME = "odom"  # or world
-ENGINE_OUTPUT_FRAME = "engine/odom"
 ENGINE_OUTPUT_ODOM_TOPIC = "engine/odom"
 
 # walk settings

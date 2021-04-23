@@ -1,11 +1,17 @@
+#!/usr/bin/env python3
+# pylint: disable=broad-except, no-name-in-module
+
 from random import randint
 import time
 import numpy as np
 
+import rospy
+
 from nightmare_math.math import (asymmetrical_sigmoid,
                                  rotate,
                                  abs2relpos,
-                                 rel2abspos)
+                                 rel2abspos,
+                                 quat2euler)
 
 from nightmare_config.config import (DEFAULT_POSE,
                                      STEP_HEIGHT,
@@ -19,7 +25,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      TIME_SIT,
                                      NUMBER_OF_LEGS,
                                      GAIT,
-                                     EPSILON)
+                                     EPSILON,
+                                     ENGINE_REFERENCE_FRAME)
 
 import bezier
 
@@ -31,8 +38,12 @@ def execute_step(engine):
     # rospy.loginfo(f"executing id {engine.step_id}, steps in queue {len(engine.steps)}")
     engine.publish_step_id()
 
-    start_trasl = engine.body_abs_trasl.copy()
-    start_rot = engine.body_abs_rot.copy()
+    trans = engine.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
+    start_trasl = [trans.translation.x, trans.translation.y, trans.translation.z]
+    start_rot = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
+    rospy.loginfo(str(quat2euler(start_rot)))
+    # start_trasl = engine.body_abs_trasl.copy()
+    # start_rot = engine.body_abs_rot.copy()
     abs_pose = rel2abspos(engine.hw_pose, start_trasl, start_rot)  # put this in main engine class and handle it TODO
     curves = {}
 
@@ -143,7 +154,9 @@ def stand(engine):
 
 def apply_transform(engine):
     # apply transform
+    filter_pose(engine)
     pose = rotate(engine.pose.copy(), engine.body_rot, inverse=True)
+    pose = rotate(pose, [engine.roll_correction, engine.pitch_correction, 0])
     pose -= engine.body_trasl
     engine.final_pose = pose
 
@@ -151,6 +164,14 @@ def apply_transform(engine):
     engine.final_body_abs_rot = engine.body_abs_rot + engine.body_rot
     rotated_command = rotate(engine.body_trasl, engine.body_rot + engine.body_abs_rot)
     engine.final_body_abs_trasl = engine.body_abs_trasl + rotated_command
+
+
+def filter_pose(engine):
+    trans = engine.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
+    rot = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
+    rot_euler = quat2euler(rot)
+    engine.roll_correction = engine.roll_correction + (engine.pose_filter_val * (rot_euler[0] - engine.pose_roll_setpoint))
+    engine.pitch_correction = engine.pitch_correction + (engine.pose_filter_val * (rot_euler[1] - engine.pose_pitch_setpoint))
 
 
 def sleep(engine):

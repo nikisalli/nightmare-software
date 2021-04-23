@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pylint: disable=broad-except
+# pylint: disable=broad-except, no-name-in-module
 
 import json
 import time
@@ -13,9 +13,8 @@ from nightmare_step_planner.msg import command  # pylint: disable=no-name-in-mod
 from std_msgs.msg import Header, Int32, String, Float32
 from visualization_msgs.msg import Marker
 
-from nightmare_math.math import rotate
+from nightmare_math.math import rotate, quat2euler
 from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, MAX_STEP_LENGTH, ENGINE_REFERENCE_FRAME
-from nightmare_math.math import quat2euler
 
 
 class stepPlannerNode():

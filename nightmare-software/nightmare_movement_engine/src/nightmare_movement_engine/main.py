@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=broad-except, no-name-in-module
 
 # libs import
 import os
@@ -10,19 +11,17 @@ import numpy as np
 import rospy
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header, Int32, String, Float32
-import tf_conversions
-import tf2_ros
-from geometry_msgs.msg import TransformStamped, Point, Pose, Quaternion, Twist, Vector3
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker
+import tf2_ros as tf
 
 # external package import
 from nightmare_config.config import (DEFAULT_POSE,
                                      ENGINE_FPS,
                                      ENGINE_REFERENCE_FRAME,
-                                     ENGINE_OUTPUT_FRAME,
                                      ENGINE_OUTPUT_ODOM_TOPIC)
-from nightmare_state_broadcaster.msg import command  # pylint: disable=no-name-in-module
+from nightmare_state_broadcaster.msg import command
 from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
 
 # same package import
@@ -44,71 +43,65 @@ JOINTSTATE_MSG = JointState(header=Header(),
 
 class engineNode():
     def __init__(self):
-        # robot state
-        self.state = 'sleep'  # actual engine state
-        self.prev_state = 'sleep'  # previous engine state
+        # ROBOT STATE #
+        self.state = 'sleep'                    # actual engine state
+        self.prev_state = 'sleep'               # previous engine state
         self.gait = 'tripod'
-        self.body_trasl = np.array([0, 0, 0])
-        self.body_rot = np.array([0, 0, 0])
-        self.walk_trasl = np.array([0, 0, 0])
-        self.walk_rot = np.array([0, 0, 0])
+        self.body_trasl = np.array([0, 0, 0])   # commanded body traslation
+        self.body_rot = np.array([0, 0, 0])     # commanded body rotation
+        self.walk_trasl = np.array([0, 0, 0])   # commanded walk traslatory speed
+        self.walk_rot = np.array([0, 0, 0])     # commanded walk rotatory speed
 
-        # robot pos
-        self.angles = np.zeros(shape=(6, 3))  # angle matrix
-        self.angles_array = [0] * 19  # angle array
+        # ROBOT POSE #
+        self.angles = np.zeros(shape=(6, 3))    # angle matrix
+        self.angles_array = [0] * 19            # angle array
         self.hw_angles_array = [0] * 19
         self.hw_angles = np.zeros(shape=(6, 3))
-        self.states = [0] * 19  # all servos disconnected at start
-        self.hw_pose = np.zeros(shape=(6, 3))  # body frame initialize as empty and fill it later in set_hw_joint_state callback
-        self.pose = DEFAULT_POSE.copy()  # body frame pose of the robot without transforms
-        self.final_pose = DEFAULT_POSE.copy()  # body frame pose of the robot with transforms
+        self.states = [0] * 19                  # all servos disconnected at start
+        self.hw_pose = np.zeros(shape=(6, 3))   # body frame initialize as empty and fill it later in set_hw_joint_state callback
+        self.pose = DEFAULT_POSE.copy()         # body frame pose of the robot without transforms
+        self.final_pose = DEFAULT_POSE.copy()   # body frame pose of the robot with transforms
         self.rate = rospy.Rate(ENGINE_FPS)
-        self.body_abs_trasl = [0, 0, 0]  # world frame
-        self.body_abs_rot = [0, 0, 0]  # world frame
-        self.final_body_abs_trasl = [0, 0, 0]  # world frame
-        self.final_body_abs_rot = [0, 0, 0]  # world frame
+        self.body_abs_trasl = [0, 0, 0]         # engine reference frame
+        self.body_abs_rot = [0, 0, 0]           # engine reference frame
+        self.final_body_abs_trasl = [0, 0, 0]   # engine reference frame
+        self.final_body_abs_rot = [0, 0, 0]     # engine reference frame
+        self.pitch_correction = 0               # process value for pose pitch P filter
+        self.roll_correction = 0                # process value for pose roll P filter
+        self.pose_filter_val = 0.15             # pose P filter aggressivity
+        self.pose_pitch_setpoint = 0
+        self.pose_roll_setpoint = 0
 
-        # step planner state
+        # STEP PLANNER STATE #
         self.step_id = 0
         self.steps = []  # world frame
         self.attenuation = 0
 
         # create publishers
         self.joint_angle_publisher = rospy.Publisher('/engine/angle_joint_states', JointState, queue_size=10)
-        self.joint_angle_msg = JOINTSTATE_MSG  # joint angle topic structure
+        self.joint_angle_msg = JOINTSTATE_MSG   # joint angle topic structure
 
         self.joint_state_publisher = rospy.Publisher('/engine/state_joint_states', JointState, queue_size=10)
-        self.joint_state_msg = JOINTSTATE_MSG  # joint state topic structure
+        self.joint_state_msg = JOINTSTATE_MSG   # joint state topic structure
 
         self.engine_step_id_publisher = rospy.Publisher('/engine/step', Int32, queue_size=10)
-        self.engine_step_id_msg = Int32()  # engine current step id
-
-        self.engine_pos_publisher = tf2_ros.TransformBroadcaster()
-        self.engine_pos_publisher_msg = TransformStamped()  # where the engine thinks the robot is
+        self.engine_step_id_msg = Int32()       # engine current step id
 
         self.marker_publisher = rospy.Publisher("/engine/markers", Marker, queue_size=100)
+        self.robotMarker = Marker()             # engine markers
+
+        self.odom_pub = rospy.Publisher(ENGINE_OUTPUT_ODOM_TOPIC, Odometry, queue_size=50)
+        self.odom_pub_msg = Odometry()          # engine odom
+
+        # TF LISTENER #
+        self.tf_buffer = tf.Buffer()
+        self.tf_listener = tf.TransformListener(self.tf_buffer)
 
         # setup body to map odometry
-        self.odom_pub = rospy.Publisher(ENGINE_OUTPUT_ODOM_TOPIC, Odometry, queue_size=50)
-        self.odom_pub_msg = Odometry()
         self.odom_pub_msg.header.frame_id = ENGINE_REFERENCE_FRAME  # odom
         self.odom_pub_msg.child_frame_id = "base_link"
 
-        # setup body to world odom transformation
-        self.engine_pos_publisher_msg.header.stamp = rospy.Time.now()
-        self.engine_pos_publisher_msg.header.frame_id = ENGINE_REFERENCE_FRAME  # odom
-        self.engine_pos_publisher_msg.child_frame_id = "base_link"
-        self.engine_pos_publisher_msg.transform.translation.x = 0.0
-        self.engine_pos_publisher_msg.transform.translation.y = 0.0
-        self.engine_pos_publisher_msg.transform.translation.z = 0.0
-        q = tf_conversions.transformations.quaternion_from_euler(0, 0, 0)
-        self.engine_pos_publisher_msg.transform.rotation.x = q[0]
-        self.engine_pos_publisher_msg.transform.rotation.y = q[1]
-        self.engine_pos_publisher_msg.transform.rotation.z = q[2]
-        self.engine_pos_publisher_msg.transform.rotation.w = q[3]
-
         # setup marker
-        self.robotMarker = Marker()
         self.robotMarker.header.frame_id = ENGINE_REFERENCE_FRAME
         self.robotMarker.ns = "engine"
         self.robotMarker.id = 0
@@ -174,23 +167,11 @@ class engineNode():
         # rospy.loginfo('\n' + str(engine.steps) + '\n')
 
     def publish_engine_odom(self, time):
-        # tf transformation
+        # transformation
         x = self.final_body_abs_trasl[0]
         y = self.final_body_abs_trasl[1]
         z = self.final_body_abs_trasl[2]
         q = euler2quat([self.final_body_abs_rot[0], self.final_body_abs_rot[1], self.final_body_abs_rot[2]])
-
-        self.engine_pos_publisher_msg.transform.translation.x = x
-        self.engine_pos_publisher_msg.transform.translation.y = y
-        self.engine_pos_publisher_msg.transform.translation.z = z
-
-        self.engine_pos_publisher_msg.transform.rotation.x = q[0]
-        self.engine_pos_publisher_msg.transform.rotation.y = q[1]
-        self.engine_pos_publisher_msg.transform.rotation.z = q[2]
-        self.engine_pos_publisher_msg.transform.rotation.w = q[3]
-
-        self.engine_pos_publisher_msg.header.stamp = time
-        # self.engine_pos_publisher.sendTransform(self.engine_pos_publisher_msg)
 
         # odom
         self.odom_pub_msg.header.stamp = time
