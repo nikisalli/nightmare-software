@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+# pylint: disable=broad-except, no-name-in-module
 
 import os
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from threading import Thread
 from typing import List, Any
 import json
@@ -12,11 +13,11 @@ import lewansoul_lx16a
 import rospy
 import serial
 from sensor_msgs.msg import JointState, Imu
-from std_msgs.msg import Header, Float32
+from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import tf_conversions
 
 from nightmare_math.math import fmap
-from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER)
+from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER, NUMBER_OF_SENSORS, SENSOR_START_ID)
 
 
 @dataclass
@@ -32,13 +33,29 @@ class Servo:
 
 
 @dataclass
+class Pressure_sensor:
+    """sensor class to hold pressure sensor data"""
+    id: int
+    tty: str
+    val: int = 0
+    force: float = 0.
+    color: List[int] = field(default_factory=lambda: [0, 0, 0])
+    mode: int = 0
+
+
+@dataclass
 class Leg:
     """leg class to hold servo positions"""
     id: int
     servos: List[Servo]
+    force_sensor: Pressure_sensor
 
 
 class ServoNotFoundError(EnvironmentError):
+    pass
+
+
+class SensorNotFoundError(EnvironmentError):
     pass
 
 
@@ -59,6 +76,23 @@ def get_servo_tty(servo_id, controllers):
     raise ServoNotFoundError
 
 
+def get_sensor_tty(sensor_id, controllers):
+    t = time.time()
+    while (time.time() - t < 30):
+        for tty, controller in controllers.items():
+            try:
+                controller.get_sensor_pressure(sensor_id, timeout=0.05)
+                rospy.loginfo(f"found sensor id {sensor_id} on {tty}")
+                return tty
+            except lewansoul_lx16a.TimeoutError:
+                pass
+        time.sleep(1)
+        rospy.loginfo(f"couldn't find sensor id {sensor_id}. retrying...")
+
+    rospy.logerr(f"couldn't find a sensor with ID: {sensor_id} on any serial bus!")
+    raise SensorNotFoundError
+
+
 def set_tty_to_low_latency():
     rospy.loginfo("setting ports to low latency mode")
 
@@ -67,26 +101,30 @@ def set_tty_to_low_latency():
     os.system(f"setserial {STAT_TTY} low_latency")
 
 
-def spawn_reading_threads(servos, controllers):
+def spawn_reading_threads(servos, sensors, controllers):
     rospy.loginfo("spawning reading threads")
 
     thread_list = []
     for tty, controller in controllers.items():
-        thread_list.append(ListenerThread([servo for servo in servos if servo.tty == tty], controller))
+        thread_list.append(ListenerThread([servo for servo in servos if servo.tty == tty],
+                                          [sensor for sensor in sensors if sensor.tty == tty],
+                                          controller))
         thread_list[-1].start()
 
     return thread_list
 
 
 class ListenerThread(Thread):
-    def __init__(self, servos: List[Servo], controller: lewansoul_lx16a.ServoController):
+    def __init__(self, servos: List[Servo], sensors: List[Pressure_sensor], controller: lewansoul_lx16a.ServoController):
         Thread.__init__(self)
         self.servos = servos
+        self.sensors = sensors
         self.controller = controller
 
     def run(self):
         counter = 0
         while not rospy.is_shutdown():
+            # handle servos
             for i, servo in enumerate(self.servos):
                 try:
                     # read servo and write state less frequently (one servo per full servo iteration)
@@ -107,6 +145,14 @@ class ListenerThread(Thread):
 
                 except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read servo position. ID: {servo.id} port: {servo.tty}")
+            # handle sensors
+            for i, sensor in enumerate(self.sensors):
+                try:
+                    voltage = fmap(self.controller.get_sensor_pressure(sensor.id, timeout=0.02), 0, 1023, 0., 5.)
+                    resistance = (voltage * 10000) / (5.00000001 - voltage)
+                    sensor.force = round(1878926000 / (1 + (resistance / 0.1563189)**1.493106), 1)
+                except lewansoul_lx16a.TimeoutError:
+                    rospy.logerr(f"couldn't read sensor force. ID: {sensor.id} port: {sensor.tty}")
             time.sleep(0.01)  # execute every 0.05s
             counter += 1
             if (counter > len(self.servos)):
@@ -165,11 +211,21 @@ class HardwareHandlerNode:
         self.imu_msg.orientation_covariance[4] = 0.00017
         self.imu_msg.orientation_covariance[8] = 0.00017
         self.imu_msg.header.frame_id = 'body_imu'  # set imu frame
+        self.sensor_msg = Float32MultiArray()
+        self.sensor_msg.layout.dim.append(MultiArrayDimension())
+        self.sensor_msg.layout.dim[0].label = "height"
+        self.sensor_msg.layout.dim[0].size = 6
+        self.sensor_msg.layout.dim[0].stride = 6
+        self.sensor_msg.layout.data_offset = 0
+        self.sensor_msg.data = [0] * 6
+
+        # publishers
         self.publisher_servo_current = rospy.Publisher('servo_current', Float32, queue_size=10)
         self.publisher_computer_current = rospy.Publisher('computer_current', Float32, queue_size=10)
         self.publisher_voltage = rospy.Publisher('voltage', Float32, queue_size=10)
         self.publisher_current = rospy.Publisher('current', Float32, queue_size=10)
         self.publisher_imu = rospy.Publisher('body_imu', Imu, queue_size=10)
+        self.publisher_force_sensors = rospy.Publisher('force_sensors', Float32MultiArray, queue_size=10)
 
         rospy.on_shutdown(self.on_shutdown)
 
@@ -179,6 +235,7 @@ class HardwareHandlerNode:
         self._publish_jnt()
         self._publish_stat()
         self._publish_imu()
+        self._publish_sensors()
 
     def _publish_jnt(self):
         ang = [servo.angle for leg in self.legs for servo in leg.servos]
@@ -210,6 +267,10 @@ class HardwareHandlerNode:
         self.imu_msg.orientation.z = q[3]
         self.publisher_imu.publish(self.imu_msg)
 
+    def _publish_sensors(self):
+        self.sensor_msg.data = [leg.force_sensor.force for leg in self.legs]
+        self.publisher_force_sensors.publish(self.sensor_msg)
+
     def get_states(self, msg):
         for i, leg in enumerate(self.legs):
             leg.servos[0].enabled = msg.position[i * 3]
@@ -238,9 +299,10 @@ if __name__ == '__main__':
 
     rospy.loginfo("indexing servos")
     servo_list = [Servo(servo_id, get_servo_tty(servo_id, controller_dict)) for servo_id in range(1, NUMBER_OF_SERVOS)]
-    leg_list = [Leg(leg_id, servo_list[leg_id * 3:leg_id * 3 + 3]) for leg_id in range(NUMBER_OF_LEGS)]
+    sensor_list = [Pressure_sensor(sensor_id, get_sensor_tty(sensor_id, controller_dict)) for sensor_id in range(SENSOR_START_ID, SENSOR_START_ID + NUMBER_OF_SENSORS)]
+    leg_list = [Leg(leg_id, servo_list[leg_id * 3:leg_id * 3 + 3], sensor_list[leg_id]) for leg_id in range(NUMBER_OF_LEGS)]
 
-    spawn_reading_threads(servo_list, controller_dict)
+    spawn_reading_threads(servo_list, sensor_list, controller_dict)
 
     stats = [0, 0, 0]
     imu_rpy = [0, 0, 0]
