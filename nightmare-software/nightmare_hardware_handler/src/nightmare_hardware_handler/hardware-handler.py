@@ -8,6 +8,7 @@ from threading import Thread
 from typing import List, Any
 import json
 import math
+import numpy as np
 
 import lewansoul_lx16a
 import rospy
@@ -17,7 +18,7 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import tf_conversions
 
 from nightmare_math.math import fmap
-from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER, NUMBER_OF_SENSORS, SENSOR_START_ID)
+from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER, NUMBER_OF_SENSORS, SENSOR_START_ID, FORCE_SENSOR_FILTER_VAL)
 
 
 @dataclass
@@ -61,10 +62,10 @@ class SensorNotFoundError(EnvironmentError):
 
 def get_servo_tty(servo_id, controllers):
     t = time.time()
-    while (time.time() - t < 30):
+    while (time.time() - t < 30) and not rospy.is_shutdown():
         for tty, controller in controllers.items():
             try:
-                controller.get_servo_id(servo_id, timeout=0.05)
+                controller.get_servo_id(servo_id, timeout=0.1)
                 rospy.loginfo(f"found servo id {servo_id} on {tty}")
                 return tty
             except lewansoul_lx16a.TimeoutError:
@@ -78,7 +79,7 @@ def get_servo_tty(servo_id, controllers):
 
 def get_sensor_tty(sensor_id, controllers):
     t = time.time()
-    while (time.time() - t < 30):
+    while (time.time() - t < 30) and not rospy.is_shutdown():
         for tty, controller in controllers.items():
             try:
                 controller.get_sensor_pressure(sensor_id, timeout=0.05)
@@ -148,9 +149,10 @@ class ListenerThread(Thread):
             # handle sensors
             for i, sensor in enumerate(self.sensors):
                 try:
-                    voltage = fmap(self.controller.get_sensor_pressure(sensor.id, timeout=0.02), 0, 1023, 0., 5.)
+                    sensor.val = self.controller.get_sensor_pressure(sensor.id, timeout=0.02)
+                    voltage = fmap(sensor.val, 0, 1023, 0., 5.)
                     resistance = (voltage * 10000) / (5.00000001 - voltage)
-                    sensor.force = round(1878926000 / (1 + (resistance / 0.1563189)**1.493106), 1)
+                    sensor.force = 18413474 / (1 + (resistance / 0.1563189)**1.493106)
                 except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read sensor force. ID: {sensor.id} port: {sensor.tty}")
             time.sleep(0.01)  # execute every 0.05s
@@ -211,13 +213,24 @@ class HardwareHandlerNode:
         self.imu_msg.orientation_covariance[4] = 0.00017
         self.imu_msg.orientation_covariance[8] = 0.00017
         self.imu_msg.header.frame_id = 'body_imu'  # set imu frame
+
         self.sensor_msg = Float32MultiArray()
         self.sensor_msg.layout.dim.append(MultiArrayDimension())
         self.sensor_msg.layout.dim[0].label = "height"
         self.sensor_msg.layout.dim[0].size = 6
         self.sensor_msg.layout.dim[0].stride = 6
         self.sensor_msg.layout.data_offset = 0
-        self.sensor_msg.data = [0] * 6
+        self.sensor_msg.data = np.asarray([0.] * 6)
+        self.sensor_msg_raw = np.asarray([0.] * 6)
+
+        self.filtered_sensor_msg = Float32MultiArray()
+        self.filtered_sensor_msg.layout.dim.append(MultiArrayDimension())
+        self.filtered_sensor_msg.layout.dim[0].label = "height"
+        self.filtered_sensor_msg.layout.dim[0].size = 6
+        self.filtered_sensor_msg.layout.dim[0].stride = 6
+        self.filtered_sensor_msg.layout.data_offset = 0
+        self.filtered_sensor_msg.data = np.asarray([0.] * 6)
+        self.filtered_sensor_msg_raw = np.asarray([0.] * 6)
 
         # publishers
         self.publisher_servo_current = rospy.Publisher('servo_current', Float32, queue_size=10)
@@ -226,6 +239,7 @@ class HardwareHandlerNode:
         self.publisher_current = rospy.Publisher('current', Float32, queue_size=10)
         self.publisher_imu = rospy.Publisher('body_imu', Imu, queue_size=10)
         self.publisher_force_sensors = rospy.Publisher('force_sensors', Float32MultiArray, queue_size=10)
+        self.publisher_filtered_force_sensors = rospy.Publisher('filtered_force_sensors', Float32MultiArray, queue_size=10)
 
         rospy.on_shutdown(self.on_shutdown)
 
@@ -268,8 +282,11 @@ class HardwareHandlerNode:
         self.publisher_imu.publish(self.imu_msg)
 
     def _publish_sensors(self):
-        self.sensor_msg.data = [leg.force_sensor.force for leg in self.legs]
+        self.sensor_msg_raw = [leg.force_sensor.force for leg in self.legs]
+        self.filtered_sensor_msg.data = self.sensor_msg_raw
+        self.sensor_msg.data += FORCE_SENSOR_FILTER_VAL * (self.sensor_msg_raw - self.sensor_msg.data)
         self.publisher_force_sensors.publish(self.sensor_msg)
+        self.publisher_filtered_force_sensors.publish(self.filtered_sensor_msg)
 
     def get_states(self, msg):
         for i, leg in enumerate(self.legs):

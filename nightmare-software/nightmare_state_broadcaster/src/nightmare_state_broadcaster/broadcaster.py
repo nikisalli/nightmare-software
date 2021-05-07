@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=broad-except, no-name-in-module
 
 # standard python imports
 import time
@@ -68,7 +69,7 @@ class ListenerThread(Thread):
             self.old_topic = self.topic
             sub = rospy.Subscriber(self.old_topic[0], self.old_topic[1], self.callback_joystick)
 
-            while self.old_topic == self.topic:
+            while self.old_topic == self.topic and not rospy.is_shutdown():
                 self.topic = find_talker()
                 time.sleep(0.05)
 
@@ -107,6 +108,7 @@ def handle_state():
         header.stamp = rospy.Time.now()
 
         # TODO remove this bs because c'mon you can do better
+        # ps it's a filter for commands
         final_body_trasl += (body_trasl - final_body_trasl) * 0.1
         final_body_rot += (body_rot - final_body_rot) * 0.1
         final_walk_trasl += (walk_trasl - final_walk_trasl) * 0.1

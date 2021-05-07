@@ -11,7 +11,8 @@ from nightmare_math.math import (asymmetrical_sigmoid,
                                  rotate,
                                  abs2relpos,
                                  rel2abspos,
-                                 quat2euler)
+                                 quat2euler,
+                                 limit)
 
 from nightmare_config.config import (DEFAULT_POSE,
                                      STEP_HEIGHT,
@@ -26,7 +27,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      NUMBER_OF_LEGS,
                                      GAIT,
                                      EPSILON,
-                                     ENGINE_REFERENCE_FRAME)
+                                     ENGINE_REFERENCE_FRAME,
+                                     DYNAMIC_TERRAIN_ADAPTATION_ENABLED)
 
 import bezier
 
@@ -74,6 +76,8 @@ def execute_step(engine):
                 pose = abs2relpos(pose, start_trasl, start_rot)
                 engine.pose[leg] = pose
             else:
+                # level legs only if on ground
+                # leg_correction(engine, leg)
                 pose = engine.pose[leg].copy()
                 pose = rotate(pose, rot_command, inverse=True)
                 pose -= rel_rotated_command
@@ -147,6 +151,9 @@ def sit(engine):
 
 
 def stand(engine):
+    # level legs
+    if(DYNAMIC_TERRAIN_ADAPTATION_ENABLED):
+        leg_correction(engine)
     engine.body_abs_trasl[2] = STAND_HEIGTH
     apply_transform(engine)
     engine.compute_ik()
@@ -154,10 +161,12 @@ def stand(engine):
 
 def apply_transform(engine):
     # apply transform
-    filter_pose(engine)
+    pose_correction(engine)
     pose = rotate(engine.pose.copy(), engine.body_rot, inverse=True)
     pose = rotate(pose, [engine.roll_correction, engine.pitch_correction, 0])
     pose -= engine.body_trasl
+    if(DYNAMIC_TERRAIN_ADAPTATION_ENABLED):
+        pose[:, 2] += engine.leg_z_correction
     engine.final_pose = pose
 
     # generate odom
@@ -166,12 +175,20 @@ def apply_transform(engine):
     engine.final_body_abs_trasl = engine.body_abs_trasl + rotated_command
 
 
-def filter_pose(engine):
+def pose_correction(engine):
     trans = engine.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
     rot = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
     rot_euler = quat2euler(rot)
-    engine.roll_correction = engine.roll_correction + (engine.pose_filter_val * (rot_euler[0] - engine.pose_roll_setpoint))
-    engine.pitch_correction = engine.pitch_correction + (engine.pose_filter_val * (rot_euler[1] - engine.pose_pitch_setpoint))
+    engine.roll_correction += engine.pose_filter_val * (rot_euler[0] - engine.pose_roll_setpoint)
+    engine.pitch_correction += engine.pose_filter_val * (rot_euler[1] - engine.pose_pitch_setpoint)
+
+
+def leg_correction(engine):
+    for leg in range(NUMBER_OF_LEGS):
+        engine.leg_z_correction[leg] -= engine.leg_adapt_filter_val * (engine.leg_adapt_var_filtered_setpoint - engine.force_sensors[leg])
+        engine.leg_z_correction[leg] = limit(engine.leg_z_correction[leg], engine.max_leg_adapt_adjust, - engine.max_leg_adapt_adjust)  # to make sure it doesn't grow without control
+    avg = float(sum(engine.leg_z_correction) / NUMBER_OF_LEGS)
+    engine.leg_z_correction -= avg
 
 
 def sleep(engine):

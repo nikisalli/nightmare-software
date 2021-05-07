@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# pylint: disable=broad-except, no-name-in-module
+
 import numpy as np
 from numpy import sin, cos, arccos, arctan2, sqrt
 from scipy.spatial.transform import Rotation as R
@@ -93,3 +96,7 @@ def quat2euler(quat):
 
 def euler2quat(euler):
     return tf_conversions.transformations.quaternion_from_euler(euler[0], euler[1], euler[2])
+
+
+def limit(val, maxv, minv):
+    return min(max(val, minv), maxv)

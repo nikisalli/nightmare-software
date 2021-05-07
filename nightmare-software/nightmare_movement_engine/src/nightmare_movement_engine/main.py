@@ -10,7 +10,7 @@ import numpy as np
 # ros libs import
 import rospy
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Header, Int32, String, Float32
+from std_msgs.msg import Header, Int32, String, Float32, Float32MultiArray
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker
@@ -20,7 +20,12 @@ import tf2_ros as tf
 from nightmare_config.config import (DEFAULT_POSE,
                                      ENGINE_FPS,
                                      ENGINE_REFERENCE_FRAME,
-                                     ENGINE_OUTPUT_ODOM_TOPIC)
+                                     ENGINE_OUTPUT_ODOM_TOPIC,
+                                     POSTURE_P_GAIN,
+                                     LEG_P_GAIN,
+                                     LEG_SETPOINT_FILTER_VAL,
+                                     MAX_LEG_CORRECTION)
+
 from nightmare_state_broadcaster.msg import command
 from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
 
@@ -59,18 +64,29 @@ class engineNode():
         self.hw_angles = np.zeros(shape=(6, 3))
         self.states = [0] * 19                  # all servos disconnected at start
         self.hw_pose = np.zeros(shape=(6, 3))   # body frame initialize as empty and fill it later in set_hw_joint_state callback
-        self.pose = DEFAULT_POSE.copy()         # body frame pose of the robot without transforms
-        self.final_pose = DEFAULT_POSE.copy()   # body frame pose of the robot with transforms
+        self.pose = DEFAULT_POSE.copy()         # body frame pose of the robot without transforms  6 x 3
+        self.final_pose = DEFAULT_POSE.copy()   # body frame pose of the robot with transforms  6 x 3
         self.rate = rospy.Rate(ENGINE_FPS)
         self.body_abs_trasl = [0, 0, 0]         # engine reference frame
         self.body_abs_rot = [0, 0, 0]           # engine reference frame
         self.final_body_abs_trasl = [0, 0, 0]   # engine reference frame
         self.final_body_abs_rot = [0, 0, 0]     # engine reference frame
+
+        # POSTURE CORRECTION #
         self.pitch_correction = 0               # process value for pose pitch P filter
         self.roll_correction = 0                # process value for pose roll P filter
-        self.pose_filter_val = 0.15             # pose P filter aggressivity
+        self.pose_filter_val = POSTURE_P_GAIN   # pose P filter aggressivity
         self.pose_pitch_setpoint = 0
         self.pose_roll_setpoint = 0
+
+        # TERRAIN ADAPTATION #
+        self.leg_z_correction = np.asarray([0.] * 6)     # leg filters process variables
+        self.leg_adapt_filter_val = LEG_P_GAIN           # leg P gain
+        self.leg_adapt_var_filtered_setpoint = 0         # leg filters' setpoint filter process variable
+        self.leg_adapt_var_setpoint_filter_val = LEG_SETPOINT_FILTER_VAL
+        self.leg_adapt_var_setpoint = 0                  # leg filters' setpoint filter setpoint
+        self.max_leg_adapt_adjust = MAX_LEG_CORRECTION   # maximum adjust value so that the filter does not explode
+        self.force_sensors = np.asarray([0.] * 6)        # list storing each legs' pressure sensor data
 
         # STEP PLANNER STATE #
         self.step_id = 0
@@ -146,7 +162,7 @@ class engineNode():
             if self.state == 'stand' and self.prev_state == 'sleep':
                 self.states = [1] * 19
                 movements.stand_up(self)
-            elif self.state == 'sleep' and self.prev_state == 'stand':
+            elif self.state == 'sleep' and (self.prev_state == 'stand' or any(v != 0 for v in self.states)):
                 movements.sit(self)
                 self.states = [0] * 19
             elif self.state == 'stand':
@@ -196,6 +212,11 @@ class engineNode():
     def set_attenuation(self, msg):
         self.attenuation = msg.data
 
+    def set_force_sensors(self, msg):
+        self.force_sensors = list(msg.data)
+        self.leg_adapt_var_setpoint = sum(self.force_sensors) / len(self.force_sensors)  # average
+        self.leg_adapt_var_filtered_setpoint += self.leg_adapt_var_setpoint_filter_val * (self.leg_adapt_var_setpoint - self.leg_adapt_var_filtered_setpoint)
+
     def set_state(self, msg):
         self.body_trasl = np.array(msg.body_trasl)
         self.body_rot = np.array(msg.body_rot)
@@ -240,5 +261,6 @@ if __name__ == '__main__':
     rospy.Subscriber("/joint_states", JointState, engine.set_hw_joint_state)
     rospy.Subscriber("/engine/footsteps", String, engine.parse_footsteps)
     rospy.Subscriber("/engine/attenuation", Float32, engine.set_attenuation)
+    rospy.Subscriber("/filtered_force_sensors", Float32MultiArray, engine.set_force_sensors)
 
     engine.run()
