@@ -35,7 +35,6 @@ NUMBER_OF_SERVOS = 19
 NUMBER_OF_SERVOS_PER_LEG = 3
 NUMBER_OF_SENSORS = 6
 NUMBER_OF_SENSORS_PER_LEG = 1
-SENSOR_START_ID = 40
 
 # HARDWARE PARAMS
 # used ttys to communicate with servos
@@ -44,19 +43,21 @@ TTY_LIST = ["/dev/ttySERVO0", "/dev/ttySERVO1", "/dev/ttySERVO2", "/dev/ttySERVO
 STAT_TTY = "/dev/ttyACM0"
 # hardware handler params
 STAT_HEADER = [0x55, 0x55, 0x55, 0x55, 0x55]
-
+FORCE_SENSOR_FILTER_VAL = 1e-1
+FORCE_SENSOR_CALIBRATION = {18: 38.47, 15: 1.26, 12: 1.63, 9: 3.44, 6: 11.5, 3: 2.45}
 
 # ENGINE PARAMETERS
 LEG_KEEPOUT = 4
 
-STAND_HEIGTH = 8.e-2
+STAND_HEIGHT = 10.e-2
+LEG_ADJ_HEIGHT = 6.e-2
 SIT_HEIGHT = 0e-2
 ENGINE_FPS = 30
-TIME_STAND_UP = 2.
-TIME_SIT = 2.
+TIME_STAND_UP = 2.5
+TIME_SIT = 2.5
 
-STEP_TIME = .8
-STEP_HEIGHT = 6.e-2
+STEP_TIME = 3.
+STEP_HEIGHT = 14.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 10.e-2
 
@@ -67,11 +68,21 @@ ENGINE_OUTPUT_ODOM_TOPIC = "engine/odom"
 POSTURE_P_GAIN = 0.15
 
 # dynamic terrain adaptation ## STILL IN BETA ##
-DYNAMIC_TERRAIN_ADAPTATION_ENABLED = False
-FORCE_SENSOR_FILTER_VAL = 1e-1
+DYNAMIC_TERRAIN_ADAPTATION_ENABLED = True
+MAX_LEG_CORRECTION = 10e-2
+# P controller
 LEG_P_GAIN = 1e-2
 LEG_SETPOINT_FILTER_VAL = 0
-MAX_LEG_CORRECTION = 2e-2
+# spring-mass
+SPRINGINESS = 200
+DAMPINESS = 0.05
+
+# walking terrain adaptation
+WALKING_TERRAIN_ADAPTATION_ENABLED = False
+TOUCHDOWN_TRESHOLD = 0.01
+MAX_TOUCHDOWN_DEPTH_SEARCH = 0.1  # 10cm
+
+AUTO_HEIGHT_ADJUSTMENT_ENABLED = False
 
 # walk settings
 MAX_WALK_TRASL_VEL = np.array([10e-2, 8e-2, 0])  # m/s
@@ -110,42 +121,42 @@ legs = [
     leg_class(  # leg 1
         dim=DEFAULT_DIM,
         abs_offset=np.array([BODY_LENGTH / 2, -BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, - STAND_HEIGTH]),
+        default_pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, - STAND_HEIGHT]),
         side=RIGHT,
         servo_offset=np.array([PI / 4, 0, 0])
     ),
     leg_class(  # leg 2
         dim=DEFAULT_DIM,
         abs_offset=np.array([0, -BODY_MID_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_MID_LEG_X, -STAND_MID_LEG_Y, - STAND_HEIGTH]),
+        default_pose=np.array([STAND_MID_LEG_X, -STAND_MID_LEG_Y, - STAND_HEIGHT]),
         side=RIGHT,
         servo_offset=np.array([0, 0, 0])
     ),
     leg_class(  # leg 3
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_LENGTH / 2, -BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, - STAND_HEIGTH]),
+        default_pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, - STAND_HEIGHT]),
         side=RIGHT,
         servo_offset=np.array([-PI / 4, 0, 0])
     ),
     leg_class(  # leg 4
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_LENGTH / 2, BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, - STAND_HEIGTH]),
+        default_pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, - STAND_HEIGHT]),
         side=LEFT,
         servo_offset=np.array([PI / 4, 0, 0])
     ),
     leg_class(  # leg 5
         dim=DEFAULT_DIM,
         abs_offset=np.array([0, BODY_MID_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, - STAND_HEIGTH]),
+        default_pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, - STAND_HEIGHT]),
         side=LEFT,
         servo_offset=np.array([0, 0, 0])
     ),
     leg_class(  # leg 6
         dim=DEFAULT_DIM,
         abs_offset=np.array([BODY_LENGTH / 2, BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, - STAND_HEIGTH]),
+        default_pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, - STAND_HEIGHT]),
         side=LEFT,
         servo_offset=np.array([-PI / 4, 0, 0])
     )

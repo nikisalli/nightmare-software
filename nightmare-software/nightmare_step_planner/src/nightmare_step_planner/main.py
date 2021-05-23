@@ -149,6 +149,7 @@ class stepPlannerNode():
             # generate new absolute pose from previous pose
             new_pos += new_rotated_command
             new_pos = rotate(new_pos, self.walk_rot * self.attenuation, pivot=new_trans)
+            new_pos[2] = 0  # for now our target is the floor, heightmap will be the new target in the future
 
             #  =======================
 

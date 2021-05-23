@@ -10,7 +10,7 @@
 
         <!-- Odometry -->
         <node pkg="rtabmap_ros" type="rgbd_odometry" name="rgbd_odometry">
-            <param name="frame_id"                  type="string" value="camera_link"/>
+            <param name="frame_id"                  type="string" value="base_link"/>  <!-- cambiare con base_link? -->
             <remap from="odom" to="/visual_odometry"/>  <!-- /rtabmap/odom to /visual_odometry -->
 
             <param name="subscribe_rgbd"            type="bool"   value="true"/>
@@ -23,10 +23,10 @@
             <param name="Odom/ResetCountdown"       type="string" value="1"/>
             <param name="Vis/FeatureType"           type="string" value="6"/> 
 
-            <param name="OdomF2M/MaxSize"           type="string" value="1000"/> <!-- default: 2000 -->
-            <param name="Vis/MaxFeatures"           type="string" value="500" /> <!-- default: 1000 -->
-            <param name="Odom/Strategy"                           value="0"/> <!-- 0 F2M 1 F2F -->
-            <param name="GFTT/MinDistance"          type="string" value="10"/> <!-- Min distance between features -->
+            <param name="OdomF2M/MaxSize"           type="string" value="2000"/> <!-- default: 2000 -->
+            <param name="Vis/MaxFeatures"           type="string" value="1000" /> <!-- default: 1000 -->
+            <param name="Odom/Strategy"                           value="0"/> <!-- 0 F2M 1 F2F F=Frame M=Map-->
+            <param name="GFTT/MinDistance"          type="string" value="1"/> <!-- Min distance between features -->
         </node> 
 
         <!-- RTABmap slam -->
@@ -39,7 +39,8 @@
             <param name="subscribe_rgb"             type="bool"   value="false"/>
             <param name="subscribe_rgbd"            type="bool"   value="true"/>
 
-            <remap from="odom" to="/odometry/filtered"/>
+            <!-- robot_localization publishes /odometry/filtered and rtabmap subscribes to odom if odom_frame_id is empty-->
+            <remap from="odom" to="/odometry/filtered"/>  
             <param name="odom_frame_id"                           value="odom"/>
             <param name="odom_tf_linear_variance"                 value="0.001"/>
             <param name="odom_tf_angular_variance"                value="0.001"/>

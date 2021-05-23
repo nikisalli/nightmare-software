@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import numpy as np
+import time
 
 # ros libs import
 import rospy
@@ -23,8 +24,7 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      ENGINE_OUTPUT_ODOM_TOPIC,
                                      POSTURE_P_GAIN,
                                      LEG_P_GAIN,
-                                     LEG_SETPOINT_FILTER_VAL,
-                                     MAX_LEG_CORRECTION)
+                                     LEG_SETPOINT_FILTER_VAL)
 
 from nightmare_state_broadcaster.msg import command
 from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
@@ -48,7 +48,7 @@ JOINTSTATE_MSG = JointState(header=Header(),
 
 class engineNode():
     def __init__(self):
-        # ROBOT STATE #
+        # ROBOT COMMANDS #
         self.state = 'sleep'                    # actual engine state
         self.prev_state = 'sleep'               # previous engine state
         self.gait = 'tripod'
@@ -57,7 +57,7 @@ class engineNode():
         self.walk_trasl = np.array([0, 0, 0])   # commanded walk traslatory speed
         self.walk_rot = np.array([0, 0, 0])     # commanded walk rotatory speed
 
-        # ROBOT POSE #
+        # ROBOT STATE #
         self.angles = np.zeros(shape=(6, 3))    # angle matrix
         self.angles_array = [0] * 19            # angle array
         self.hw_angles_array = [0] * 19
@@ -71,6 +71,9 @@ class engineNode():
         self.body_abs_rot = [0, 0, 0]           # engine reference frame
         self.final_body_abs_trasl = [0, 0, 0]   # engine reference frame
         self.final_body_abs_rot = [0, 0, 0]     # engine reference frame
+        self.leg_ground = np.array([True] * 6)  # array of bools True if leg touching ground
+        self.filtered_force_sensors = np.asarray([0.] * 6)
+        self.force_sensors = np.asarray([0.] * 6)
 
         # POSTURE CORRECTION #
         self.pitch_correction = 0               # process value for pose pitch P filter
@@ -80,13 +83,16 @@ class engineNode():
         self.pose_roll_setpoint = 0
 
         # TERRAIN ADAPTATION #
-        self.leg_z_correction = np.asarray([0.] * 6)     # leg filters process variables
+        self.leg_z_correction = np.array([0] * 6)     # leg filters process variables
+        self.simulink_leg_z_correction = np.array([0] * 6)
+        self.leg_z_speed = np.array([0] * 6)
+        self.leg_z_prev_pos = np.array([0] * 6)
+        self.leg_z_prev_time = time.time()
+        self.init_time = time.time()
+        # P controller
         self.leg_adapt_filter_val = LEG_P_GAIN           # leg P gain
         self.leg_adapt_var_filtered_setpoint = 0         # leg filters' setpoint filter process variable
-        self.leg_adapt_var_setpoint_filter_val = LEG_SETPOINT_FILTER_VAL
         self.leg_adapt_var_setpoint = 0                  # leg filters' setpoint filter setpoint
-        self.max_leg_adapt_adjust = MAX_LEG_CORRECTION   # maximum adjust value so that the filter does not explode
-        self.force_sensors = np.asarray([0.] * 6)        # list storing each legs' pressure sensor data
 
         # STEP PLANNER STATE #
         self.step_id = 0
@@ -146,12 +152,12 @@ class engineNode():
         self.blue = [0, 0, 1]
 
     def compute_ik(self):
-        time = rospy.Time.now()
+        t = rospy.Time.now()
         self.angles_array = abs_pos2ang(self.final_pose)
 
-        self.publish_states(time)
-        self.publish_joints(time)  # publish engine output pose
-        self.publish_engine_odom(time)  # publish engine transform for enhanced slam and odometry
+        self.publish_states(t)
+        self.publish_joints(t)  # publish engine output pose
+        self.publish_engine_odom(t)  # publish engine transform for enhanced slam and odometry
 
     def run(self):
         rospy.wait_for_message("/joint_states", JointState)  # at start wait for first hardware frame to know where to start
@@ -182,7 +188,7 @@ class engineNode():
         self.steps = json.loads(msg.data)
         # rospy.loginfo('\n' + str(engine.steps) + '\n')
 
-    def publish_engine_odom(self, time):
+    def publish_engine_odom(self, t):
         # transformation
         x = self.final_body_abs_trasl[0]
         y = self.final_body_abs_trasl[1]
@@ -190,19 +196,19 @@ class engineNode():
         q = euler2quat([self.final_body_abs_rot[0], self.final_body_abs_rot[1], self.final_body_abs_rot[2]])
 
         # odom
-        self.odom_pub_msg.header.stamp = time
+        self.odom_pub_msg.header.stamp = t
         self.odom_pub_msg.pose.pose = Pose(Point(x, y, z), Quaternion(*q))
         self.odom_pub_msg.twist.twist = Twist(Vector3(0, 0, 0), Vector3(0, 0, 0))
         self.odom_pub.publish(self.odom_pub_msg)
 
-    def publish_joints(self, time):
+    def publish_joints(self, t):
         self.joint_angle_msg.position = self.angles_array
-        self.joint_angle_msg.header.stamp = time
+        self.joint_angle_msg.header.stamp = t
         self.joint_angle_publisher.publish(self.joint_angle_msg)
 
-    def publish_states(self, time):
+    def publish_states(self, t):
         self.joint_state_msg.position = self.states
-        self.joint_state_msg.header.stamp = time
+        self.joint_state_msg.header.stamp = t
         self.joint_state_publisher.publish(self.joint_state_msg)
 
     def publish_step_id(self):
@@ -213,9 +219,17 @@ class engineNode():
         self.attenuation = msg.data
 
     def set_force_sensors(self, msg):
-        self.force_sensors = list(msg.data)
+        self.force_sensors = np.asarray(list(msg.data))
+
+        # update terrain adaptation setpoint
         self.leg_adapt_var_setpoint = sum(self.force_sensors) / len(self.force_sensors)  # average
-        self.leg_adapt_var_filtered_setpoint += self.leg_adapt_var_setpoint_filter_val * (self.leg_adapt_var_setpoint - self.leg_adapt_var_filtered_setpoint)
+        self.leg_adapt_var_filtered_setpoint += LEG_SETPOINT_FILTER_VAL * (self.leg_adapt_var_setpoint - self.leg_adapt_var_filtered_setpoint)
+
+    def set_simulink_leg_correction(self, msg):
+        self.simulink_leg_z_correction = np.asarray(list(msg.data))
+
+    def set_filtered_force_sensors(self, msg):
+        self.filtered_force_sensors = np.asarray(list(msg.data))
 
     def set_state(self, msg):
         self.body_trasl = np.array(msg.body_trasl)
@@ -261,6 +275,10 @@ if __name__ == '__main__':
     rospy.Subscriber("/joint_states", JointState, engine.set_hw_joint_state)
     rospy.Subscriber("/engine/footsteps", String, engine.parse_footsteps)
     rospy.Subscriber("/engine/attenuation", Float32, engine.set_attenuation)
-    rospy.Subscriber("/filtered_force_sensors", Float32MultiArray, engine.set_force_sensors)
+    rospy.Subscriber("/force_sensors", Float32MultiArray, engine.set_force_sensors)
+    rospy.Subscriber("/filtered_force_sensors", Float32MultiArray, engine.set_filtered_force_sensors)
+
+    # for simulink simulation #TODO remove
+    rospy.Subscriber("/simulink/leg_correction", Float32MultiArray, engine.set_simulink_leg_correction)
 
     engine.run()

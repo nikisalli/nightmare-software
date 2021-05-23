@@ -18,7 +18,7 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import tf_conversions
 
 from nightmare_math.math import fmap
-from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER, NUMBER_OF_SENSORS, SENSOR_START_ID, FORCE_SENSOR_FILTER_VAL)
+from nightmare_config.config import (PI, NUMBER_OF_LEGS, NUMBER_OF_SERVOS, TTY_LIST, STAT_TTY, STAT_HEADER, FORCE_SENSOR_FILTER_VAL, FORCE_SENSOR_CALIBRATION)
 
 
 @dataclass
@@ -65,7 +65,7 @@ def get_servo_tty(servo_id, controllers):
     while (time.time() - t < 30) and not rospy.is_shutdown():
         for tty, controller in controllers.items():
             try:
-                controller.get_servo_id(servo_id, timeout=0.1)
+                controller.get_servo_id(servo_id, timeout=0.02)
                 rospy.loginfo(f"found servo id {servo_id} on {tty}")
                 return tty
             except lewansoul_lx16a.TimeoutError:
@@ -75,23 +75,6 @@ def get_servo_tty(servo_id, controllers):
 
     rospy.logerr(f"couldn't find a servo with ID: {servo_id} on any serial bus!")
     raise ServoNotFoundError
-
-
-def get_sensor_tty(sensor_id, controllers):
-    t = time.time()
-    while (time.time() - t < 30) and not rospy.is_shutdown():
-        for tty, controller in controllers.items():
-            try:
-                controller.get_sensor_pressure(sensor_id, timeout=0.05)
-                rospy.loginfo(f"found sensor id {sensor_id} on {tty}")
-                return tty
-            except lewansoul_lx16a.TimeoutError:
-                pass
-        time.sleep(1)
-        rospy.loginfo(f"couldn't find sensor id {sensor_id}. retrying...")
-
-    rospy.logerr(f"couldn't find a sensor with ID: {sensor_id} on any serial bus!")
-    raise SensorNotFoundError
 
 
 def set_tty_to_low_latency():
@@ -149,10 +132,11 @@ class ListenerThread(Thread):
             # handle sensors
             for i, sensor in enumerate(self.sensors):
                 try:
-                    sensor.val = self.controller.get_sensor_pressure(sensor.id, timeout=0.02)
-                    voltage = fmap(sensor.val, 0, 1023, 0., 5.)
-                    resistance = (voltage * 10000) / (5.00000001 - voltage)
-                    sensor.force = 18413474 / (1 + (resistance / 0.1563189)**1.493106)
+                    sensor.val = self.controller.get_voltage(sensor.id, timeout=0.02) * 0.000145299145
+                    voltage = sensor.val
+                    resistance = (26543.5 - 15869.6 * voltage) / (voltage - 0.717391)
+                    resistance = np.inf if resistance < 0 else resistance
+                    sensor.force = (18413474 / (1 + (resistance / 0.1563189)**1.493106)) * FORCE_SENSOR_CALIBRATION[sensor.id]
                 except lewansoul_lx16a.TimeoutError:
                     rospy.logerr(f"couldn't read sensor force. ID: {sensor.id} port: {sensor.tty}")
             time.sleep(0.01)  # execute every 0.05s
@@ -283,8 +267,8 @@ class HardwareHandlerNode:
 
     def _publish_sensors(self):
         self.sensor_msg_raw = [leg.force_sensor.force for leg in self.legs]
-        self.filtered_sensor_msg.data = self.sensor_msg_raw
-        self.sensor_msg.data += FORCE_SENSOR_FILTER_VAL * (self.sensor_msg_raw - self.sensor_msg.data)
+        self.sensor_msg.data = self.sensor_msg_raw
+        self.filtered_sensor_msg.data += FORCE_SENSOR_FILTER_VAL * (self.sensor_msg_raw - self.filtered_sensor_msg.data)
         self.publisher_force_sensors.publish(self.sensor_msg)
         self.publisher_filtered_force_sensors.publish(self.filtered_sensor_msg)
 
@@ -316,7 +300,7 @@ if __name__ == '__main__':
 
     rospy.loginfo("indexing servos")
     servo_list = [Servo(servo_id, get_servo_tty(servo_id, controller_dict)) for servo_id in range(1, NUMBER_OF_SERVOS)]
-    sensor_list = [Pressure_sensor(sensor_id, get_sensor_tty(sensor_id, controller_dict)) for sensor_id in range(SENSOR_START_ID, SENSOR_START_ID + NUMBER_OF_SENSORS)]
+    sensor_list = [Pressure_sensor(sensor_id, servo_list[sensor_id - 1].tty) for sensor_id in range(3, NUMBER_OF_SERVOS + 1, 3)]
     leg_list = [Leg(leg_id, servo_list[leg_id * 3:leg_id * 3 + 3], sensor_list[leg_id]) for leg_id in range(NUMBER_OF_LEGS)]
 
     spawn_reading_threads(servo_list, sensor_list, controller_dict)
