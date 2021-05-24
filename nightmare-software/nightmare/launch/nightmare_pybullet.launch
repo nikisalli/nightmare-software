@@ -1,0 +1,50 @@
+<launch>
+    <arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
+
+    <!-- upload urdf model to ROS param server -->
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+
+    <!-- start joint compatibility layer node -->
+    <node pkg="nightmare_pybullet" type="joint_state_redirector_node" name="joint_redirector" required="true"/>
+
+    <!-- start nightmare engine node, robot state publisher and state broadcaster -->
+    <include file="$(find nightmare)/launch/nightmare_simulated.launch" />
+
+    <!-- start usb joystick parser node -->
+    <include file="$(find nightmare_usb_joystick)/launch/joystick.launch" />
+
+    <!-- start pybullet -->
+    <!-- partial configuration params for nightmare_pybullet node, rest will be loaded from config_file -->
+    <arg name="config_file" default="$(find nightmare_pybullet)/ros/config/pybullet_params_example.yaml" />
+    <arg name="plugin_import_prefix" default="nightmare_pybullet.plugins" />
+    <arg name="environment" default="environment" />
+    <arg name="pybullet_gui" default="True" /> <!-- if true pybullet gui will show -->
+    <arg name="robot_urdf_path" default="$(arg model)" />
+    <arg name="pause_simulation" default="False" /> <!-- if true, will boot with paused physics -->
+    <arg name="parallel_plugin_execution" default="True" />
+    <arg name="robot_pose_x" default="0.0" /> <!-- robot spawn pose is set here -->
+    <arg name="robot_pose_y" default="0.0" />
+    <arg name="robot_pose_z" default="0.3" />
+    <arg name="robot_pose_yaw" default="0.0" />
+    <arg name="fixed_base" default="False" /> <!-- if false, allow free movement of the robot -->
+    <arg name="use_deformable_world" default="False" /> <!-- enable/disable soft body simulation -->
+    <arg name="gui_options" default="" />
+
+    <!-- pybullet ros wrapper node -->
+    <node pkg="nightmare_pybullet" type="nightmare_pybullet_node" name="nightmare_pybullet" output="screen" required="true" >
+        <rosparam file="$(arg config_file)" command="load" />
+        <param name="plugin_import_prefix" value="$(arg plugin_import_prefix)" />
+        <param name="environment" value="$(arg environment)" />
+        <param name="pybullet_gui" value="$(arg pybullet_gui)" />
+        <param name="robot_urdf_path" value="$(arg robot_urdf_path)" />
+        <param name="pause_simulation" value="$(arg pause_simulation)" />
+        <param name="parallel_plugin_execution" value="$(arg parallel_plugin_execution)" />
+        <param name="robot_pose_x" value="$(arg robot_pose_x)" />
+        <param name="robot_pose_y" value="$(arg robot_pose_y)" />
+        <param name="robot_pose_z" value="$(arg robot_pose_z)" />
+        <param name="robot_pose_yaw" value="$(arg robot_pose_yaw)" />
+        <param name="fixed_base" value="$(arg fixed_base)" />
+        <param name="use_deformable_world" value="$(arg use_deformable_world)" />
+        <param name="gui_options" value="$(arg gui_options)" />
+    </node>
+</launch>

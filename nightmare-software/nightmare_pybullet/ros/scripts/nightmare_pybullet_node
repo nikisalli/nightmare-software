@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+
+import nightmare_pybullet.nightmare_pybullet
+
+if __name__ == '__main__':
+    nightmare_pybullet.nightmare_pybullet.main()

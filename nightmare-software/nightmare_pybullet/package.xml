@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package>
+    <name>nightmare_pybullet</name>
+    <version>0.0.0</version>
+    <description> ROS wrapper for pybullet simulator </description>
+    <license>GPLv3</license>
+    <author email="niki.salli@gmail.com">Nik</author>
+    <maintainer email="niki.salli@gmail.com">Nik</maintainer>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <run_depend>std_msgs</run_depend>
+    <run_depend>cv_bridge</run_depend>
+
+</package>

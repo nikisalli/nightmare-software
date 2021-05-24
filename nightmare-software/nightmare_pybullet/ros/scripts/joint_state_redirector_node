@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+
+import nightmare_pybullet.joint_state_redirector
+
+if __name__ == '__main__':
+    nightmare_pybullet.joint_state_redirector.main()
