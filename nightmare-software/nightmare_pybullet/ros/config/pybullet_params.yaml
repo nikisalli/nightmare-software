@@ -18,6 +18,9 @@ plugins:
   - 
     module: nightmare_pybullet.plugins.joint_state_pub
     class: joinStatePub
+  - 
+    module: nightmare_pybullet.plugins.nightmare_force_sensors
+    class: nightmareForceSensors
 #  - 
 #    module: nightmare_pybullet.plugins.rgbd_camera
 #    class: RGBDCamera
