@@ -72,6 +72,7 @@ class engineNode():
         self.final_body_abs_trasl = [0, 0, 0]   # engine reference frame
         self.final_body_abs_rot = [0, 0, 0]     # engine reference frame
         self.leg_ground = np.array([True] * 6)  # array of bools True if leg touching ground
+        self.touched = np.array([True] * 6)     # array of bools True if leg touched during walk cycle
         self.filtered_force_sensors = np.asarray([0.] * 6)
         self.force_sensors = np.asarray([0.] * 6)
 

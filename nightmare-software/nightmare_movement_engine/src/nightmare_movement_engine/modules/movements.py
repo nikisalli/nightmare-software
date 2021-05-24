@@ -54,7 +54,7 @@ def execute_step(engine):
     # rospy.loginfo(str(start_trasl))
     # start_trasl = engine.body_abs_trasl.copy()
     # start_rot = engine.body_abs_rot.copy()
-    abs_pose = rel2abspos(engine.hw_pose, start_trasl, start_rot)  # put this in main engine class and handle it TODO
+    abs_pose = rel2abspos(engine.pose, start_trasl, start_rot)  # put this in main engine class and handle it TODO
     curves = {}
 
     for substep in step['steps']:
@@ -70,6 +70,7 @@ def execute_step(engine):
                   end_pose[2] + STEP_HEIGHT,
                   end_pose[2] + (STEP_HEIGHT / 6),
                   end_pose[2]]]
+        print(nodes)
         curves[leg] = bezier.Curve(nodes, degree=5)
 
     divider = len(GAIT[engine.gait])
@@ -77,9 +78,9 @@ def execute_step(engine):
 
     # array to hold leg state and handle debounce
     # The not suspended legs are set to True by default because we know those are on ground
-    touched = [leg not in curves for leg in range(NUMBER_OF_LEGS)]
+    engine.touched = np.array([leg not in curves for leg in range(NUMBER_OF_LEGS)])  # length NUMBER_OF_LEGS
 
-    for i in range(frames):
+    for i in range(frames + 1):
         timer = time.time()
 
         trasl_command = (engine.walk_trasl * engine.attenuation * 2) / (frames * divider)
@@ -89,13 +90,11 @@ def execute_step(engine):
 
         for leg in range(NUMBER_OF_LEGS):
             if leg in curves:
-                if not touched[leg]:
+                if True:
+                    # if not engine.touched[leg]:
                     pose = np.array(curves[leg].evaluate(i / frames)).flatten()
                     pose = abs2relpos(pose, start_trasl, start_rot)
                     engine.pose[leg] = pose
-                    engine.leg_ground[leg] = False
-                else:
-                    engine.leg_ground[leg] = True
             else:
                 # level legs only if on ground
                 # leg_correction(engine, leg)
@@ -104,6 +103,7 @@ def execute_step(engine):
                 pose -= rel_rotated_command
                 engine.pose[leg] = pose
 
+        print(engine.pose[:, 2], i / frames)
         # generate odom
         engine.body_abs_rot += rot_command
         engine.body_abs_trasl += abs_rotated_command
@@ -114,28 +114,31 @@ def execute_step(engine):
         # if a leg is false and it touched ground set its corresponding value to true
         # start checking only when the leg left the ground!
         if i > frames / 2:
-            touched = [engine.force_sensors[leg] > TOUCHDOWN_TRESHOLD or touched[leg] for leg in range(NUMBER_OF_LEGS)]
+            for leg in range(NUMBER_OF_LEGS):
+                if engine.leg_ground[leg]:
+                    engine.touched[leg] = True
 
         if (1 / ENGINE_FPS) - (time.time() - timer) > EPSILON:
             time.sleep((1 / ENGINE_FPS) - (time.time() - timer))
 
     # if some legs haven't touched ground yet, stop and try to reach it
     if WALKING_TERRAIN_ADAPTATION_ENABLED:
-        start_pose = engine.pose.copy()
-        offsets = np.zeros(shape=(6, 3))  # offset matrix
-        while False in touched and not rospy.is_shutdown():
-            touched = [engine.force_sensors[leg] > TOUCHDOWN_TRESHOLD or touched[leg] for leg in range(NUMBER_OF_LEGS)]
+        # iterate until every leg has touched ground
+        counter = 0
+        while False in engine.touched and not rospy.is_shutdown():
             for leg in range(NUMBER_OF_LEGS):
-                if not touched[leg]:
-                    offsets[leg][2] -= 0.005
-                    engine.leg_ground[leg] = False
-                else:
-                    engine.leg_ground[leg] = True
-            engine.pose = start_pose + offsets
+                # if a leg touches ground end the cycle for it by setting the touched flag
+                if engine.leg_ground[leg]:
+                    engine.touched[leg] = True
+                # if a leg hasn't touched ground yet try to reach it by lowering it on ground
+                if not engine.touched[leg]:
+                    engine.pose[leg][2] -= 0.005
             apply_transform(engine)
             engine.compute_ik()
             time.sleep(0.02)
-            if (offsets > MAX_TOUCHDOWN_DEPTH_SEARCH).any():
+
+            counter += 1
+            if 0.005 * counter > MAX_TOUCHDOWN_DEPTH_SEARCH:
                 rospy.logerr("some legs didn't touch ground!")
                 return
 
@@ -216,13 +219,17 @@ def stand(engine):
 
 
 def apply_transform(engine):
-    pose = engine.pose.copy()
-
     # make sure the nearest on ground leg to the body is at the right height
     # STAND_HEIGHT is positive therefore a - is needed
     if AUTO_HEIGHT_ADJUSTMENT_ENABLED:
-        max_h = max([pose[leg][2] for leg in range(NUMBER_OF_LEGS) if engine.leg_ground[leg]])
-        pose[:, 2] -= max_h + STAND_HEIGHT
+        max_h = max([engine.pose[leg][2] for leg in range(NUMBER_OF_LEGS) if engine.touched[leg]])
+        engine.pose[:, 2] -= max_h + STAND_HEIGHT
+        # rospy.loginfo(str(max_h + STAND_HEIGHT))
+
+    pose = engine.pose.copy()
+
+    # check if legs on ground
+    engine.leg_ground = engine.filtered_force_sensors > TOUCHDOWN_TRESHOLD
 
     # dynamic terrain adaptation (still work in progress)
     if DYNAMIC_TERRAIN_ADAPTATION_ENABLED:
