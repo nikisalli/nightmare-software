@@ -13,6 +13,9 @@
     <!-- start usb joystick parser node -->
     <include file="$(find nightmare_usb_joystick)/launch/joystick.launch" />
 
+    <!-- remap wrong jointstates by pybullet to another topic -->
+    <remap from="/joint_states" to="/pybullet/joint_states" />
+
     <!-- start pybullet -->
     <!-- partial configuration params for nightmare_pybullet node, rest will be loaded from config_file -->
     <arg name="config_file" default="$(find nightmare_pybullet)/ros/config/pybullet_params.yaml" />
