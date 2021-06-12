@@ -4,6 +4,8 @@ import rospy
 from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import numpy as np
 
+FILTER_VAL = 0.99
+
 
 class nightmareForceSensors:
     def __init__(self, pybullet, robot, **kargs):
@@ -15,7 +17,8 @@ class nightmareForceSensors:
         self.robot = robot
         self.tibias = {}
         self.index_tibias()
-        self.forces = [0] * 6
+        self.forces = np.array([0.] * 6)
+        self.prev_forces = np.array([0.] * 6)
 
         self.sensor_msg = Float32MultiArray()
         self.sensor_msg.layout.dim.append(MultiArrayDimension())
@@ -44,9 +47,10 @@ class nightmareForceSensors:
         for p in points:
             _id = p[3]
             if _id in self.tibias:
-                self.forces[self.tibias[p[3]]] = round(p[9] / 50, 2)
+                self.forces[self.tibias[p[3]]] = round(p[9] * 10., 2)
         self.sensor_msg.data = self.forces
-        self.filtered_sensor_msg.data = self.forces
+        self.filtered_sensor_msg.data = FILTER_VAL * self.prev_forces + (1. - FILTER_VAL) * self.forces  # simple first order low pass filter
+        self.prev_filtered_forces = self.filtered_sensor_msg.data
         self.publisher_force_sensors.publish(self.sensor_msg)
         self.publisher_filtered_force_sensors.publish(self.filtered_sensor_msg)
 
