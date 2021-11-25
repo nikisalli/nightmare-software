@@ -4,3 +4,4 @@ __pycache__
 bagfiles/*
 examples
 dockerfiles/private-dockerfiles
+.vscode-ctags

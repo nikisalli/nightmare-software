@@ -14,7 +14,7 @@ from std_msgs.msg import Header, Int32, String, Float32
 from visualization_msgs.msg import Marker
 
 from nightmare_math.math import rotate, quat2euler
-from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, MAX_STEP_LENGTH, ENGINE_REFERENCE_FRAME
+from nightmare_config.config import GAIT, LEG_TIPS, DEFAULT_POSE, MAX_STEP_LENGTH, ENGINE_REFERENCE_FRAME, STAND_HEIGHT
 
 
 class stepPlannerNode():
@@ -111,16 +111,7 @@ class stepPlannerNode():
         self.step_id += 1
         step = []
 
-        if len(self.steps) == 0:
-            translation = [self.body_trans.translation.x, self.body_trans.translation.y, self.body_trans.translation.z]
-            rotation = quat2euler([self.body_trans.rotation.x, self.body_trans.rotation.y, self.body_trans.rotation.z, self.body_trans.rotation.w])
-        # else:
-            # translation = self.steps[-1]['trans']
-            # rotation = self.steps[-1]['rot']
-
-        # find absolute pose
-        abs_pose = rotate(DEFAULT_POSE, rotation)
-        abs_pose += translation
+        start_pose = DEFAULT_POSE.copy()
 
         # find rotated command
         rotated_command = rotate(self.walk_trasl, self.walk_rot)
@@ -137,19 +128,19 @@ class stepPlannerNode():
         else:
             self.attenuation = 1
 
-        new_rot = rotation + (self.walk_rot * self.attenuation)
-        new_rotated_command = rotate(self.walk_trasl * self.attenuation, new_rot)
-        new_trans = translation + new_rotated_command  # abs target pose translation
+        new_rot = self.walk_rot * self.attenuation  # len 3
+        new_rotated_command = rotate(self.walk_trasl * self.attenuation, new_rot)  # len 3
+        new_trans = new_rotated_command  # target local translation
 
         # generate steps
         for leg in GAIT[self.gait][self.gait_step]:
-            new_pos = abs_pose[leg]
+            new_pos = start_pose[leg]
 
             #  =======================
             # generate new absolute pose from previous pose
             new_pos += new_rotated_command
             new_pos = rotate(new_pos, self.walk_rot * self.attenuation, pivot=new_trans)
-            new_pos[2] = 0  # for now our target is the floor, heightmap will be the new target in the future
+            new_pos[2] = -STAND_HEIGHT  # for now our target is the floor, heightmap will be the new target in the future
 
             #  =======================
 

@@ -24,7 +24,8 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      ENGINE_OUTPUT_ODOM_TOPIC,
                                      POSTURE_P_GAIN,
                                      LEG_P_GAIN,
-                                     LEG_SETPOINT_FILTER_VAL)
+                                     LEG_SETPOINT_FILTER_VAL,
+                                     TOUCHDOWN_TRESHOLD)
 
 from nightmare_state_broadcaster.msg import command
 from nightmare_math.math import abs_ang2pos, abs_pos2ang, euler2quat
@@ -49,56 +50,47 @@ JOINTSTATE_MSG = JointState(header=Header(),
 class engineNode():
     def __init__(self):
         # ROBOT COMMANDS #
-        self.state = 'sleep'                    # actual engine state
-        self.prev_state = 'sleep'               # previous engine state
+        self.state = 'sleep'                       # actual engine state
+        self.prev_state = 'sleep'                  # previous engine state
         self.gait = 'tripod'
-        self.body_trasl = np.array([0, 0, 0])   # commanded body traslation
-        self.body_rot = np.array([0, 0, 0])     # commanded body rotation
-        self.walk_trasl = np.array([0, 0, 0])   # commanded walk traslatory speed
-        self.walk_rot = np.array([0, 0, 0])     # commanded walk rotatory speed
+        self.body_trasl = np.array([0., 0., 0.])   # commanded body traslation
+        self.body_rot = np.array([0., 0., 0.])     # commanded body rotation
+        self.walk_trasl = np.array([0., 0., 0.])   # commanded walk traslatory speed
+        self.walk_rot = np.array([0., 0., 0.])     # commanded walk rotatory speed
 
         # ROBOT STATE #
-        self.angles = np.zeros(shape=(6, 3))    # angle matrix
-        self.angles_array = [0] * 19            # angle array
-        self.hw_angles_array = [0] * 19
+        self.angles = np.zeros(shape=(6, 3))       # angle matrix
+        self.angles_array = [0.] * 19              # angle array
+        self.hw_angles_array = [0.] * 19
         self.hw_angles = np.zeros(shape=(6, 3))
-        self.states = [0] * 19                  # all servos disconnected at start
-        self.hw_pose = np.zeros(shape=(6, 3))   # body frame initialize as empty and fill it later in set_hw_joint_state callback
-        self.pose = DEFAULT_POSE.copy()         # body frame pose of the robot without transforms  6 x 3
-        self.final_pose = DEFAULT_POSE.copy()   # body frame pose of the robot with transforms  6 x 3
+        self.states = [0.] * 19                    # all servos disconnected at start
+        self.hw_pose = np.zeros(shape=(6, 3))      # body frame initialize as empty and fill it later in set_hw_joint_state callback
+        self.pose = DEFAULT_POSE.copy()            # body frame pose of the robot without transforms  6 x 3
+        self.final_pose = DEFAULT_POSE.copy()      # body frame pose of the robot with transforms  6 x 3
         self.rate = rospy.Rate(ENGINE_FPS)
-        self.body_abs_trasl = [0, 0, 0]         # engine reference frame
-        self.body_abs_rot = [0, 0, 0]           # engine reference frame
-        self.final_body_abs_trasl = [0, 0, 0]   # engine reference frame
-        self.final_body_abs_rot = [0, 0, 0]     # engine reference frame
-        self.leg_ground = np.array([True] * 6)  # array of bools True if leg touching ground
-        self.touched = np.array([True] * 6)     # array of bools True if leg touched during walk cycle
+        self.body_abs_trasl = [0., 0., 0.]         # engine reference frame
+        self.body_abs_rot = [0., 0., 0.]           # engine reference frame
+        self.final_body_abs_trasl = [0., 0., 0.]   # engine reference frame
+        self.final_body_abs_rot = [0., 0., 0.]     # engine reference frame
+        self.leg_ground = np.array([True] * 6)     # array of bools True if leg touching ground
+        self.touched = np.array([True] * 6)        # array of bools True if leg touched during walk cycle
         self.filtered_force_sensors = np.asarray([0.] * 6)
         self.force_sensors = np.asarray([0.] * 6)
 
         # POSTURE CORRECTION #
-        self.pitch_correction = 0               # process value for pose pitch P filter
-        self.roll_correction = 0                # process value for pose roll P filter
-        self.pose_filter_val = POSTURE_P_GAIN   # pose P filter aggressivity
-        self.pose_pitch_setpoint = 0
-        self.pose_roll_setpoint = 0
+        self.pose_filter_val = POSTURE_P_GAIN      # pose P filter aggressivity
+        self.pose_pitch_setpoint = 0.
+        self.pose_roll_setpoint = 0.
 
         # TERRAIN ADAPTATION #
-        self.leg_z_correction = np.array([0] * 6)     # leg filters process variables
-        self.simulink_leg_z_correction = np.array([0] * 6)
-        self.leg_z_speed = np.array([0] * 6)
-        self.leg_z_prev_pos = np.array([0] * 6)
-        self.leg_z_prev_time = time.time()
-        self.init_time = time.time()
-        # P controller
-        self.leg_adapt_filter_val = LEG_P_GAIN           # leg P gain
-        self.leg_adapt_var_filtered_setpoint = 0         # leg filters' setpoint filter process variable
-        self.leg_adapt_var_setpoint = 0                  # leg filters' setpoint filter setpoint
+        self.leg_z_correction = np.array([0.] * 6)     # leg filters process variables
+        self.leg_z_integral = np.array([0.] * 6)
+        self.simulink_leg_z_correction = np.array([0.] * 6)
 
         # STEP PLANNER STATE #
-        self.step_id = 0
+        self.step_id = 0.
         self.steps = []  # world frame
-        self.attenuation = 0
+        self.attenuation = 0.
 
         # create publishers
         self.joint_angle_publisher = rospy.Publisher('/engine/angle_joint_states', JointState, queue_size=10)
@@ -222,15 +214,13 @@ class engineNode():
     def set_force_sensors(self, msg):
         self.force_sensors = np.asarray(list(msg.data))
 
-        # update terrain adaptation setpoint
-        self.leg_adapt_var_setpoint = sum(self.force_sensors) / len(self.force_sensors)  # average
-        self.leg_adapt_var_filtered_setpoint += LEG_SETPOINT_FILTER_VAL * (self.leg_adapt_var_setpoint - self.leg_adapt_var_filtered_setpoint)
-
     def set_simulink_leg_correction(self, msg):
         self.simulink_leg_z_correction = np.asarray(list(msg.data))
 
     def set_filtered_force_sensors(self, msg):
         self.filtered_force_sensors = np.asarray(list(msg.data))
+        # check if legs on ground
+        self.leg_ground = self.filtered_force_sensors > TOUCHDOWN_TRESHOLD
 
     def set_state(self, msg):
         self.body_trasl = np.array(msg.body_trasl)

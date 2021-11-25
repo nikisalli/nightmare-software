@@ -1,8 +1,9 @@
 import os
 import sys
+import numpy as np
 import rospy
 import cv2
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
 
 # import local modules
@@ -37,7 +38,11 @@ class imageProcessorNode():
         self.image_output = 0
 
         # publisher for cooked images
-        self.image_publisher = rospy.Publisher('/image_processor/cooked_image', Image, queue_size=10)
+        self.image_publisher = rospy.Publisher('/image_processor/cooked_image/compressed', CompressedImage)
+
+        # msg
+        self.cimg_msg = CompressedImage()
+        self.cimg_msg.format = "jpeg"
 
     def process_frame(self):
         # execute filters
@@ -47,14 +52,17 @@ class imageProcessorNode():
         # execute detectors
         self.raw_poses = detect_poses(self.frame)
         self.raw_markers = detect_markers(self.frame)
-        print(self.raw_markers)
         # build final frame
         self.image_output = overlay_on_image(self.frame, self.raw_poses)
         self.image_output = overlay_marker_on_image(self.image_output, self.raw_markers)
 
-        msg_frame = CvBridge().cv2_to_imgmsg(self.image_output)
-        self.image_publisher.publish(msg_frame)
-        rospy.loginfo("frame processed!")
+        # msg_frame = CvBridge().cv2_to_imgmsg(self.image_output)
+
+        self.cimg_msg.header.stamp = rospy.Time.now()
+        self.cimg_msg.data = np.array(cv2.imencode('.jpg', self.image_output)[1]).tostring()
+
+        # publish compressed image
+        self.image_publisher.publish(self.cimg_msg)
 
     def image_callback(self, msg):
         # rospy.loginfo("image received")
@@ -72,6 +80,7 @@ class imageProcessorNode():
                 return
 
             self.process_frame()
+            rospy.loginfo("frame processed!")
 
             self.prev_frame = self.frame
             self.prev_intensity_frame = get_intensity(self.frame)

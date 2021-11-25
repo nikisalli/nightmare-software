@@ -33,10 +33,12 @@ from nightmare_config.config import (DEFAULT_POSE,
                                      TOUCHDOWN_TRESHOLD,
                                      MAX_TOUCHDOWN_DEPTH_SEARCH,
                                      WALKING_TERRAIN_ADAPTATION_ENABLED,
-                                     AUTO_HEIGHT_ADJUSTMENT_ENABLED,
                                      SPRINGINESS,
                                      DAMPINESS,
-                                     LEG_ADJ_HEIGHT)
+                                     LEG_ADJ_HEIGHT,
+                                     LEG_P_GAIN,
+                                     MAX_LEG_CORRECTION,
+                                     MAX_POSTURE_CORRECTION)
 
 import bezier
 
@@ -48,18 +50,18 @@ def execute_step(engine):
     # rospy.loginfo(f"executing id {engine.step_id}, steps in queue {len(engine.steps)}")
     engine.publish_step_id()
 
-    trans = engine.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
-    start_trasl = [trans.translation.x, trans.translation.y, trans.translation.z]
-    start_rot = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
+    # trans = engine.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
+    # start_trasl = [trans.translation.x, trans.translation.y, trans.translation.z]
+    # start_rot = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
     # rospy.loginfo(str(start_trasl))
     # start_trasl = engine.body_abs_trasl.copy()
     # start_rot = engine.body_abs_rot.copy()
-    abs_pose = rel2abspos(engine.pose, start_trasl, start_rot)  # put this in main engine class and handle it TODO
+    # abs_pose = rel2abspos(engine.pose, start_trasl, start_rot)  # put this in main engine class and handle it TODO
     curves = {}
 
     for substep in step['steps']:
         leg = substep['leg']
-        start_pose = abs_pose[leg]
+        start_pose = engine.hw_pose[leg]
         end_pose = np.array(substep['pos'])
 
         nodes = [[start_pose[0], start_pose[0], start_pose[0], end_pose[0], end_pose[0], end_pose[0]],
@@ -70,7 +72,6 @@ def execute_step(engine):
                   end_pose[2] + STEP_HEIGHT,
                   end_pose[2] + (STEP_HEIGHT / 6),
                   end_pose[2]]]
-        print(nodes)
         curves[leg] = bezier.Curve(nodes, degree=5)
 
     divider = len(GAIT[engine.gait])
@@ -83,6 +84,11 @@ def execute_step(engine):
     for i in range(frames + 1):
         timer = time.time()
 
+        # if a leg is false and it touched ground set its corresponding value to true
+        # start checking only when the leg left the ground!
+        if i < frames / 2:
+            engine.touched &= False  # set all elements to false
+
         trasl_command = (engine.walk_trasl * engine.attenuation * 2) / (frames * divider)
         rot_command = (engine.walk_rot * engine.attenuation * 2) / (frames * divider)
         rel_rotated_command = rotate(trasl_command, rot_command)
@@ -90,11 +96,9 @@ def execute_step(engine):
 
         for leg in range(NUMBER_OF_LEGS):
             if leg in curves:
-                if True:
-                    # if not engine.touched[leg]:
-                    pose = np.array(curves[leg].evaluate(i / frames)).flatten()
-                    pose = abs2relpos(pose, start_trasl, start_rot)
-                    engine.pose[leg] = pose
+                # if True:
+                if not engine.touched[leg] or not WALKING_TERRAIN_ADAPTATION_ENABLED:
+                    engine.pose[leg] = np.array(curves[leg].evaluate(i / frames)).flatten()
             else:
                 # level legs only if on ground
                 # leg_correction(engine, leg)
@@ -103,20 +107,15 @@ def execute_step(engine):
                 pose -= rel_rotated_command
                 engine.pose[leg] = pose
 
-        print(engine.pose[:, 2], i / frames)
+        # print(engine.pose[:, 2], i / frames)
         # generate odom
+        # print(pose)
         engine.body_abs_rot += rot_command
         engine.body_abs_trasl += abs_rotated_command
 
         apply_transform(engine)
 
         engine.compute_ik()
-        # if a leg is false and it touched ground set its corresponding value to true
-        # start checking only when the leg left the ground!
-        if i > frames / 2:
-            for leg in range(NUMBER_OF_LEGS):
-                if engine.leg_ground[leg]:
-                    engine.touched[leg] = True
 
         if (1 / ENGINE_FPS) - (time.time() - timer) > EPSILON:
             time.sleep((1 / ENGINE_FPS) - (time.time() - timer))
@@ -219,17 +218,9 @@ def stand(engine):
 
 
 def apply_transform(engine):
-    # make sure the nearest on ground leg to the body is at the right height
-    # STAND_HEIGHT is positive therefore a - is needed
-    if AUTO_HEIGHT_ADJUSTMENT_ENABLED:
-        max_h = max([engine.pose[leg][2] for leg in range(NUMBER_OF_LEGS) if engine.touched[leg]])
-        engine.pose[:, 2] -= max_h + STAND_HEIGHT
-        # rospy.loginfo(str(max_h + STAND_HEIGHT))
+    engine.touched |= engine.leg_ground
 
     pose = engine.pose.copy()
-
-    # check if legs on ground
-    engine.leg_ground = engine.filtered_force_sensors > TOUCHDOWN_TRESHOLD
 
     # dynamic terrain adaptation (still work in progress)
     if DYNAMIC_TERRAIN_ADAPTATION_ENABLED:
@@ -239,10 +230,6 @@ def apply_transform(engine):
     pose = rotate(pose, engine.body_rot, inverse=True)
     pose -= engine.body_trasl
 
-    # make sure the body is at the right angle
-    pose_correction(engine)
-    pose = rotate(pose, [engine.roll_correction, engine.pitch_correction, 0])
-
     engine.final_pose = pose
 
     # generate odom
@@ -251,35 +238,33 @@ def apply_transform(engine):
     engine.final_body_abs_trasl = engine.body_abs_trasl + rotated_command
 
 
-def pose_correction(engine):
+def leg_correction(engine):
+    # ########## integration mode ##########
+    # print(engine.leg_ground)
+    engine.leg_z_integral = np.bitwise_not(engine.leg_ground) * (engine.leg_z_integral + 1e-5)
+    engine.leg_z_correction -= np.bitwise_not(engine.leg_ground) * engine.leg_z_integral
+
     trans = engine.tf_buffer.lookup_transform(ENGINE_REFERENCE_FRAME, 'base_link', rospy.Time(0), rospy.Duration(.1)).transform
     rot = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
     rot_euler = quat2euler(rot)
-    engine.roll_correction += engine.pose_filter_val * (rot_euler[0] - engine.pose_roll_setpoint)
-    engine.pitch_correction += engine.pose_filter_val * (rot_euler[1] - engine.pose_pitch_setpoint)
+    roll_inc = engine.pose_filter_val * (rot_euler[0] - engine.pose_roll_setpoint)
+    pitch_inc = engine.pose_filter_val * (rot_euler[1] - engine.pose_pitch_setpoint)
 
+    engine.leg_z_correction -= np.array([roll_inc, roll_inc, roll_inc, -roll_inc, -roll_inc, -roll_inc]) * engine.leg_ground
+    engine.leg_z_correction -= np.array([pitch_inc, 0, -pitch_inc, -pitch_inc, 0, pitch_inc]) * engine.leg_ground
 
-def leg_correction(engine):
-    # P controller mode
-    # for leg in range(NUMBER_OF_LEGS):
-    #     engine.leg_z_correction[leg] -= engine.leg_adapt_filter_val * (engine.leg_adapt_var_filtered_setpoint - engine.force_sensors[leg])
-    #     engine.leg_z_correction[leg] = limit(engine.leg_z_correction[leg],  MAX_LEG_CORRECTION, -  MAX_LEG_CORRECTION)  # to make sure it doesn't grow without control
-    # avg = float(sum(engine.leg_z_correction) / NUMBER_OF_LEGS)
-    # engine.leg_z_correction -= avg
+    engine.leg_z_correction -= float(sum(engine.leg_z_correction) / NUMBER_OF_LEGS)
+    # print(round(roll_inc, 4), round(pitch_inc, 4))
+    print(np.bitwise_not(engine.leg_ground) * 1e-3)
 
-    # spring-damper mode
-    n = engine.filtered_force_sensors
-    L = STAND_HEIGHT
-    s = SPRINGINESS
-    d = DAMPINESS
+    # ########## spring-damper mode ##########
+    # n = engine.filtered_force_sensors
+    # y = (engine.pose[:, 2] + STAND_HEIGHT + (n / SPRINGINESS))
+    # y_1 = engine.leg_z_prev_pos
+    # engine.leg_z_correction = DAMPINESS * y + ((1 - DAMPINESS) * y_1)
 
-    y = (engine.pose[:, 2] + L + (n / s))
-    y_1 = engine.leg_z_prev_pos
-    engine.leg_z_correction = d * y + ((1 - d) * y_1)
-
-    # simulink
+    # ########## simulink ##########
     # engine.leg_z_correction = engine.simulink_leg_z_correction
-
     # print(f"{engine.leg_z_correction} -- {engine.simulink_leg_z_correction}")
 
     engine.leg_z_prev_pos = engine.leg_z_correction
