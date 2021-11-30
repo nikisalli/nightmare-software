@@ -37,14 +37,14 @@ NUMBER_OF_SENSORS = 6
 NUMBER_OF_SENSORS_PER_LEG = 1
 
 # HARDWARE PARAMS
-# used ttys to communicate with servos
-TTY_LIST = ["/dev/ttySERVO0", "/dev/ttySERVO1", "/dev/ttySERVO2", "/dev/ttySERVO3"]
-# onboard microcontroller communication port
+# servo tty
+SERVO_TTY = "/dev/ttyACM1"
+# hw data tty
 STAT_TTY = "/dev/ttyACM0"
 # hardware handler params
-STAT_HEADER = [0x55, 0x55, 0x55, 0x55, 0x55]
-FORCE_SENSOR_FILTER_VAL = 1e-1
-FORCE_SENSOR_CALIBRATION = {18: 38.47, 15: 1.26, 12: 1.63, 9: 3.44, 6: 11.5, 3: 2.45}
+STAT_HEADER = [0x55, 0x55, 0x55, 0x55]
+# FORCE_SENSOR_FILTER_VAL = 1e-1
+# FORCE_SENSOR_CALIBRATION = {18: 38.47, 15: 1.26, 12: 1.63, 9: 3.44, 6: 11.5, 3: 2.45}
 
 # ENGINE PARAMETERS
 LEG_KEEPOUT = 4
