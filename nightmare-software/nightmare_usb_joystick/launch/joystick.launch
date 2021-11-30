@@ -1,7 +1,0 @@
-<!-- Start joystick node. -->
-<launch>
-
-  <!-- start joint compatibility layer node -->
-  <node name="usb_joystick" pkg="nightmare_usb_joystick" required="true" type="main.py" output="screen"/>
-
-</launch>
