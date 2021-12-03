@@ -12,7 +12,7 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS})
 
-file(GLOB cpp_files src/*.cpp)
+file(GLOB_RECURSE cpp_files src/*.cpp)
 add_executable(${PROJECT_NAME} ${cpp_files})
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
