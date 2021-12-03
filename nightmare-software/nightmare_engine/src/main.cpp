@@ -1,5 +1,6 @@
 #include <ros/ros.h>
-#include <nightmare/math.h>
+
+#include "nightmare/engine.h"
 
 int main (int argc, char **argv)
 {

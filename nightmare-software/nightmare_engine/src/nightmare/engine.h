@@ -1,8 +1,9 @@
 #ifndef NIGHTMARE_ENGINE_H
 #define NIGHTMARE_ENGINE_H
 
-#include <nightmare/types.h>
 #include <Eigen/Core>
+
+#include "types.h"
 
 using namespace N;
 
