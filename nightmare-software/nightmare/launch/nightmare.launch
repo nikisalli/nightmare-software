@@ -1,5 +1,7 @@
 <launch>
     <!-- load Robot configuration file in rosparam server -->
-    <rosparam file="$(find nightmare)/nightmare_config.yaml" />
+	<rosparam file="$(find nightmare)/nightmare_config.yaml" />
+
+	<node name="hardware" pkg="nightmare_hardware" required="true" type="main.py" output="screen"/>
 
 </launch>
