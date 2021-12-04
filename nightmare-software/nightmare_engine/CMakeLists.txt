@@ -5,22 +5,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
-  message_generation
 )
 
-add_message_files(
-  FILES
-  command.msg
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
-
-catkin_package(
-  CATKIN_DEPENDS message_runtime
-)
+catkin_package()
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
