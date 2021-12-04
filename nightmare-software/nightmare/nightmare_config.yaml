@@ -1,0 +1,14 @@
+engine:
+    rate: 100
+
+hardware:
+    comm_port: 'ttyACM0'
+    servo_port: 'ttyACM1'
+    sensor_port: 'ttyACM2'
+    leg_configuration:
+        - [1, 2, 3]  # leg 1 [coxa, femur, tibia]
+        - [4, 5, 6]  # leg 2
+        - [7, 8, 9]  # leg 3
+        - [10, 11, 12]  # leg 4
+        - [13, 14, 15]  # leg 5
+        - [16, 17, 18]  # leg 6

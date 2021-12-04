@@ -1,33 +1,5 @@
 <launch>
-	<arg default="$(find nightmare_description)/urdf/nightmare.xacro" name="model"/>
-	<param command="$(find xacro)/xacro $(arg model)" name="robot_description"/>
+    <!-- load Robot configuration file in rosparam server -->
+    <rosparam file="$(find nightmare)/nightmare_config.yaml" />
 
-	<!-- start hardware abstraction node -->
-	<node name="hardware_handler" pkg="nightmare_hardware_handler" required="true" type="hardware-handler.py" output="screen"/>
-
-	<!-- start robot state publisher to convert joint_states in tf-->
-	<node name="robot_state_publisher" pkg="robot_state_publisher" required="true" type="robot_state_publisher" output="screen"/>
-
-	<!-- start robot state broadcaster -->
-    <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py" output="screen"/>
-
-	<!-- start step planner -->
-    <node name="step_planner" pkg="nightmare_step_planner" required="true" type="main.py" output="screen"/>
-
-	<!-- start movement engine -->
-    <node name="movement_engine" pkg="nightmare_movement_engine" required="true" type="main.py" output="screen"/>
-
-	<!-- start camera node -->
-	<include file="$(find realsense2_camera)/launch/rs_camera.launch">
-		<arg name="clip_distance"          	value="3"/>
-  		<arg name="align_depth"             value="true"/>
-		<arg name="linear_accel_cov" 		value="1.0"/>
-		<arg name="unite_imu_method" 		value="linear_interpolation"/>
-		<arg name="initial_reset" 			value="true"/>                 <!-- mitigate imu hardware problems -->
-		<arg name="depth_fps"               value="30"/>
-  		<arg name="color_fps"               value="30"/>
-	</include>
-
-	<!-- start web server node -->
-	<!-- <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/> -->
 </launch>

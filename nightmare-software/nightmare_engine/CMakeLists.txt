@@ -14,5 +14,5 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS 
-  src/nightmare_engine/main.py
+  src/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
