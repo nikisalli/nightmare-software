@@ -1,0 +1,3 @@
+[submodule "nightmare-software/nightmare_hardware/src/hardware/LX16A"]
+	path = nightmare-software/nightmare_hardware/src/hardware/LX16A
+	url = https://github.com/nikisalli/LX16A.git

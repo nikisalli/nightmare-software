@@ -5,7 +5,7 @@
 
 #include "types.h"
 
-using namespace N;
+using namespace nightmare_types;
 
 typedef struct leg
 {

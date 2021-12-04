@@ -1,0 +1,5 @@
+<launch>
+    <!-- load Robot configuration file in rosparam server -->
+    <rosparam file="$(find nightmare)/nightmare_config.yaml" />
+
+</launch>

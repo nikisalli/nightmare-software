@@ -1,7 +1,7 @@
 #ifndef NIGHTMARE_TYPES_H
 #define NIGHTMARE_TYPES_H
 
-namespace N
+namespace nightmare_types
 {
     typedef unsigned char   uint8_t;
     typedef char            int8_t;
