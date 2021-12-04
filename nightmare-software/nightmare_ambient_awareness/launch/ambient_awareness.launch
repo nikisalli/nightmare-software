@@ -1,7 +1,0 @@
-<!-- Start joystick node. -->
-<launch>
-
-    <!-- start joint compatibility layer node -->
-    <node name="ambient_awareness" pkg="nightmare_ambient_awareness" required="true" type="main.py" output="screen"/>
-
-</launch>
