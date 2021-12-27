@@ -10,10 +10,13 @@ from sensor_msgs.msg import JointState, Imu
 from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import tf_conversions
 
+# module imports
+from nightmare_hardware.logging import printlog, loglevel
+
 # every array is in the form of [[coxa, femur, tibia], [coxa, femur, tibia], ...] for every leg from 0 to 5 (6 legs)
 
 
-# utility map function
+# utility functions
 def fmap(x: float, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
@@ -28,9 +31,9 @@ class hardware_node:
                 self.comm_port = serial.Serial(rospy.get_param("/hardware/comm_port"), 115200, timeout=0.1)
                 break
             except Exception:
-                rospy.logerr("Could not connect to servo controller")
+                printlog("Could not connect to servo controller", loglevel.ERROR)
                 rospy.sleep(1)
-        rospy.loginfo("all ports detected and connected")
+        printlog("all ports detected and connected")
         # this array can be used as a lookup table for the servo id's
         self.servo_index_to_id_map = np.array(rospy.get_param("/hardware/leg_configuration")).flatten()
         # self.counter = 0  # counter to read the servos less frequently
@@ -77,7 +80,7 @@ class hardware_node:
         rospy.Subscriber("/engine/angle_joint_states", JointState, self.engine_angles_callback)
         rospy.Subscriber("/engine/enable_joint_states", JointState, self.engine_enables_callback)
 
-        rospy.loginfo("hardware node ready")
+        printlog("hardware node ready")
 
     def engine_angles_callback(self, msg):
         # this is the raw angles from the engine
@@ -102,7 +105,7 @@ class hardware_node:
                 try:
                     self.hardware_angles[index] = fmap(self.controller.get_position(self.servo_index_to_id_map[index]), 0, 1000, -2.0944, 2.0944)
                 except Exception:
-                    rospy.logerr(f"could not read servo {self.servo_index_to_id_map[index]}")
+                    printlog(f"could not read servo {self.servo_index_to_id_map[index]}", loglevel.ERROR)
         # publish joint state
         self.joint_msg.position = self.hardware_angles
         self.joint_msg.header.stamp = rospy.Time.now()
@@ -155,7 +158,7 @@ class hardware_node:
 if __name__ == '__main__':
     rospy.init_node('hardware_handler')
 
-    rospy.loginfo("starting hardware node")
+    printlog("starting hardware node")
 
     node = hardware_node()
 
@@ -163,4 +166,4 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         node.update()
         rate.sleep()
-    rospy.loginfo("hardware node stopped")
+    printlog("hardware node stopped")
