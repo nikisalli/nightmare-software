@@ -3,6 +3,7 @@ import serial
 import numpy as np
 import struct
 import math
+import sys
 
 # ros imports
 import rospy
@@ -11,7 +12,7 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import tf_conversions
 
 # module imports
-from nightmare_hardware.logging import printlog, loglevel
+from nightmare.modules.logging import printlog, loglevel, pinfo, pwarn, perr, pfatal
 
 # every array is in the form of [[coxa, femur, tibia], [coxa, femur, tibia], ...] for every leg from 0 to 5 (6 legs)
 
@@ -26,23 +27,24 @@ class hardware_node:
         # get serial port name from param server and create controller, if port unavailable keep trying forever
         while True or not rospy.is_shutdown():
             try:
-                self.controller = lewansoul_lx16a.ServoController(serial.Serial(rospy.get_param("/hardware/servo_port"), 115200, timeout=0.1))
-                self.sensor_port = serial.Serial(rospy.get_param("/hardware/sensor_port"), 115200, timeout=0.1)
-                self.comm_port = serial.Serial(rospy.get_param("/hardware/comm_port"), 115200, timeout=0.1)
+                self.controller = lewansoul_lx16a.ServoController(serial.Serial(rospy.get_param("/hardware/motherboard/servo_port"), 115200, timeout=0.1))
+                self.sensor_port = serial.Serial(rospy.get_param("/hardware/motherboard/sensor_port"), 115200, timeout=0.1)
+                self.comm_port = serial.Serial(rospy.get_param("/hardware/motherboard/comm_port"), 115200, timeout=0.1)
                 break
             except Exception:
-                printlog("Could not connect to servo controller", loglevel.ERROR)
+                perr("Could not connect to servo controller")
                 rospy.sleep(1)
-        printlog("all ports detected and connected")
+        pinfo("all ports detected and connected")
         # this array can be used as a lookup table for the servo id's
-        self.servo_index_to_id_map = np.array(rospy.get_param("/hardware/leg_configuration")).flatten()
+        self.servo_index_to_id_map = np.array(rospy.get_param("/hardware/legs/leg_configuration")).flatten()
         # self.counter = 0  # counter to read the servos less frequently
         self.hardware_angles = [0] * 18  # servo angles read from hardware
         self.commanded_angles = [0] * 18  # servo angles commanded by the engine
         self.commanded_enable = [False] * 18  # enable/disable servos
         self.already_enabled = [False] * 18  # enable/disable servo cache to avoid unnecessary enable/disable commands
-        self.sensor_header = rospy.get_param("/hardware/sensor_header")
+        self.sensor_header = rospy.get_param("/hardware/motherboard/sensor_header")
 
+        # ######## PUBLISHERS ########
         # joint state publisher for robot_state_publisher to parse, this should publish joint angles read from hardware
         # this names come from the .trans file in nightmare_description and are used to drive the joints
         self.joint_msg = JointState(header=Header(),
@@ -50,7 +52,7 @@ class hardware_node:
                                           'leg4coxa', 'leg4femur', 'leg4tibia', 'leg5coxa', 'leg5femur', 'leg5tibia', 'leg6coxa', 'leg6femur', 'leg6tibia'],
                                     velocity=[],
                                     effort=[])
-        self.joint_state_publisher = rospy.Publisher('/joint_states', JointState, queue_size=10)
+        self.joint_state_publisher = rospy.Publisher('/hardware/joint_states', JointState, queue_size=10)
 
         # imu
         self.imu_msg = Imu()
@@ -76,38 +78,59 @@ class hardware_node:
         self.voltage_publisher = rospy.Publisher('/hardware/battery/voltage', Float32, queue_size=10)
         self.current_publisher = rospy.Publisher('/hardware/battery/current', Float32, queue_size=10)
 
+        # ######## SUBSCRIBERS ########
         # subscriber to read the raw commands coming from the engine
-        rospy.Subscriber("/engine/angle_joint_states", JointState, self.engine_angles_callback)
-        rospy.Subscriber("/engine/enable_joint_states", JointState, self.engine_enables_callback)
+        rospy.Subscriber("/engine/joint_states", JointState, self.engine_angles_callback)
 
-        printlog("hardware node ready")
+        pinfo("ready")
 
     def engine_angles_callback(self, msg):
         # this is the raw angles from the engine
         self.commanded_angles = msg.position
+        self.commanded_enable = [bool(x) for x in msg.effort]
 
-    def engine_enables_callback(self, msg):
-        # this is the enable/disable commands from the engine
-        self.commanded_enable = int(msg.position)
+    def enable_motor(self, index):
+        sid = self.servo_index_to_id_map[index]
+        if self.already_enabled[index] is False:
+            self.controller.motor_on(sid)
+            # wait for feedback
+            try:
+                if self.controller.is_motor_on(sid, timeout=0.1):
+                    self.already_enabled[index] = True
+                else:
+                    perr(f"could not enable servo id: {sid}")
+            except Exception as e:
+                perr(f"could not enable servo id: {sid} exception: {type(e).__name__}")
+
+    def disable_motor(self, index):
+        sid = self.servo_index_to_id_map[index]
+        if self.already_enabled[index] is True:
+            self.controller.motor_off(sid)
+            # wait for feedback
+            try:
+                if not self.controller.is_motor_on(sid, timeout=0.1):
+                    self.already_enabled[index] = False
+                else:
+                    perr(f"could not disable servo id: {sid}")
+            except Exception as e:
+                perr(f"could not disable servo id: {sid} exception: {type(e).__name__}")
 
     def update_servos(self):
         # write servos
         for index in range(18):
+            sid = self.servo_index_to_id_map[index]
             if self.commanded_enable[index] is True:
-                if self.already_enabled[index] is False:
-                    self.controller.motor_on(self.servo_index_to_id_map[index])
-                    self.already_enabled[index] = True
-                self.controller.move(self.servo_index_to_id_map[index], fmap(self.commanded_angles[index], -2.0944, 2.0944, 0, 1000))
+                self.enable_motor(index)
+                self.controller.move(sid, fmap(self.commanded_angles[index], -2.0944, 2.0944, 0, 1000))
             else:
-                self.controller.motor_off(self.servo_index_to_id_map[index])
-                self.already_enabled[index] = False
-                # read the servo only if it is disabled
+                self.disable_motor(index)
                 try:
-                    self.hardware_angles[index] = fmap(self.controller.get_position(self.servo_index_to_id_map[index]), 0, 1000, -2.0944, 2.0944)
-                except Exception:
-                    printlog(f"could not read servo {self.servo_index_to_id_map[index]}", loglevel.ERROR)
+                    self.hardware_angles[index] = fmap(self.controller.get_position(sid, timeout=0.1), 0, 1000, -2.0944, 2.0944)
+                except Exception as e:
+                    perr(f"could not read servo {sid} exception: {type(e).__name__}")
         # publish joint state
         self.joint_msg.position = self.hardware_angles
+        self.joint_msg.effort = [bool(x) for x in self.already_enabled]
         self.joint_msg.header.stamp = rospy.Time.now()
         self.joint_state_publisher.publish(self.joint_msg)
 
@@ -158,7 +181,7 @@ class hardware_node:
 if __name__ == '__main__':
     rospy.init_node('hardware_handler')
 
-    printlog("starting hardware node")
+    pinfo("starting")
 
     node = hardware_node()
 
@@ -166,4 +189,4 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         node.update()
         rate.sleep()
-    printlog("hardware node stopped")
+    pinfo("stopped")

@@ -11,7 +11,7 @@ class loglevel(Enum):
 
 def printlog(msg, level=loglevel.INFO):
     header = f"[{rospy.get_name()}] "
-    new_msg = header + msg
+    new_msg = header + str(msg)
     if level == loglevel.INFO:
         rospy.loginfo(new_msg)
     elif level == loglevel.WARN:
@@ -20,3 +20,19 @@ def printlog(msg, level=loglevel.INFO):
         rospy.logerr(new_msg)
     elif level == loglevel.FATAL:
         rospy.logfatal(new_msg)
+
+
+def pinfo(msg):
+    printlog(msg, loglevel.INFO)
+
+
+def pwarn(msg):
+    printlog(msg, loglevel.WARN)
+
+
+def perr(msg):
+    printlog(msg, loglevel.ERROR)
+
+
+def pfatal(msg):
+    printlog(msg, loglevel.FATAL)

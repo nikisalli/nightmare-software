@@ -2,14 +2,19 @@ engine:
     rate: 100
 
 hardware:
-    comm_port: '/dev/ttyACM0'
-    servo_port: '/dev/ttyACM1'
-    sensor_port: '/dev/ttyACM2'
-    sensor_header: [85, 85, 85, 85]
-    leg_configuration:
-        - [1, 2, 3]  # leg 1 [coxa, femur, tibia]
-        - [4, 5, 6]  # leg 2
-        - [7, 8, 9]  # leg 3
-        - [10, 11, 12]  # leg 4
-        - [13, 14, 15]  # leg 5
-        - [16, 17, 18]  # leg 6
+    motherboard:
+        comm_port: '/dev/ttyACM0'
+        servo_port: '/dev/ttyACM1'
+        sensor_port: '/dev/ttyACM2'
+        sensor_header: [85, 85, 85, 85]
+    legs:
+        leg_configuration:
+            - [1, 2, 3]  # leg 1 [coxa, femur, tibia]
+            - [4, 5, 6]  # leg 2
+            - [7, 8, 9]  # leg 3
+            - [10, 11, 12]  # leg 4
+            - [13, 14, 15]  # leg 5
+            - [16, 17, 18]  # leg 6
+        coxa_length: 6.5e-2
+        femur_length: 13.e-2
+        tibia_length: 17.e-2
