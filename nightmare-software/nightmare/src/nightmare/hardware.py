@@ -135,8 +135,8 @@ class hardware_node:
         self.hardware_joint_publisher_msg.header.stamp = rospy.Time.now()
         self.hardware_joint_publisher.publish(self.hardware_joint_publisher_msg)
         # publish urdf joint state
-        # these are offset angles to accomodate for any discrepancies between the hardware and the urdf
-        self.urdf_joint_publisher_msg.position = [angle + offset for angle, offset in zip(self.hardware_angles, URDF_JOINT_OFFSETS)]
+        # add offset REAL -> URDF
+        self.urdf_joint_publisher_msg.position = np.array(self.hardware_angles) + URDF_JOINT_OFFSETS
         self.urdf_joint_publisher_msg.effort = [bool(x) for x in self.already_enabled]
         self.urdf_joint_publisher_msg.header.stamp = rospy.Time.now()
         self.urdf_joint_publisher.publish(self.urdf_joint_publisher_msg)

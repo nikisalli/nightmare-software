@@ -5,17 +5,6 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import numpy as np
 
 
-URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
-JOINT_STATE_LABELS = ['leg1coxa', 'leg1femur', 'leg1tibia',
-                      'leg2coxa', 'leg2femur', 'leg2tibia',
-                      'leg3coxa', 'leg3femur', 'leg3tibia',
-                      'leg4coxa', 'leg4femur', 'leg4tibia',
-                      'leg5coxa', 'leg5femur', 'leg5tibia',
-                      'leg6coxa', 'leg6femur', 'leg6tibia']
-URDF_DICT = {name: {'offset': offset} for name in JOINT_STATE_LABELS for offset in URDF_JOINT_OFFSETS}
-FILTER_VAL = 0.99
-
-
 class nightmareForceSensors:
     def __init__(self, pybullet, robot, **kargs):
         # get "import pybullet as pb" and store in self.pb

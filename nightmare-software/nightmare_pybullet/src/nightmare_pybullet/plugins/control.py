@@ -7,6 +7,9 @@ position, velocity and effort control for all revolute joints on the robot
 import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
+import numpy as np
+
+URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
 
 
 class Control:
@@ -35,7 +38,8 @@ class Control:
         self.force_commands = [max_effort] * self.joint_number
 
     def joint_state_cb(self, msg):
-        self.position_joint_commands = msg.position
+        # add offset REAL -> URDF
+        self.position_joint_commands = np.array(msg.position) + URDF_JOINT_OFFSETS
         # self.velocity_joint_commands = msg.velocity
         # self.effort_joint_commands = msg.effort
 
