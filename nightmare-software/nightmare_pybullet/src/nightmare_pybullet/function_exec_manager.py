@@ -14,9 +14,7 @@ Example:
              plugin1       plugin2         plugin3
 start    ----------------------------------------------
               start        start           start
-                
               finish
-                
                                            finish
 
 
@@ -39,16 +37,20 @@ See function_exec_manager_example.py for a runing example on how to use this cla
 """
 
 from threading import Thread
-import time, sys, copy
+import time
+import sys
+import copy
+
 
 class FuncExecManager:
     """
     helper class to keep track of synchronous multiple parallel execution of functions with deadlines
     """
+
     def __init__(self, list_of_objects, stop_condition, exec_after_each_loop, pause_execution, log_info=print,
                  log_warn=print, log_debug=print, function_name='function'):
         # deadline for functions to finish their process
-        self.loop_rate = 0.25 # every 4 secs
+        self.loop_rate = 0.25  # every 4 secs
         # keep track of functions which execution time is "below" the deadline (set by loop rate)
         self.on_time_functions = []
         # keep track of functions which execution time is "above" the deadline (set by loop rate)
@@ -82,7 +84,8 @@ class FuncExecManager:
             self.on_time_functions.append(obj)
         else:
             end_time = time.time()
-            self.log_warn(f'{class_name}: Missed loop rate, took {str(round(end_time - start_time - (1.0 / self.loop_rate), 2))} sec longer than expected')
+            self.log_warn(
+                f'{class_name}: Missed loop rate, took {str(round(end_time - start_time - (1.0 / self.loop_rate), 2))} sec longer than expected')
             self.late_functions.append(obj)
 
     def loop_thread(self):
@@ -115,7 +118,8 @@ class FuncExecManager:
             # start "on time" functions
             thread_list = []
             for func in self.on_time_functions:
-                thread_list.append(Thread(target=self.time_control, args=(cycle_unique_id, func,)))
+                thread_list.append(
+                    Thread(target=self.time_control, args=(cycle_unique_id, func,)))
             self.on_time_functions = []
             for t in thread_list:
                 t.start()
@@ -127,7 +131,8 @@ class FuncExecManager:
                 if self.late_functions != []:
                     self.late_threads = []
                     for func in self.late_functions:
-                        self.late_threads.append(Thread(target=self.time_control, args=(cycle_unique_id, func,)))
+                        self.late_threads.append(
+                            Thread(target=self.time_control, args=(cycle_unique_id, func,)))
                         self.late_threads[-1].start()
                     self.late_functions = []
                 # sleep to reduce computational load

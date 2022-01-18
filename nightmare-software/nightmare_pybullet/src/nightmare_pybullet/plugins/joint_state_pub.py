@@ -7,6 +7,7 @@ query robot state and publish position, velocity and effort values to /joint_sta
 import rospy
 from sensor_msgs.msg import JointState
 
+
 class joinStatePub:
     def __init__(self, pybullet, robot, **kargs):
         # get "import pybullet as pb" and store in self.pb
@@ -16,7 +17,8 @@ class joinStatePub:
         # get joints names and store them in dictionary
         self.joint_index_name_dic = kargs['rev_joints']
         # register this node in the network as a publisher in /joint_states topic
-        self.pub_joint_states = rospy.Publisher('joint_states', JointState, queue_size=1)
+        self.pub_joint_states = rospy.Publisher('/joint_states', JointState, queue_size=1)
+        self.pub_joint_states_hw = rospy.Publisher('/hardware/joint_states', JointState, queue_size=1)
 
     def execute(self):
         """this function gets called from pybullet ros main update loop"""
@@ -30,8 +32,9 @@ class joinStatePub:
             joint_msg.name.append(self.joint_index_name_dic[joint_index])
             joint_msg.position.append(joint_state[0])
             joint_msg.velocity.append(joint_state[1])
-            joint_msg.effort.append(joint_state[3]) # applied effort in last sim step
+            joint_msg.effort.append(joint_state[3])  # applied effort in last sim step
         # update msg time using ROS time api
         joint_msg.header.stamp = rospy.Time.now()
         # publish joint states to ROS
         self.pub_joint_states.publish(joint_msg)
+        self.pub_joint_states_hw.publish(joint_msg)

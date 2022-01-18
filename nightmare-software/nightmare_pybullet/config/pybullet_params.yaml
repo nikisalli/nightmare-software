@@ -7,9 +7,6 @@
 # laser_scanner - Laser scanner simulation based on pybullet rayTestBatch function
 plugins:
   -
-    module: nightmare_pybullet.plugins.body_vel_control
-    class: cmdVelCtrl
-  -
     module: nightmare_pybullet.plugins.odometry
     class: simpleOdometry
   -
@@ -49,3 +46,16 @@ use_intertia_from_file: False           # default: False
 #     resolution:
 #         width:          640             # default: 640, horizontal image resolution in pixels
 #         height:         480             # default: 480, vertical image resolution in pixels
+
+plugin_import_prefix: nightmare_pybullet.plugins
+environment: environment
+pybullet_gui: True # if true pybullet gui will show
+pause_simulation: False # if true, will boot with paused physics
+parallel_plugin_execution: True
+robot_pose_x: 0.0 # robot spawn pose is set here
+robot_pose_y: 0.0
+robot_pose_z: 0.3
+robot_pose_yaw: 0.0
+fixed_base: False # if false, allow free movement of the robot
+use_deformable_world: False # enable/disable soft body simulation
+gui_options: ""

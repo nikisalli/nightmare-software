@@ -12,6 +12,7 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import tf_conversions
 
 # module imports
+from nightmare.config import *
 from nightmare.modules.logging import printlog, loglevel, pinfo, pwarn, perr, pfatal
 
 # every array is in the form of [[coxa, femur, tibia], [coxa, femur, tibia], ...] for every leg from 0 to 5 (6 legs)
@@ -24,35 +25,34 @@ def fmap(x: float, in_min, in_max, out_min, out_max):
 
 class hardware_node:
     def __init__(self):
-        # get serial port name from param server and create controller, if port unavailable keep trying forever
+        # create controller, if port unavailable keep trying forever
         while True or not rospy.is_shutdown():
             try:
-                self.controller = lewansoul_lx16a.ServoController(serial.Serial(rospy.get_param("/hardware/motherboard/servo_port"), 115200, timeout=0.1))
-                self.sensor_port = serial.Serial(rospy.get_param("/hardware/motherboard/sensor_port"), 115200, timeout=0.1)
-                self.comm_port = serial.Serial(rospy.get_param("/hardware/motherboard/comm_port"), 115200, timeout=0.1)
+                self.controller = lewansoul_lx16a.ServoController(serial.Serial(SERVO_PORT, 115200, timeout=0.1))
+                self.sensor_port = serial.Serial(SENSOR_PORT, 115200, timeout=0.1)
+                self.comm_port = serial.Serial(COMMUNICATION_PORT, 115200, timeout=0.1)
                 break
             except Exception:
                 perr("Could not connect to servo controller")
                 rospy.sleep(1)
         pinfo("all ports detected and connected")
         # this array can be used as a lookup table for the servo id's
-        self.servo_index_to_id_map = np.array(rospy.get_param("/hardware/legs/leg_configuration")).flatten()
+        self.servo_index_to_id_map = np.array(SERVO_IDS)
         # self.counter = 0  # counter to read the servos less frequently
         self.hardware_angles = [0] * 18  # servo angles read from hardware
         self.commanded_angles = [0] * 18  # servo angles commanded by the engine
         self.commanded_enable = [False] * 18  # enable/disable servos
         self.already_enabled = [False] * 18  # enable/disable servo cache to avoid unnecessary enable/disable commands
-        self.sensor_header = rospy.get_param("/hardware/motherboard/sensor_header")
+        self.sensor_header = SENSOR_HEADER
 
         # ######## PUBLISHERS ########
         # joint state publisher for robot_state_publisher to parse, this should publish joint angles read from hardware
         # this names come from the .trans file in nightmare_description and are used to drive the joints
-        self.joint_msg = JointState(header=Header(),
-                                    name=['leg1coxa', 'leg1femur', 'leg1tibia', 'leg2coxa', 'leg2femur', 'leg2tibia', 'leg3coxa', 'leg3femur', 'leg3tibia',
-                                          'leg4coxa', 'leg4femur', 'leg4tibia', 'leg5coxa', 'leg5femur', 'leg5tibia', 'leg6coxa', 'leg6femur', 'leg6tibia'],
-                                    velocity=[],
-                                    effort=[])
-        self.joint_state_publisher = rospy.Publisher('/hardware/joint_states', JointState, queue_size=10)
+
+        self.hardware_joint_publisher_msg = JointState(header=Header(), name=JOINT_STATE_LABELS)
+        self.hardware_joint_publisher = rospy.Publisher('/hardware/joint_states', JointState, queue_size=10)
+        self.urdf_joint_publisher_msg = JointState(header=Header(), name=JOINT_STATE_LABELS)
+        self.urdf_joint_publisher = rospy.Publisher('/joint_states', JointState, queue_size=10)
 
         # imu
         self.imu_msg = Imu()
@@ -128,11 +128,18 @@ class hardware_node:
                     self.hardware_angles[index] = fmap(self.controller.get_position(sid, timeout=0.1), 0, 1000, -2.0944, 2.0944)
                 except Exception as e:
                     perr(f"could not read servo {sid} exception: {type(e).__name__}")
-        # publish joint state
-        self.joint_msg.position = self.hardware_angles
-        self.joint_msg.effort = [bool(x) for x in self.already_enabled]
-        self.joint_msg.header.stamp = rospy.Time.now()
-        self.joint_state_publisher.publish(self.joint_msg)
+        # publish hardware joint state
+        # these are the real angles read from the hardware
+        self.hardware_joint_publisher_msg.position = self.hardware_angles
+        self.hardware_joint_publisher_msg.effort = [bool(x) for x in self.already_enabled]
+        self.hardware_joint_publisher_msg.header.stamp = rospy.Time.now()
+        self.hardware_joint_publisher.publish(self.hardware_joint_publisher_msg)
+        # publish urdf joint state
+        # these are offset angles to accomodate for any discrepancies between the hardware and the urdf
+        self.urdf_joint_publisher_msg.position = [angle + offset for angle, offset in zip(self.hardware_angles, URDF_JOINT_OFFSETS)]
+        self.urdf_joint_publisher_msg.effort = [bool(x) for x in self.already_enabled]
+        self.urdf_joint_publisher_msg.header.stamp = rospy.Time.now()
+        self.urdf_joint_publisher.publish(self.urdf_joint_publisher_msg)
 
     def parse_sensors(self):
         # flush the serial buffer to avoid reading old data

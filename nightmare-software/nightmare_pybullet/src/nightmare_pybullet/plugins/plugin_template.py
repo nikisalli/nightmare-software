@@ -6,6 +6,7 @@ TODO: briefly describe your plugin here
 
 import rospy
 
+
 class pluginTemplate:
     def __init__(self, pybullet, robot, **kargs):
         # get "import pybullet as pb" and store in self.pb

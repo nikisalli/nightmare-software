@@ -11,6 +11,7 @@ import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
+
 class RGBDCamera:
     def __init__(self, pybullet, robot, **kargs):
         # get "import pybullet as pb" and store in self.pb
@@ -20,29 +21,39 @@ class RGBDCamera:
         # create image msg placeholder for publication
         self.image_msg = Image()
         # get RGBD camera parameters from ROS param server
-        self.image_msg.width = rospy.get_param('~rgbd_camera/resolution/width', 640)
-        self.image_msg.height = rospy.get_param('~rgbd_camera/resolution/height', 480)
+        self.image_msg.width = rospy.get_param(
+            '~rgbd_camera/resolution/width', 640)
+        self.image_msg.height = rospy.get_param(
+            '~rgbd_camera/resolution/height', 480)
         assert(self.image_msg.width > 5)
         assert(self.image_msg.height > 5)
         cam_frame_id = rospy.get_param('~rgbd_camera/frame_id', None)
         if not cam_frame_id:
-            rospy.logerr('Required parameter rgbd_camera/frame_id not set, will exit now...')
-            rospy.signal_shutdown('Required parameter rgbd_camera/frame_id not set')
+            rospy.logerr(
+                'Required parameter rgbd_camera/frame_id not set, will exit now...')
+            rospy.signal_shutdown(
+                'Required parameter rgbd_camera/frame_id not set')
             return
         # get pybullet camera link id from its name
         link_names_to_ids_dic = kargs['link_ids']
-        if not cam_frame_id in link_names_to_ids_dic:
-            rospy.logerr('Camera reference frame "{}" not found in URDF model'.format(cam_frame_id))
-            rospy.logwarn('Available frames are: {}'.format(link_names_to_ids_dic))
-            rospy.signal_shutdown('required param rgbd_camera/frame_id not set properly')
+        if not (cam_frame_id in link_names_to_ids_dic):
+            rospy.logerr(
+                'Camera reference frame "{}" not found in URDF model'.format(cam_frame_id))
+            rospy.logwarn('Available frames are: {}'.format(
+                link_names_to_ids_dic))
+            rospy.signal_shutdown(
+                'required param rgbd_camera/frame_id not set properly')
             return
         self.pb_camera_link_id = link_names_to_ids_dic[cam_frame_id]
         self.image_msg.header.frame_id = cam_frame_id
         # create publisher
         self.pub_image = rospy.Publisher('rgb_image', Image, queue_size=1)
-        self.image_msg.encoding = rospy.get_param('~rgbd_camera/resolution/encoding', 'rgb8')
-        self.image_msg.is_bigendian = rospy.get_param('~rgbd_camera/resolution/encoding', 0)
-        self.image_msg.step = rospy.get_param('~rgbd_camera/resolution/encoding', 1920)
+        self.image_msg.encoding = rospy.get_param(
+            '~rgbd_camera/resolution/encoding', 'rgb8')
+        self.image_msg.is_bigendian = rospy.get_param(
+            '~rgbd_camera/resolution/encoding', 0)
+        self.image_msg.step = rospy.get_param(
+            '~rgbd_camera/resolution/encoding', 1920)
         # projection matrix
         self.hfov = rospy.get_param('~rgbd_camera/hfov', 56.3)
         self.vfov = rospy.get_param('~rgbd_camera/vfov', 43.7)
@@ -56,17 +67,18 @@ class RGBDCamera:
 
     def compute_projection_matrix(self):
         return self.pb.computeProjectionMatrix(
-                    left=-math.tan(math.pi * self.hfov / 360.0) * self.near_plane,
-                    right=math.tan(math.pi * self.hfov / 360.0) * self.near_plane,
-                    bottom=-math.tan(math.pi * self.vfov / 360.0) * self.near_plane,
-                    top=math.tan(math.pi * self.vfov / 360.0) * self.near_plane,
-                    nearVal=self.near_plane,
-                    farVal=self.far_plane)
+            left=-math.tan(math.pi * self.hfov / 360.0) * self.near_plane,
+            right=math.tan(math.pi * self.hfov / 360.0) * self.near_plane,
+            bottom=-math.tan(math.pi * self.vfov / 360.0) * self.near_plane,
+            top=math.tan(math.pi * self.vfov / 360.0) * self.near_plane,
+            nearVal=self.near_plane,
+            farVal=self.far_plane)
 
     def extract_frame(self, camera_image):
         bgr_image = np.zeros((self.image_msg.height, self.image_msg.width, 3))
 
-        camera_image = np.reshape(camera_image[2], (camera_image[1], camera_image[0], 4))
+        camera_image = np.reshape(
+            camera_image[2], (camera_image[1], camera_image[0], 4))
 
         bgr_image[:, :, 2] =\
             (1 - camera_image[:, :, 3]) * camera_image[:, :, 2] +\
@@ -89,10 +101,12 @@ class RGBDCamera:
         This method is used to tranform it to the world reference frame
         NOTE: this method uses pybullet functions and not tf
         """
-        target_point = [5.0, 0, 0] # expressed w.r.t camera reference frame
-        camera_position = [camera_position[0], camera_position[1], camera_position[2]]
+        target_point = [5.0, 0, 0]  # expressed w.r.t camera reference frame
+        camera_position = [camera_position[0],
+                           camera_position[1], camera_position[2]]
         rm = self.pb.getMatrixFromQuaternion(camera_orientation)
-        rotation_matrix = [[rm[0], rm[1], rm[2]],[rm[3], rm[4], rm[5]],[rm[6], rm[7], rm[8]]]
+        rotation_matrix = [[rm[0], rm[1], rm[2]], [
+            rm[3], rm[4], rm[5]], [rm[6], rm[7], rm[8]]]
         return np.dot(rotation_matrix, target_point) + camera_position
 
     def execute(self):
@@ -101,12 +115,13 @@ class RGBDCamera:
         self.count += 1
         if self.count < 100:
             return
-        self.count = 0 # reset count
+        self.count = 0  # reset count
         # get camera pose
         cam_state = self.pb.getLinkState(self.robot, self.pb_camera_link_id)
         # target is a point 5m ahead of the robot camera expressed w.r.t world reference frame
         target = self.compute_camera_target(cam_state[0], cam_state[1])
-        view_matrix = self.pb.computeViewMatrix(cam_state[0], target, [0, 0, 1])
+        view_matrix = self.pb.computeViewMatrix(
+            cam_state[0], target, [0, 0, 1])
         # get camera image from pybullet
         pybullet_cam_resp = self.pb.getCameraImage(self.image_msg.width,
                                                    self.image_msg.height,

@@ -4,6 +4,15 @@ import rospy
 from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import numpy as np
 
+
+URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
+JOINT_STATE_LABELS = ['leg1coxa', 'leg1femur', 'leg1tibia',
+                      'leg2coxa', 'leg2femur', 'leg2tibia',
+                      'leg3coxa', 'leg3femur', 'leg3tibia',
+                      'leg4coxa', 'leg4femur', 'leg4tibia',
+                      'leg5coxa', 'leg5femur', 'leg5tibia',
+                      'leg6coxa', 'leg6femur', 'leg6tibia']
+URDF_DICT = {name: {'offset': offset} for name in JOINT_STATE_LABELS for offset in URDF_JOINT_OFFSETS}
 FILTER_VAL = 0.99
 
 
@@ -15,8 +24,6 @@ class nightmareForceSensors:
 
         # get robot from parent class
         self.robot = robot
-        self.tibias = {}
-        self.index_tibias()
         self.forces = np.array([0.] * 6)
         self.prev_forces = np.array([0.] * 6)
 
@@ -38,25 +45,27 @@ class nightmareForceSensors:
         self.filtered_sensor_msg.data = np.asarray([0.] * 6)
         self.filtered_sensor_msg_raw = np.asarray([0.] * 6)
 
-        self.publisher_force_sensors = rospy.Publisher('force_sensors', Float32MultiArray, queue_size=10)
-        self.publisher_filtered_force_sensors = rospy.Publisher('filtered_force_sensors', Float32MultiArray, queue_size=10)
+        # self.publisher_force_sensors = rospy.Publisher('force_sensors', Float32MultiArray, queue_size=10)
+        self.publisher_filtered_force_sensors = rospy.Publisher('/hardware/load_cells', Float32MultiArray, queue_size=10)
+
+        for i in range(self.pb.getNumJoints(self.robot)):
+            self.pb.enableJointForceTorqueSensor(self.robot, i, 1)
 
     def execute(self):
         """this function gets called from pybullet ros main update loop"""
-        points = self.pb.getContactPoints(self.robot)
-        for p in points:
-            _id = p[3]
-            if _id in self.tibias:
-                self.forces[self.tibias[p[3]]] = round(p[9] * 10., 2)
+        # create arrays as long as the number of joints to store positions and torques
+        self.positions = np.array([0.] * self.pb.getNumJoints(self.robot))
+        self.torques = np.array([0.] * self.pb.getNumJoints(self.robot))
+        # fill the arrays
+        for i in range(self.pb.getNumJoints(self.robot)):
+            name = self.pb.getJointInfo(self.robot, i)[1].decode("utf-8")
+            if 'femur' in name:
+                leg_num = int(name[3]) - 1
+                self.forces[leg_num] = self.pb.getJointState(self.robot, i)[2][2] / 9.81
+
+        # publish
         self.sensor_msg.data = self.forces
         self.filtered_sensor_msg.data = FILTER_VAL * self.prev_forces + (1. - FILTER_VAL) * self.forces  # simple first order low pass filter
         self.prev_filtered_forces = self.filtered_sensor_msg.data
-        self.publisher_force_sensors.publish(self.sensor_msg)
+        # self.publisher_force_sensors.publish(self.sensor_msg)
         self.publisher_filtered_force_sensors.publish(self.filtered_sensor_msg)
-
-    def index_tibias(self):
-        for i in range(self.pb.getNumJoints(self.robot)):
-            n = self.pb.getJointInfo(self.robot, i)[12].decode('UTF-8')
-            if "tibia" in n:
-                # fill the list with the id of the tibia of leg n at place n - 1 (leg count starts at 1)
-                self.tibias[i] = int(n[4]) - 1

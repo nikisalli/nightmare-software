@@ -438,7 +438,7 @@
   <origin rpy="0 0 0" xyz="0.093 0.0 0.0455"/>
   <parent link="body_link"/>
   <child link="leg_2_coxa_1"/>
-  <axis xyz="-0.0 -0.0 1.0"/>
+  <axis xyz="-0.0 -0.0 -1.0"/>
 </joint>
 
 <joint name="leg3tibia" type="continuous">
@@ -452,7 +452,7 @@
   <origin rpy="0 0 0" xyz="0.067171 -0.079498 0.0455"/>
   <parent link="body_link"/>
   <child link="leg_3_coxa_1"/>
-  <axis xyz="-0.0 -0.0 1.0"/>
+  <axis xyz="-0.0 -0.0 -1.0"/>
 </joint>
 
 <joint name="leg4tibia" type="continuous">
@@ -508,14 +508,14 @@
   <origin rpy="0 0 0" xyz="-0.038891 0.014142 -0.0285"/>
   <parent link="leg_6_coxa_1"/>
   <child link="leg_6_femur_1"/>
-  <axis xyz="-0.707107 -0.707107 -0.0"/>
+  <axis xyz="0.707107 0.707107 -0.0"/>
 </joint>
 
 <joint name="leg6coxa" type="continuous">
   <origin rpy="0 0 0" xyz="-0.067171 0.079498 0.0455"/>
   <parent link="body_link"/>
   <child link="leg_6_coxa_1"/>
-  <axis xyz="0.0 0.0 1.0"/>
+  <axis xyz="0.0 0.0 -1.0"/>
 </joint>
 
 <joint name="leg1femur" type="continuous">
@@ -529,14 +529,14 @@
   <origin rpy="0 0 0" xyz="0.0375 0.0165 -0.0285"/>
   <parent link="leg_2_coxa_1"/>
   <child link="leg_2_femur_1"/>
-  <axis xyz="0.0 1.0 0.0"/>
+  <axis xyz="0.0 -1.0 0.0"/>
 </joint>
 
 <joint name="leg3femur" type="continuous">
   <origin rpy="0 0 0" xyz="0.038184 -0.014849 -0.0285"/>
   <parent link="leg_3_coxa_1"/>
   <child link="leg_3_femur_1"/>
-  <axis xyz="0.707107 0.707107 -0.0"/>
+  <axis xyz="-0.707107 -0.707107 -0.0"/>
 </joint>
 
 </robot>

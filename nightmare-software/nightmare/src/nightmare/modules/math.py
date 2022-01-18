@@ -7,41 +7,14 @@ from dataclasses import dataclass
 import rospy
 import tf_conversions
 
+# module imports
+from nightmare.config import *
+
 
 RIGHT = 1
 LEFT = 0
 PI = np.pi
 EPSILON = 0.0001
-
-
-@dataclass
-class Leg:
-    coxa_dim: float
-    femur_dim: float
-    tibia_dim: float
-    coxa: float
-    femur: float
-    tibia: float
-    local_pos: np.ndarray  # start of the coxa reference
-    body_pos: np.ndarray  # center of the body reference
-    ground_pos: np.ndarray  # center of the body reference without rotation
-
-
-class Body:
-    def __init__(self):
-        self.legs = [Leg(
-            rospy.get_param("/hardware/legs/coxa_length"),
-            rospy.get_param("/hardware/legs/femur_length"),
-            rospy.get_param("/hardware/legs/tibia_length"),
-            0, 0, 0,
-            np.array([0, 0, 0]),
-            np.array([0, 0, 0]),
-            np.array([0, 0, 0])
-        ) for _ in range(6)]
-        pass
-
-    def __setattr__(self, name, value):
-        print(name, value)
 
 
 def feq(a, b):  # floating point equal

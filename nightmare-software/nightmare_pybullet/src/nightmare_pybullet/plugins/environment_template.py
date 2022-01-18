@@ -2,6 +2,7 @@
 
 from nightmare_pybullet.plugins.environment import Environment as DefaultEnv
 
+
 class Environment(DefaultEnv):
     def __init__(self, pybullet, **kargs):
         super().__init__(pybullet)

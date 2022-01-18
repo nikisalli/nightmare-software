@@ -7,13 +7,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
+catkin_python_setup()
+
 catkin_package()
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
-
-catkin_python_setup()
 
 catkin_install_python(PROGRAMS 
   src/nightmare/hardware.py

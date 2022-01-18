@@ -11,7 +11,14 @@ from nightmare.modules.logging import printlog, loglevel, pinfo, pwarn, perr, pf
 
 class engine_node:
     def __init__(self):
+        # hardware data
+        self.local_pos = np.zeros(shape=(3, 6))  # position of each leg starting from the attachment to the body
+        self.body_pos = np.zeros(shape=(3, 6))  # position of each leg with the center of the body as origin
+        self.ground_pos = np.zeros(shape=(3, 6))  # body pos but with rotation relative to the ground
         pinfo("ready")
+
+    def compute_ik(self, ground_pos):
+        pass
 
     def update(self):
         pass
