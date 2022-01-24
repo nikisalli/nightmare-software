@@ -6,10 +6,10 @@ query robot state and publish position, velocity and effort values to /joint_sta
 
 import rospy
 from sensor_msgs.msg import JointState
+import numpy as np
 
 
 URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
-FILTER_VAL = 0.99
 
 
 class joinStatePub:

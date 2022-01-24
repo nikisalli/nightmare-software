@@ -9,6 +9,9 @@
         <param name="robot_urdf_path" value="$(arg model)" />
     </node>
 
+    <!-- start engine -->
+	<node name="engine" pkg="nightmare" required="true" type="engine.py" output="screen"/>
+
     <!-- start robot state publisher to convert joint_states in tf-->
 	<node pkg="robot_state_publisher" name="robot_state_publisher" required="true" type="robot_state_publisher" output="screen"/>
 </launch>

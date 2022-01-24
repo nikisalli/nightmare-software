@@ -4,6 +4,8 @@ import rospy
 from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 import numpy as np
 
+FILTER_VAL = 0.99
+
 
 class nightmareForceSensors:
     def __init__(self, pybullet, robot, **kargs):
