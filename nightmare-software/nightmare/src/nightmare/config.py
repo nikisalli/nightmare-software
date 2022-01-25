@@ -17,10 +17,10 @@ EPSILON = 0.0001
 # ===================================
 
 # ROBOT DIMENSIONS
-STAND_MID_LEG_Y = 26.e-2
-STAND_OUT_LEG_Y = 20.e-2
-STAND_MID_LEG_X = 0.e-2
+STAND_MID_LEG_X = 26.e-2
 STAND_OUT_LEG_X = 20.e-2
+STAND_MID_LEG_Y = 0.e-2
+STAND_OUT_LEG_Y = 20.e-2
 BODY_LENGTH = 15.5e-2  # X
 BODY_MID_WIDTH = 18.6e-2  # Y
 BODY_OUT_WIDTH = 13.7e-2  # Y
@@ -89,6 +89,7 @@ JOINT_STATE_LABELS = ['leg1coxa', 'leg1femur', 'leg1tibia',
                       'leg5coxa', 'leg5femur', 'leg5tibia',
                       'leg6coxa', 'leg6femur', 'leg6tibia']
 URDF_OFFSET_DICT = dict(zip(JOINT_STATE_LABELS, URDF_JOINT_OFFSETS))
+LEG_TIPS = ["leg_1_tip", "leg_2_tip", "leg_3_tip", "leg_4_tip", "leg_5_tip", "leg_6_tip"]
 
 
 # ============================
@@ -109,53 +110,53 @@ class LEG():
 legs = [
     LEG(  # leg 1
         dim=DEFAULT_DIM,
-        abs_offset=np.array([BODY_LENGTH / 2, -BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, - STAND_HEIGHT]),
+        abs_offset=np.array([BODY_OUT_WIDTH / 2, BODY_LENGTH / 2, 0]),
+        default_pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=RIGHT,
-        servo_offset=np.array([PI / 4, 0, 0])
+        servo_offset=np.array([PI / 4, -0.14874564, 0])
     ),
     LEG(  # leg 2
         dim=DEFAULT_DIM,
-        abs_offset=np.array([0, -BODY_MID_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_MID_LEG_X, -STAND_MID_LEG_Y, - STAND_HEIGHT]),
+        abs_offset=np.array([BODY_MID_WIDTH / 2, 0, 0]),
+        default_pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, -STAND_HEIGHT]),
         side=RIGHT,
-        servo_offset=np.array([0, 0, 0])
+        servo_offset=np.array([0, -0.14874564, 0])
     ),
     LEG(  # leg 3
         dim=DEFAULT_DIM,
-        abs_offset=np.array([-BODY_LENGTH / 2, -BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, - STAND_HEIGHT]),
+        abs_offset=np.array([BODY_OUT_WIDTH / 2, -BODY_LENGTH / 2, 0]),
+        default_pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=RIGHT,
-        servo_offset=np.array([-PI / 4, 0, 0])
+        servo_offset=np.array([-PI / 4, -0.14874564, 0])
     ),
     LEG(  # leg 4
         dim=DEFAULT_DIM,
-        abs_offset=np.array([-BODY_LENGTH / 2, BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, - STAND_HEIGHT]),
+        abs_offset=np.array([-BODY_OUT_WIDTH / 2, -BODY_LENGTH / 2, 0]),
+        default_pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=LEFT,
-        servo_offset=np.array([PI / 4, 0, 0])
+        servo_offset=np.array([PI / 4, -0.14874564, 0])
     ),
     LEG(  # leg 5
         dim=DEFAULT_DIM,
-        abs_offset=np.array([0, BODY_MID_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, - STAND_HEIGHT]),
+        abs_offset=np.array([-BODY_MID_WIDTH / 2, 0, 0]),
+        default_pose=np.array([-STAND_MID_LEG_X, STAND_MID_LEG_Y, -STAND_HEIGHT]),
         side=LEFT,
-        servo_offset=np.array([0, 0, 0])
+        servo_offset=np.array([0, -0.14874564, 0])
     ),
     LEG(  # leg 6
         dim=DEFAULT_DIM,
-        abs_offset=np.array([BODY_LENGTH / 2, BODY_OUT_WIDTH / 2, 0]),
-        default_pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, - STAND_HEIGHT]),
+        abs_offset=np.array([-BODY_OUT_WIDTH / 2, BODY_LENGTH / 2, 0]),
+        default_pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=LEFT,
-        servo_offset=np.array([-PI / 4, 0, 0])
+        servo_offset=np.array([-PI / 4, -0.14874564, 0])
     )
 ]
 
 DEFAULT_POSE = np.array([leg.default_pose for leg in legs])
 DEFAULT_SIT_POSE = np.array([[pos[0], pos[1], SIT_HEIGHT] for pos in DEFAULT_POSE.copy()])
-SERVO_OFFSET = np.append(np.array([leg.servo_offset for leg in legs]).ravel(), 0)
+SERVO_OFFSET = np.array([leg.servo_offset for leg in legs]).ravel()
 POSE_OFFSET = np.array([leg.abs_offset for leg in legs])
-POSE_REL_CONVERT = np.array([[-1 if leg.side else 1, -1 if leg.side else 1, 1] for leg in legs])
+POSE_REL_CONVERT = np.array([[1 if leg.side else -1, 1 if leg.side else -1, 1] for leg in legs])
 SERVO_IDS = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
 
 # GAITS

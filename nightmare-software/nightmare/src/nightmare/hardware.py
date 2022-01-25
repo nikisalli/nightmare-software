@@ -122,6 +122,8 @@ class hardware_node:
             if self.commanded_enable[index] is True:
                 self.enable_motor(index)
                 self.controller.move(sid, fmap(self.commanded_angles[index], -2.0944, 2.0944, 0, 1000))
+                # if everything is ok the servo will reach the commanded angle immediately so we can save bandwidth on the bus by assuming it did
+                self.hardware_angles[index] = self.commanded_angles[index]
             else:
                 self.disable_motor(index)
                 try:
