@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(nightmare)
+project(nightmare_usb_joystick)
 
 find_package(catkin REQUIRED COMPONENTS
+  roscpp
   rospy
   std_msgs
-  tf
   message_generation
 )
-
-catkin_python_setup()
 
 add_message_files(
   FILES
@@ -29,6 +27,5 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS 
-  src/nightmare/hardware.py
-  src/nightmare/engine.py
+  src/nightmare_usb_joystick/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
