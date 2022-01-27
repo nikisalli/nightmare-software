@@ -121,8 +121,27 @@ def feq(a, b):  # floating point equal
 
 
 def handle_js():
+    global jsdev
     while not rospy.is_shutdown():
-        evbuf = jsdev.read(8)
+        evbus = None
+        try:
+            evbuf = jsdev.read(8)
+        except OSError:
+            rospy.loginfo("joystick missing, waiting...")
+            while True:
+                for fn in os.listdir('/dev/input'):
+                    if fn.startswith('js'):
+                        device = '/dev/input/%s' % (fn)
+                        break
+                else:
+                    time.sleep(0.8)
+                    # rospy.loginfo("connect valid joystick to host")
+                    continue
+                break
+            fn = device
+            rospy.loginfo('Opening %s...' % fn)
+            jsdev = open(fn, 'rb')
+            continue  # continue to next iteration of outer loop
         if evbuf:
             _, value, _type, number = struct.unpack('IhBB', evbuf)
             if _type & 0x01:
@@ -159,7 +178,7 @@ def publisher():
     prev_button_states = button_states.copy()
     prev_axis_states = axis_states.copy()
     rate = rospy.Rate(50)
-    pub = rospy.Publisher("/control/usb_joystick", command, queue_size=1)
+    pub = rospy.Publisher("/control/command", command, queue_size=1)
 
     while not rospy.is_shutdown():
         if button_states['bb'] and prev_button_states['bb'] is False:  # joystick mode slection
