@@ -25,7 +25,7 @@ mode = 'stand'  # joystick command mode
 # robot command vars #
 
 gait = 'tripod'
-state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
+state = 'idle'  # string containing the robot's global state e.g. walking sitting etc
 
 body_trasl = np.array([0, 0, 0])
 body_rot = np.array([0, 0, 0])
@@ -195,13 +195,13 @@ def publisher():
         prev_button_states['bx'] = button_states['bx']
         prev_button_states['by'] = button_states['by']
 
-        if button_states['start'] and state == 'sleep' and prev_button_states['start'] is False:
+        if button_states['start'] and state == 'idle' and prev_button_states['start'] is False:
             state = 'awake'
             rospy.loginfo('state set to awake')
             height_displacement = 0
         elif button_states['start'] and state == 'awake' and prev_button_states['start'] is False:
-            state = 'sleep'
-            rospy.loginfo('state set to sleep')
+            state = 'idle'
+            rospy.loginfo('state set to idle')
             height_displacement = 0
         prev_button_states['start'] = button_states['start']
 
