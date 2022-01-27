@@ -188,7 +188,7 @@ def publisher():
             mode = 'stand'
             rospy.loginfo('mode set to stand')
         elif button_states['bx'] and prev_button_states['bx'] is False:
-            mode = 'leg control'
+            mode = 'leg_control'
             rospy.loginfo('mode set to leg control')
         prev_button_states['ba'] = button_states['ba']
         prev_button_states['bb'] = button_states['bb']
@@ -196,10 +196,10 @@ def publisher():
         prev_button_states['by'] = button_states['by']
 
         if button_states['start'] and state == 'sleep' and prev_button_states['start'] is False:
-            state = 'stand'
-            rospy.loginfo('state set to stand')
+            state = 'awake'
+            rospy.loginfo('state set to awake')
             height_displacement = 0
-        elif button_states['start'] and state == 'stand' and prev_button_states['start'] is False:
+        elif button_states['start'] and state == 'awake' and prev_button_states['start'] is False:
             state = 'sleep'
             rospy.loginfo('state set to sleep')
             height_displacement = 0
@@ -239,7 +239,7 @@ def publisher():
         # If None is used as the header value, rospy will automatically
         # fill it in.
         header.stamp = rospy.Time.now()
-        pub.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, state, gait))
+        pub.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, mode, state, gait))
         rate.sleep()
 
 
