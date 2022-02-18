@@ -61,6 +61,7 @@ class HardwareNode:
         self._imu_publisher = rospy.Publisher('/hardware/body_imu', Imu, queue_size=10)
 
         # load cell
+        self._load_cell_calibration_data = np.zeros(6)
         self._load_cell_msg = Float32MultiArray()
         self._load_cell_msg.layout.dim.append(MultiArrayDimension())
         self._load_cell_msg.layout.dim[0].label = "height"
@@ -81,7 +82,7 @@ class HardwareNode:
         pinfo("ready")
 
     def engine_angles_callback(self, msg: JointState):
-        # this is the raw angles from the engine
+        '''get pose from engine'''
         self._commanded_angles = msg.position
         self._commanded_enable = [bool(x) for x in msg.effort]
 
@@ -112,7 +113,7 @@ class HardwareNode:
                 perr(f"could not disable servo id: {sid} exception: {type(e).__name__}")
 
     def update_servos(self):
-        # write servos
+        '''write and read servos'''
         for index in range(18):
             sid = self._servo_index_to_id_map[index]
             if self._commanded_enable[index] is True:
@@ -167,7 +168,11 @@ class HardwareNode:
             self._imu_publisher.publish(self._imu_msg)
 
             # publish load cell data
-            self._load_cell_msg.data = np.asarray(data[4:9])
+            try:
+                self._load_cell_calibration_data = np.array(rospy.get_param("/hardware/load_cells_offsets"))
+            except KeyError:
+                pass
+            self._load_cell_msg.data = (np.array([data[9], data[5], data[6], data[8], data[7], data[4]]) / LOAD_CELLS_CONVERSION_FACTOR) - self._load_cell_calibration_data
             self._load_cell_publisher.publish(self._load_cell_msg)
 
             # publish voltage and current

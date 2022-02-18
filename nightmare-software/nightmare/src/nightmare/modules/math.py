@@ -12,10 +12,6 @@ import tf_conversions
 from nightmare.config import *
 
 
-def feq(a, b):  # floating point equal
-    return abs(a - b) < EPSILON
-
-
 def no_zero(a):   # make a value always not zero
     if abs(a) < EPSILON:
         return EPSILON
@@ -28,7 +24,7 @@ def fmap(x: float, in_min, in_max, out_min, out_max):
 
 
 def asymmetrical_sigmoid(val):
-    return 1 / (1 + np.e**(-13 * (val - 0.5)))
+    return 1 / (1 + np.e**(-13 * (val - 0.5)))  # width set to 13
 
 
 def rotate(pose, rot, pivot=None, inverse=False):

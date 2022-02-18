@@ -42,6 +42,8 @@ SERVO_PORT = "/dev/ttyACM1"
 SENSOR_PORT = "/dev/ttyACM2"
 
 SENSOR_HEADER = [0x55, 0x55, 0x55, 0x55]
+# convert raw vals to kg
+LOAD_CELLS_CONVERSION_FACTOR = np.array([325334.23661089, 428671.46949402, -448192.25155393, 351489.18146571, -437940.86353348, -303112.40625357])
 
 # ENGINE PARAMETERS
 LEG_KEEPOUT = 4
@@ -49,14 +51,19 @@ LEG_KEEPOUT = 4
 STAND_HEIGHT = 10.e-2
 LEG_ADJ_HEIGHT = 6.e-2
 SIT_HEIGHT = 0.
+
 ENGINE_FPS = 30
-TIME_STAND_UP = 2.5
+
+TIME_GET_UP_LEG_ADJ = 1.0
+TIME_SIT_LEG_ADJ = 1.0
+TIME_GET_UP = 2.5
 TIME_SIT = 2.5
 
 STEP_TIME = 1.
 STEP_HEIGHT = 6.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 8.e-2
+POSE_NEAR_THRESHOLD = 5.e-2
 
 # LEG ADJ SEQUENCES
 DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
@@ -152,12 +159,12 @@ legs = [
     )
 ]
 
-DEFAULT_POSE = np.array([leg.default_pose for leg in legs])
-DEFAULT_SIT_POSE = np.array([[pos[0], pos[1], SIT_HEIGHT] for pos in DEFAULT_POSE.copy()])
-SERVO_OFFSET = np.array([leg.servo_offset for leg in legs]).ravel()
-POSE_OFFSET = np.array([leg.abs_offset for leg in legs])
-POSE_REL_CONVERT = np.array([[1 if leg.side else -1, 1 if leg.side else -1, 1] for leg in legs])
-SERVO_IDS = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
+DEFAULT_POSE: np.ndarray(shape=(6, 3)) = np.array([leg.default_pose for leg in legs])
+DEFAULT_SIT_POSE: np.ndarray(shape=(6, 3)) = np.array([[pos[0], pos[1], SIT_HEIGHT] for pos in DEFAULT_POSE.copy()])
+SERVO_OFFSET: np.ndarray(shape=(18,)) = np.array([leg.servo_offset for leg in legs]).ravel()
+POSE_OFFSET: np.ndarray(shape=(6, 3)) = np.array([leg.abs_offset for leg in legs])
+POSE_REL_CONVERT: np.ndarray(shape=(6, 3)) = np.array([[1 if leg.side else -1, 1 if leg.side else -1, 1] for leg in legs])
+SERVO_IDS: np.ndarray(shape=(18,)) = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
 
 # GAITS
 GAIT = {'tripod': np.array([[0, 2, 4], [1, 3, 5]]),
