@@ -108,16 +108,16 @@ class GetUpState:
 
     def update(self, state: RobotState) -> (typing.Any, Pose):
         advancement = self.task_time_s() / config.TIME_GET_UP
-        if advancement < 1 and state.cmd.state == 'awake':
+        if advancement < 1:
             return self, Pose(config.DEFAULT_SIT_POSE + (config.DEFAULT_POSE - config.DEFAULT_SIT_POSE) * advancement, np.ones(shape=6))
-        elif state.cmd.state == 'idle':
+        elif advancement > 1 and state.cmd.state == 'idle':
             return SitState(state), Pose(state.pose.body_pos, np.ones(shape=6))
-        elif advancement > 1 and state.cmd.mode == 'stand':
+        elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'stand':
             return StandState(state), Pose(state.pose.body_pos, np.ones(shape=6))
-        elif advancement > 1 and state.cmd.mode == 'walk':
+        elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'walk':
             return WalkState(state), Pose(state.pose.body_pos, np.ones(shape=6))
         else:
-            perr(f'unhandled state in idle state: {state}')
+            perr(f'unhandled state in get up state: {state}')
 
 
 class SitState:

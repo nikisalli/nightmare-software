@@ -35,12 +35,20 @@ class Control:
             self.max_effort = rospy.get_param('~max_effort_vel_mode', 100.0)
         else:
             self.max_effort = rospy.get_param('~max_effort', 100.0)
+
+        if rospy.has_param('~min_effort_vel_mode'):
+            rospy.logwarn('min_effort_vel_mode parameter is deprecated, please use min_effort instead')
+            # kept for backwards compatibility, delete after some time
+            self.min_effort = rospy.get_param('~min_effort_vel_mode', 0.0)
+        else:
+            self.min_effort = rospy.get_param('~min_effort', 0.0)
+
         self.force_commands = [self.max_effort] * self.joint_number
 
     def joint_state_cb(self, msg):
         # add offset REAL -> URDF
         self.position_joint_commands = np.array(msg.position) + URDF_JOINT_OFFSETS
-        self.force_commands = np.array(msg.effort) * self.max_effort
+        self.force_commands = np.array(msg.effort) * self.max_effort + (np.ones(shape=len(msg.effort)) - np.array(msg.effort)) * self.min_effort
         # self.velocity_joint_commands = msg.velocity
         # self.effort_joint_commands = msg.effort
 
