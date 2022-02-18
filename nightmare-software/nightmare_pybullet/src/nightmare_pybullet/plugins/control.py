@@ -32,14 +32,15 @@ class Control:
         if rospy.has_param('~max_effort_vel_mode'):
             rospy.logwarn('max_effort_vel_mode parameter is deprecated, please use max_effort instead')
             # kept for backwards compatibility, delete after some time
-            max_effort = rospy.get_param('~max_effort_vel_mode', 100.0)
+            self.max_effort = rospy.get_param('~max_effort_vel_mode', 100.0)
         else:
-            max_effort = rospy.get_param('~max_effort', 100.0)
-        self.force_commands = [max_effort] * self.joint_number
+            self.max_effort = rospy.get_param('~max_effort', 100.0)
+        self.force_commands = [self.max_effort] * self.joint_number
 
     def joint_state_cb(self, msg):
         # add offset REAL -> URDF
         self.position_joint_commands = np.array(msg.position) + URDF_JOINT_OFFSETS
+        self.force_commands = np.array(msg.effort) * self.max_effort
         # self.velocity_joint_commands = msg.velocity
         # self.effort_joint_commands = msg.effort
 
@@ -50,7 +51,7 @@ class Control:
         # forward commands to pybullet, give priority to position control cmds, then vel, at last effort
         self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
                                           controlMode=self.pb.POSITION_CONTROL, targetPositions=self.position_joint_commands, forces=self.force_commands)
-        self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                          controlMode=self.pb.VELOCITY_CONTROL, targetVelocities=self.velocity_joint_commands, forces=self.force_commands)
-        self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
-                                          controlMode=self.pb.TORQUE_CONTROL, forces=self.effort_joint_commands)
+        # self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
+        #                                   controlMode=self.pb.VELOCITY_CONTROL, targetVelocities=self.velocity_joint_commands, forces=self.force_commands)
+        # self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
+        #                                   controlMode=self.pb.TORQUE_CONTROL, forces=self.effort_joint_commands)
