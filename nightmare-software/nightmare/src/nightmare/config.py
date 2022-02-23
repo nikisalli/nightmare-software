@@ -88,7 +88,9 @@ MAX_BODY_TRASL_CMD_ACC = np.array([20e-6, 20e-6, 20e-6])  # m/s^2
 MAX_BODY_ROT_CMD_ACC = np.array([PI / 1000, PI / 1000, PI / 1000])  # rad/s^2
 
 # URDF PARAMS
-URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
+URDF_JOINT_OFFSETS = np.array([0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854, 0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854])
+
+
 JOINT_STATE_LABELS = ['leg1coxa', 'leg1femur', 'leg1tibia',
                       'leg2coxa', 'leg2femur', 'leg2tibia',
                       'leg3coxa', 'leg3femur', 'leg3tibia',
@@ -165,6 +167,14 @@ SERVO_OFFSET: np.ndarray(shape=(18,)) = np.array([leg.servo_offset for leg in le
 POSE_OFFSET: np.ndarray(shape=(6, 3)) = np.array([leg.abs_offset for leg in legs])
 POSE_REL_CONVERT: np.ndarray(shape=(6, 3)) = np.array([[1 if leg.side else -1, 1 if leg.side else -1, 1] for leg in legs])
 SERVO_IDS: np.ndarray(shape=(18,)) = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
+
+# make this poses immutable for safety
+DEFAULT_POSE.flags.writeable = False
+DEFAULT_SIT_POSE.flags.writeable = False
+SERVO_OFFSET.flags.writeable = False
+POSE_OFFSET.flags.writeable = False
+POSE_REL_CONVERT.flags.writeable = False
+SERVO_IDS.flags.writeable = False
 
 # GAITS
 GAIT = {'tripod': np.array([[0, 2, 4], [1, 3, 5]]),

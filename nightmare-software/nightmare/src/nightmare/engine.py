@@ -14,7 +14,7 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 
 # module imports
 from nightmare.modules.logging import printlog, loglevel, pinfo, pwarn, perr, pfatal
-from nightmare.modules.math import no_zero, asymmetrical_sigmoid
+from nightmare.modules.math import no_zero, asymmetrical_sigmoid, rotate
 from nightmare import config
 from nightmare.config import PI, EPSILON
 from nightmare.msg import command
@@ -32,15 +32,32 @@ class Pose:
     enables: np.ndarray(shape=6)
 
     def __init__(self, body_pos: np.ndarray(shape=(6, 3)), enables: np.ndarray(shape=6)):
-        self.body_pos = body_pos
-        self.enables = enables
+        self.body_pos = body_pos.copy()
+        self.enables = enables.copy()
+
+    def __str__(self):
+        return f'Pose(body_pos={self.body_pos}, enables={self.enables})'
 
     def is_near(self, other) -> bool:
         '''check if poses are near'''
         return np.all(np.abs(self.body_pos - other.body_pos) < config.POSE_NEAR_THRESHOLD)
 
-    def __str__(self):
-        return f'Pose(body_pos={self.body_pos}, enables={self.enables})'
+    def rotate(self, euler_angles: np.ndarray(shape=(3,)), pivot: np.ndarray(shape=(3,)) = None, inverse: bool = False):
+        '''rotate the pose around a pivot point'''
+        self.body_pos = rotate(self.body_pos, euler_angles, pivot, inverse)
+        return self
+
+    def translate(self, translation: np.ndarray(shape=(3,))):
+        '''translate the pose'''
+        self.body_pos += translation
+        return self
+
+    def copy(self):
+        return Pose(self.body_pos.copy(), self.enables.copy())
+
+    def disable(self):
+        self.enables = np.zeros(6)
+        return self
 
 
 class RobotState:
@@ -59,29 +76,31 @@ class RobotState:
 # FSM states
 class IdleState:
     '''returns same pose as start and disables all servos'''
-    _idle_pose: Pose
+    identifier = 'idle'
 
     def __init__(self, state: RobotState):
-        # get pose to return
-        self._idle_pose = Pose(state.pose.body_pos, np.zeros(shape=6))
+        pass
 
     def update(self, state: RobotState) -> (typing.Any, Pose):
         if state.cmd.state == 'idle':
-            return self, self._idle_pose
+            return self, state.pose.disable()
         elif state.cmd.state == 'awake':
-            return AdjustGetUpState(state), self._idle_pose
+            return AdjustGetUpState(state), state.pose.disable()
         else:
             perr(f'unhandled state in idle state: {state}')
 
 
 class AdjustGetUpState:
     '''adjust legs to get up and calibrate load cells'''
+    identifier = 'adjust_get_up'
+
     _start_pose: Pose
     _start_time: float
 
     def __init__(self, state: RobotState):
         self._start_pose = state.pose
         self._start_time = time_s()
+        print("leg adj start pose:\n", self._start_pose)
 
     def task_time_s(self) -> float:
         return time_s() - self._start_time
@@ -93,15 +112,18 @@ class AdjustGetUpState:
         else:
             # calibrate force sensors
             rospy.set_param("/hardware/load_cells_offsets", state.force_sensors.tolist())
-            return GetUpState(state), state.pose
+            return GetUpState(state), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
 
 
 class GetUpState:
     '''get up'''
+    identifier = 'get_up'
+
     _start_time: float
 
     def __init__(self, state: RobotState):
         self._start_time = time_s()
+        print("get up start pose:\n", state.pose)
 
     def task_time_s(self) -> float:
         return time_s() - self._start_time
@@ -111,17 +133,19 @@ class GetUpState:
         if advancement < 1:
             return self, Pose(config.DEFAULT_SIT_POSE + (config.DEFAULT_POSE - config.DEFAULT_SIT_POSE) * advancement, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'idle':
-            return SitState(state), Pose(state.pose.body_pos, np.ones(shape=6))
+            return AdjustSitState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'stand':
-            return StandState(state), Pose(state.pose.body_pos, np.ones(shape=6))
+            return StandState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'walk':
-            return WalkState(state), Pose(state.pose.body_pos, np.ones(shape=6))
+            return WalkState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         else:
             perr(f'unhandled state in get up state: {state}')
 
 
 class SitState:
     '''sit'''
+    identifier = 'sit'
+
     _start_time: float
 
     def __init__(self, state: RobotState):
@@ -135,11 +159,13 @@ class SitState:
         if advancement < 1:
             return self, Pose(config.DEFAULT_POSE + (config.DEFAULT_SIT_POSE - config.DEFAULT_POSE) * advancement, np.ones(shape=6))
         else:
-            return IdleState(state), Pose(state.pose.body_pos, np.ones(shape=6))
+            return IdleState(state), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
 
 
-"""class AdjustSitState:
+class AdjustSitState:
     '''adjust legs before sitting'''
+    identifier = 'adjust_sit'
+
     _start_time: float
 
     def __init__(self, state: RobotState):
@@ -149,7 +175,28 @@ class SitState:
         return time_s() - self._start_time
 
     def update(self, state: RobotState) -> (typing.Any, Pose):
-        advancement = self.task_time_s() / config.TIME_SIT_LEG_ADJ"""
+        return SitState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+
+
+class StandState:
+    '''stand'''
+    identifier = 'stand'
+
+    _start_pose: Pose
+
+    def __init__(self, state: RobotState):
+        self._start_pose = state.pose
+        print("stand start pose:\n", self._start_pose)
+
+    def update(self, state: RobotState) -> (typing.Any, Pose):
+        if state.cmd.state == 'awake' and state.cmd.mode == 'stand':
+            return self, Pose(config.DEFAULT_POSE, np.ones(shape=6)).translate(state.cmd.body_trasl).rotate(state.cmd.body_rot)
+        elif state.cmd.state == 'awake' and state.cmd.mode == 'walk':
+            return WalkState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+        elif state.cmd.state == 'idle':
+            return AdjustSitState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+        else:
+            perr(f'unhandled state in stand state: {state}')
 
 
 class FiniteStateMachine:
@@ -161,6 +208,7 @@ class FiniteStateMachine:
     def update(self, state: RobotState) -> Pose:
         '''get next state and updated pose'''
         self._state, pose = self._state.update(state)
+        # print("current_state:", self._state.identifier)
         return pose
 
 
@@ -251,10 +299,6 @@ class EngineNode:
     def update(self):
         self.get_hardware_pose()
         self.set_hardware_pose(self._finite_state_machine.update(self._robot_state))
-        # self._state_machine.update(self._current_command, self._current_command)
-
-        # self.get_hardware_pose()
-        # self.set_hardware_pose(self._body_pos)
 
 
 if __name__ == '__main__':

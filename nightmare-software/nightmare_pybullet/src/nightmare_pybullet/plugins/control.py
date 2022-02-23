@@ -9,7 +9,7 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
 import numpy as np
 
-URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
+URDF_JOINT_OFFSETS = np.array([0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854, 0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854])
 
 
 class Control:
@@ -32,9 +32,9 @@ class Control:
         if rospy.has_param('~max_effort_vel_mode'):
             rospy.logwarn('max_effort_vel_mode parameter is deprecated, please use max_effort instead')
             # kept for backwards compatibility, delete after some time
-            self.max_effort = rospy.get_param('~max_effort_vel_mode', 100.0)
+            self.max_effort = rospy.get_param('~max_effort_vel_mode', 10000.0)
         else:
-            self.max_effort = rospy.get_param('~max_effort', 100.0)
+            self.max_effort = rospy.get_param('~max_effort', 10000.0)
 
         if rospy.has_param('~min_effort_vel_mode'):
             rospy.logwarn('min_effort_vel_mode parameter is deprecated, please use min_effort instead')
@@ -57,6 +57,7 @@ class Control:
         """check if user has commanded a joint and forward the request to pybullet"""
         # flag to indicate there are pending position control tasks
         # forward commands to pybullet, give priority to position control cmds, then vel, at last effort
+        print(self.position_joint_commands, self.joint_indices, self.joint_names)
         self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
                                           controlMode=self.pb.POSITION_CONTROL, targetPositions=self.position_joint_commands, forces=self.force_commands)
         # self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
