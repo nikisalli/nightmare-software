@@ -182,7 +182,8 @@ class pyBulletRosWrapper(object):
         # NOTE: self collision enabled by default
         return self.pb.loadURDF(urdf_path, basePosition=[robot_pose_x, robot_pose_y, robot_pose_z],
                                 baseOrientation=robot_spawn_orientation,
-                                useFixedBase=fixed_base, flags=urdf_flags)
+                                # useFixedBase=fixed_base, flags=urdf_flags)
+                                useFixedBase=fixed_base)  # no self collision
 
     def handle_reset_simulation(self, req):
         """Callback to handle the service offered by this node to reset the simulation"""
