@@ -116,6 +116,10 @@ button_map = []
 EPSILON = 0.001  # for float comparisons
 
 
+def fmap(x: float, in_min, in_max, out_min, out_max):
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+
 def feq(a, b):  # floating point equal
     return abs(a - b) < EPSILON
 
@@ -223,8 +227,12 @@ def publisher():
             rospy.loginfo(f"gait set to {gait}")
 
         if mode == 'walk':
-            walk_trasl = [- axis_states['jly'], - axis_states['jlx'], 0]
-            walk_rot = [0, 0, - axis_states['jrx']]
+            walk_trasl = [fmap(axis_states['jlx'], -1, 1, -0.1, 0.1),
+                          fmap(- axis_states['jly'], -1, 1, -0.1, 0.1),
+                          0]
+            walk_rot = [0,
+                        0,
+                        fmap(- axis_states['jrx'], -1, 1, -0.4, 0.4)]
 
             body_trasl = [0, 0, height_displacement]
             body_rot = [0, 0, 0]
@@ -233,8 +241,12 @@ def publisher():
             walk_trasl = [0, 0, 0]
             walk_rot = [0, 0, 0]
 
-            body_trasl = [- axis_states['jly'], - axis_states['jlx'], height_displacement]
-            body_rot = [axis_states['jrx'], - axis_states['jry'], 0]
+            body_trasl = [fmap(- axis_states['jlx'], -1, 1, -0.1, 0.1),
+                          fmap(axis_states['jly'], -1, 1, -0.1, 0.1),
+                          height_displacement]
+            body_rot = [fmap(axis_states['jry'], -1, 1, -0.5, 0.5),
+                        fmap(axis_states['jrx'], -1, 1, -0.5, 0.5),
+                        0]
 
         # If None is used as the header value, rospy will automatically
         # fill it in.

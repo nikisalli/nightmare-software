@@ -9,7 +9,7 @@ import numpy as np
 RIGHT = 1
 LEFT = 0
 PI = np.pi
-EPSILON = 0.0001
+EPSILON = 1e-6
 
 
 # ===================================
@@ -46,7 +46,8 @@ SENSOR_HEADER = [0x55, 0x55, 0x55, 0x55]
 LOAD_CELLS_CONVERSION_FACTOR = np.array([325334.23661089, 428671.46949402, -448192.25155393, 351489.18146571, -437940.86353348, -303112.40625357])
 
 # ENGINE PARAMETERS
-LEG_KEEPOUT = 4
+# distance legs must keep from each other
+LEG_KEEPOUT_RADIUS = 0.05
 
 STAND_HEIGHT = 10.e-2
 LEG_ADJ_HEIGHT = 6.e-2
@@ -59,17 +60,12 @@ TIME_SIT_LEG_ADJ = 1.0
 TIME_GET_UP = 2.5
 TIME_SIT = 2.5
 
-STEP_TIME = 1.
+STEP_TIME = 0.8
 STEP_HEIGHT = 6.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 8.e-2
-POSE_NEAR_THRESHOLD = 5.e-2
 
-# LEG ADJ SEQUENCES
-DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
-                    [[3, 6], [1, 5], [2, 4]]]
-
-# ENGINE LIMITS
+# ROBOT MOVEMENT PARAMS
 # walk settings
 MAX_WALK_TRASL_VEL = np.array([10e-2, 8e-2, 0])  # m/s
 MAX_WALK_ROT_VEL = np.array([0, 0, PI / 10])  # rad/s
@@ -87,10 +83,12 @@ MAX_BODY_ROT_CMD_VEL = np.array([PI / 100, PI / 100, PI / 100])  # rad/s
 MAX_BODY_TRASL_CMD_ACC = np.array([20e-6, 20e-6, 20e-6])  # m/s^2
 MAX_BODY_ROT_CMD_ACC = np.array([PI / 1000, PI / 1000, PI / 1000])  # rad/s^2
 
+# leg adj sequences
+DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
+                    [[3, 6], [1, 5], [2, 4]]]
+
 # URDF PARAMS
 URDF_JOINT_OFFSETS = np.array([0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854, 0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854])
-
-
 JOINT_STATE_LABELS = ['leg1coxa', 'leg1femur', 'leg1tibia',
                       'leg2coxa', 'leg2femur', 'leg2tibia',
                       'leg3coxa', 'leg3femur', 'leg3tibia',
@@ -177,6 +175,14 @@ POSE_REL_CONVERT.flags.writeable = False
 SERVO_IDS.flags.writeable = False
 
 # GAITS
-GAIT = {'tripod': np.array([[0, 2, 4], [1, 3, 5]]),
-        'ripple': np.array([[0, 4], [1, 3], [2, 5]]),
-        'wave': np.array([[0], [1], [2], [3], [4], [5]])}
+GAIT = {'tripod': [np.array([True, False, True, False, True, False]),
+                   np.array([False, True, False, True, False, True])],
+        'ripple': [np.array([True, False, False, False, True, False]),
+                   np.array([False, True, False, True, False, False]),
+                   np.array([False, False, True, False, False, True])],
+        'wave': [np.array([True, False, False, False, False, False]),
+                 np.array([False, True, False, False, False, False]),
+                 np.array([False, False, True, False, False, False]),
+                 np.array([False, False, False, True, False, False]),
+                 np.array([False, False, False, False, True, False]),
+                 np.array([False, False, False, False, False, True])]}

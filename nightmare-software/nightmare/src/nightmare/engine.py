@@ -1,10 +1,6 @@
 import numpy as np
-import sys
-from dataclasses import dataclass
 from numpy import sin, cos, arccos, arctan2, sqrt
-from enum import Enum
 import typing
-from threading import Semaphore
 
 # ros imports
 import rospy
@@ -14,10 +10,13 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 
 # module imports
 from nightmare.modules.logging import printlog, loglevel, pinfo, pwarn, perr, pfatal
-from nightmare.modules.math import no_zero, asymmetrical_sigmoid, rotate
+from nightmare.modules.math import no_zero, asymmetrical_sigmoid, rotate, vmult
 from nightmare import config
 from nightmare.config import PI, EPSILON
 from nightmare.msg import command
+from nightmare.modules.bezier import Bezier as bezier
+
+from nightmare.modules.debug import plot
 
 
 # utils
@@ -31,7 +30,8 @@ class Pose:
     body_pos: np.ndarray(shape=(6, 3))
     enables: np.ndarray(shape=6)
 
-    def __init__(self, body_pos: np.ndarray(shape=(6, 3)), enables: np.ndarray(shape=6)):
+    def __init__(self, body_pos: np.ndarray(shape=(6, 3)),
+                 enables: np.ndarray(shape=6)):
         self.body_pos = body_pos.copy()
         self.enables = enables.copy()
 
@@ -42,14 +42,36 @@ class Pose:
         '''check if poses are near'''
         return np.all(np.abs(self.body_pos - other.body_pos) < config.POSE_NEAR_THRESHOLD)
 
-    def rotate(self, euler_angles: np.ndarray(shape=(3,)), pivot: np.ndarray(shape=(3,)) = None, inverse: bool = False):
+    def rotate(self, euler_angles: np.ndarray(shape=(3,)),
+               mask: np.ndarray(shape=(6,)) = np.full((6,), True),
+               pivot: np.ndarray(shape=(3,)) = None,
+               inverse: bool = False):
         '''rotate the pose around a pivot point'''
-        self.body_pos = rotate(self.body_pos, euler_angles, pivot, inverse)
+        # self.body_pos = rotate(self.body_pos, euler_angles, pivot, inverse, mask)
+        temp = self.body_pos.copy()
+        self.body_pos = vmult(rotate(self.body_pos, euler_angles, pivot, inverse), mask) + vmult(temp, np.invert(mask))
         return self
 
-    def translate(self, translation: np.ndarray(shape=(3,))):
+    def translate(self, translation: np.ndarray(shape=(3,)),
+                  mask: np.ndarray(shape=(6,)) = np.full((6,), True)):
         '''translate the pose'''
-        self.body_pos += translation
+        # self.body_pos += translation
+        self.body_pos += vmult(np.tile(translation, (6, 1)), mask)  # sum only non masked vectors
+        return self
+
+    def bezier(self, t: float,
+               poses: list,
+               mask: np.ndarray(shape=(6,)) = np.full((6,), True)):
+        '''move every leg along a bezier curve interpolated on multiple poses
+        t: parameter in [0, 1]
+        poses: list of poses to interpolate between
+        mask: mask to apply to not interpolate certain legs
+
+        Note: this does not work with disabled legs, every leg must be enabled
+        '''
+        points = [p.body_pos for p in poses]
+        temp = self.body_pos.copy()
+        self.body_pos = vmult(bezier.Point(t, points), mask) + vmult(temp, np.invert(mask))
         return self
 
     def copy(self):
@@ -75,139 +97,202 @@ class RobotState:
 
 # FSM states
 class IdleState:
-    '''returns same pose as start and disables all servos'''
-    identifier = 'idle'
-
-    def __init__(self, state: RobotState):
+    def __init__(self, state: RobotState, pose: Pose):
         pass
 
-    def update(self, state: RobotState) -> (typing.Any, Pose):
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         if state.cmd.state == 'idle':
             return self, state.pose.disable()
         elif state.cmd.state == 'awake':
-            return AdjustGetUpState(state), state.pose.disable()
+            return AdjustGetUpState(state, pose), state.pose.disable()
         else:
             perr(f'unhandled state in idle state: {state}')
 
 
 class AdjustGetUpState:
-    '''adjust legs to get up and calibrate load cells'''
-    identifier = 'adjust_get_up'
-
     _start_pose: Pose
     _start_time: float
 
-    def __init__(self, state: RobotState):
+    def __init__(self, state: RobotState, pose: Pose):
         self._start_pose = state.pose
         self._start_time = time_s()
-        print("leg adj start pose:\n", self._start_pose)
+        # print("leg adj start pose:\n", self._start_pose)
 
     def task_time_s(self) -> float:
         return time_s() - self._start_time
 
-    def update(self, state: RobotState) -> (typing.Any, Pose):
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         advancement = self.task_time_s() / config.TIME_GET_UP_LEG_ADJ
         if advancement < 1:
-            return self, Pose(self._start_pose.body_pos + (config.DEFAULT_SIT_POSE - self._start_pose.body_pos) * advancement, np.ones(shape=6))
+            return self, Pose(self._start_pose.body_pos + (config.DEFAULT_SIT_POSE - self._start_pose.body_pos) * advancement,
+                              np.ones(shape=6))  # enable all servos
         else:
             # calibrate force sensors
             rospy.set_param("/hardware/load_cells_offsets", state.force_sensors.tolist())
-            return GetUpState(state), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
+            return GetUpState(state, pose), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
 
 
 class GetUpState:
-    '''get up'''
-    identifier = 'get_up'
-
     _start_time: float
 
-    def __init__(self, state: RobotState):
+    def __init__(self, state: RobotState, pose: Pose):
         self._start_time = time_s()
-        print("get up start pose:\n", state.pose)
+        # print("get up start pose:\n", state.pose)
 
     def task_time_s(self) -> float:
         return time_s() - self._start_time
 
-    def update(self, state: RobotState) -> (typing.Any, Pose):
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         advancement = self.task_time_s() / config.TIME_GET_UP
         if advancement < 1:
             return self, Pose(config.DEFAULT_SIT_POSE + (config.DEFAULT_POSE - config.DEFAULT_SIT_POSE) * advancement, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'idle':
-            return AdjustSitState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return AdjustSitState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'stand':
-            return StandState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return StandState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'walk':
-            return WalkState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return WalkState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         else:
             perr(f'unhandled state in get up state: {state}')
 
 
 class SitState:
-    '''sit'''
-    identifier = 'sit'
-
     _start_time: float
 
-    def __init__(self, state: RobotState):
+    def __init__(self, state: RobotState, pose: Pose):
         self._start_time = time_s()
 
     def task_time_s(self) -> float:
         return time_s() - self._start_time
 
-    def update(self, state: RobotState) -> (typing.Any, Pose):
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         advancement = self.task_time_s() / config.TIME_SIT
         if advancement < 1:
             return self, Pose(config.DEFAULT_POSE + (config.DEFAULT_SIT_POSE - config.DEFAULT_POSE) * advancement, np.ones(shape=6))
         else:
-            return IdleState(state), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
+            return IdleState(state, pose), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
 
 
 class AdjustSitState:
-    '''adjust legs before sitting'''
-    identifier = 'adjust_sit'
-
     _start_time: float
 
-    def __init__(self, state: RobotState):
+    def __init__(self, state: RobotState, pose: Pose):
         self._start_time = time_s()
 
     def task_time_s(self) -> float:
         return time_s() - self._start_time
 
-    def update(self, state: RobotState) -> (typing.Any, Pose):
-        return SitState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
+        return SitState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
 
 
 class StandState:
-    '''stand'''
-    identifier = 'stand'
-
     _start_pose: Pose
 
-    def __init__(self, state: RobotState):
+    def __init__(self, state: RobotState, pose: Pose):
         self._start_pose = state.pose
-        print("stand start pose:\n", self._start_pose)
+        # print("stand start pose:\n", self._start_pose)
 
-    def update(self, state: RobotState) -> (typing.Any, Pose):
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         if state.cmd.state == 'awake' and state.cmd.mode == 'stand':
             return self, Pose(config.DEFAULT_POSE, np.ones(shape=6)).translate(state.cmd.body_trasl).rotate(state.cmd.body_rot)
         elif state.cmd.state == 'awake' and state.cmd.mode == 'walk':
-            return WalkState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return WalkState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         elif state.cmd.state == 'idle':
-            return AdjustSitState(state), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return AdjustSitState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         else:
             perr(f'unhandled state in stand state: {state}')
 
 
+class WalkState:
+    _gait_step: int  # step index from 0 to len(gait) - 1
+    _gait_step_state: float  # 0 to 1
+    _last_step_pose: Pose  # pose of the last step
+
+    def __init__(self, state: RobotState, pose: Pose):
+        self._gait_step = 0
+        self._gait_step_state = 0
+        self._last_step_pose = pose.copy()
+        print("new step")
+
+    def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
+        if state.cmd.state == 'awake' and state.cmd.mode == 'walk':
+            # translate and rotate the current pose according to the walk command
+            temp = pose.copy()
+            # calculate max speed for the current step
+            # get current gait
+            gait = config.GAIT[state.cmd.gait]
+            # get current step
+            gait_step = gait[self._gait_step]
+
+            def distance():
+                """function that returns the minimum distance from one leg to any other leg"""
+                dists = []
+                for start_leg in range(6):
+                    for end_leg in range(6):
+                        if start_leg == end_leg:
+                            continue
+                        start_leg_pos = temp.body_pos.copy()[start_leg]
+                        start_leg_pos[2] = 0  # ignore z because legs can collide even if they aren't on the same plane
+                        end_leg_pos = temp.body_pos.copy()[end_leg]
+                        end_leg_pos[2] = 0
+                        dists.append(np.linalg.norm(start_leg_pos - end_leg_pos))
+                return min(dists)
+
+            red = 1 - np.e**(30 * (-distance() + config.LEG_KEEPOUT_RADIUS))
+            if red < 0:
+                red = 0
+            # print(red, distance())
+
+            # translate and rotate legs on ground
+            legs_on_ground_mask = np.invert(gait_step)
+            total_mult_factor = red * (1 / config.ENGINE_FPS) * 2 * len(gait)
+            # the minus sign is because the legs on ground need to move in the opposite direction to move the robot forward
+            temp = temp.translate(- state.cmd.walk_trasl * total_mult_factor, legs_on_ground_mask).rotate(- state.cmd.walk_rot * total_mult_factor, legs_on_ground_mask)
+
+            # move along step spline if legs not on ground
+            legs_stepping_mask = gait_step
+            # ahead of time step prediction
+            total_mult_factor_step = red * config.STEP_TIME
+            target_pose = Pose(config.DEFAULT_POSE, np.ones((6,))).translate(state.cmd.walk_trasl * total_mult_factor_step).rotate(state.cmd.walk_rot * total_mult_factor_step)
+            points = [
+                self._last_step_pose.copy(),
+                self._last_step_pose.copy().translate(np.array([0, 0, config.STEP_HEIGHT])),
+                target_pose.copy().translate(np.array([0, 0, config.STEP_HEIGHT])),
+                target_pose.copy()
+            ]
+            temp.bezier(self._gait_step_state, points, legs_stepping_mask)
+
+            # update step state when a substep is completed
+            self._gait_step_state += len(gait) / (config.STEP_TIME * config.ENGINE_FPS)
+            if self._gait_step_state >= 1:
+                self._gait_step_state = 0
+                self._gait_step = (self._gait_step + 1) % len(gait)
+                self._last_step_pose = pose.copy()
+
+            return self, temp
+        elif state.cmd.state == 'awake' and state.cmd.mode == 'stand':
+            return StandState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+        elif state.cmd.state == 'idle':
+            return IdleState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+        else:
+            perr(f'unhandled state in walk state: {state}')
+
+
 class FiniteStateMachine:
+    # current fsm state instance
     _state: typing.Any
+    # last commanded pose by the fsm
+    _pose: Pose
 
     def __init__(self, state: RobotState):
-        self._state = IdleState(state)
+        self._state = IdleState(state, state.pose)
+        self._pose = state.pose
 
     def update(self, state: RobotState) -> Pose:
         '''get next state and updated pose'''
-        self._state, pose = self._state.update(state)
+        self._state, pose = self._state.update(state, self._pose)
+        self._pose = pose.copy()
         # print("current_state:", self._state.identifier)
         return pose
 
@@ -277,7 +362,8 @@ class EngineNode:
         angles = np.ravel(np.array([relative_ik(rel, leg.dim) for rel, leg in zip(rel_poses, config.legs)]))
         # publish the angles
         self._engine_joint_publisher_msg.position = angles
-        self._engine_joint_publisher_msg.effort = np.ravel(np.tile(pose.enables, (3, 1)).transpose((1, 0)))  # expand leg enable to its 3 joints
+        # expand leg enable to its 3 joints
+        self._engine_joint_publisher_msg.effort = np.ravel(np.tile(pose.enables, (3, 1)).transpose((1, 0)))
         self._engine_joint_publisher_msg.header.stamp = rospy.Time.now()
         self._engine_joint_publisher.publish(self._engine_joint_publisher_msg)
 
@@ -291,6 +377,10 @@ class EngineNode:
             raise TimeoutError("couldn't get transform!")
 
     def command_callback(self, msg):
+        msg.body_trasl = np.array(msg.body_trasl)
+        msg.body_rot = np.array(msg.body_rot)
+        msg.walk_trasl = np.array(msg.walk_trasl)
+        msg.walk_rot = np.array(msg.walk_rot)
         self._robot_state.cmd = msg
 
     def force_sensors_callback(self, msg):
@@ -308,7 +398,7 @@ if __name__ == '__main__':
 
     node = EngineNode()
 
-    rate = rospy.Rate(50)
+    rate = rospy.Rate(config.ENGINE_FPS)
     while not rospy.is_shutdown():
         node.update()
         rate.sleep()
