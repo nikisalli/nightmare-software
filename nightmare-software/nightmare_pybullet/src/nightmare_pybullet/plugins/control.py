@@ -57,7 +57,7 @@ class Control:
         """check if user has commanded a joint and forward the request to pybullet"""
         # flag to indicate there are pending position control tasks
         # forward commands to pybullet, give priority to position control cmds, then vel, at last effort
-        print(self.position_joint_commands, self.joint_indices, self.joint_names)
+        # print(self.position_joint_commands, self.joint_indices, self.joint_names)
         self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
                                           controlMode=self.pb.POSITION_CONTROL, targetPositions=self.position_joint_commands, forces=self.force_commands)
         # self.pb.setJointMotorControlArray(bodyUniqueId=self.robot, jointIndices=self.joint_indices,
