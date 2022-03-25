@@ -109,96 +109,51 @@ def segment_circle_intersection(pt1, pt2, circle_center, circle_radius, tangent_
     return line_segment_circle_lintersection(pt1, pt2, circle_center, circle_radius, False, tangent_tol)
 
 
-def closestDistanceBetweenLines(a0, a1, b0, b1, clampAll=False, clampA0=False, clampA1=False, clampB0=False, clampB1=False):
-    ''' Given two lines defined by numpy.array pairs (a0,a1,b0,b1)
-        Return the closest points on each segment and their distance
-    '''
+# Return true if line segments AB and CD intersect
+def segments_intersect_2d(A, B, C, D):
+    def ccw(A, B, C):
+        return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+    return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
-    # If clampAll=True, set all clamps to True
-    if clampAll:
-        clampA0 = True
-        clampA1 = True
-        clampB0 = True
-        clampB1 = True
 
-    # Calculate denomitator
-    A = a1 - a0
-    B = b1 - b0
-    magA = np.linalg.norm(A)
-    magB = np.linalg.norm(B)
+def shortest_distance_point_segment_2d(p1, p2, p):
+    """ Find the shortest distance between a point and a line segment in 2D.
 
-    _A = A / magA
-    _B = B / magB
+    :param p1: The (x, y) location of the first point of the segment
+    :param p2: The (x, y) location of the second point of the segment
+    :param p: The (x, y) location of the point
+    :return float: The shortest distance between the point and the line segment
 
-    cross = np.cross(_A, _B)
-    denom = np.linalg.norm(cross)**2
+    Note: We follow: http://geomalgorithms.com/a02-_lines.html#Distance-to-Ray-or-Segment
+    """
+    (x1, y1), (x2, y2), (px, py) = p1, p2, p
+    (dx, dy) = (x2 - x1), (y2 - y1)
+    if dx == 0 and dy == 0:  # Special case for a point
+        return ((px - x1) ** 2 + (py - y1) ** 2) ** .5
+    else:
+        t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)
+        if t < 0:  # closest point is p1
+            return ((px - x1) ** 2 + (py - y1) ** 2) ** .5
+        elif t > 1:  # closest point is p2
+            return ((px - x2) ** 2 + (py - y2) ** 2) ** .5
+        else:  # closest point is p1 + t*(p2-p1)
+            return ((px - (x1 + t * dx)) ** 2 + (py - (y1 + t * dy)) ** 2) ** .5
 
-    # If lines are parallel (denom=0) test if lines overlap.
-    # If they don't overlap then there is a closest point solution.
-    # If they do overlap, there are infinite closest positions, but there is a closest distance
-    if not denom:
-        d0 = np.dot(_A, (b0 - a0))
 
-        # Overlap only possible with clamping
-        if clampA0 or clampA1 or clampB0 or clampB1:
-            d1 = np.dot(_A, (b1 - a0))
+def shortest_distance_two_segments_2d(p1a, p1b, p2a, p2b):
+    """ Find the shortest distance between two line segments.
 
-            # Is segment B before A?
-            if d0 <= 0 >= d1:
-                if clampA0 and clampB1:
-                    if np.absolute(d0) < np.absolute(d1):
-                        return a0, b0, np.linalg.norm(a0 - b0)
-                    return a0, b1, np.linalg.norm(a0 - b1)
-
-            # Is segment B after A?
-            elif d0 >= magA <= d1:
-                if clampA1 and clampB0:
-                    if np.absolute(d0) < np.absolute(d1):
-                        return a1, b0, np.linalg.norm(a1 - b0)
-                    return a1, b1, np.linalg.norm(a1 - b1)
-
-        # Segments overlap, return distance between parallel segments
-        return None, None, np.linalg.norm(((d0 * _A) + a0) - b0)
-
-    # Lines criss-cross: Calculate the projected closest points
-    t = (b0 - a0)
-    detA = np.linalg.det([t, _B, cross])
-    detB = np.linalg.det([t, _A, cross])
-
-    t0 = detA / denom
-    t1 = detB / denom
-
-    pA = a0 + (_A * t0)  # Projected closest point on segment A
-    pB = b0 + (_B * t1)  # Projected closest point on segment B
-
-    # Clamp projections
-    if clampA0 or clampA1 or clampB0 or clampB1:
-        if clampA0 and t0 < 0:
-            pA = a0
-        elif clampA1 and t0 > magA:
-            pA = a1
-
-        if clampB0 and t1 < 0:
-            pB = b0
-        elif clampB1 and t1 > magB:
-            pB = b1
-
-        # Clamp projection A
-        if (clampA0 and t0 < 0) or (clampA1 and t0 > magA):
-            dot = np.dot(_B, (pA - b0))
-            if clampB0 and dot < 0:
-                dot = 0
-            elif clampB1 and dot > magB:
-                dot = magB
-            pB = b0 + (_B * dot)
-
-        # Clamp projection B
-        if (clampB0 and t1 < 0) or (clampB1 and t1 > magB):
-            dot = np.dot(_A, (pB - a0))
-            if clampA0 and dot < 0:
-                dot = 0
-            elif clampA1 and dot > magA:
-                dot = magA
-            pA = a0 + (_A * dot)
-
-    return pA, pB, np.linalg.norm(pA - pB)
+    :param p1a: The first point of the first segment
+    :param p1b: The second point of the first segment
+    :param p2a: The first point of the second segment
+    :param p2b: The second point of the second segment
+    :return float: The shortest distance between the two segments
+    """
+    if segments_intersect_2d(p1a, p1b, p2a, p2b):
+        return 0
+    else:
+        d1 = shortest_distance_point_segment_2d(p1a, p1b, p2a)
+        d2 = shortest_distance_point_segment_2d(p1a, p1b, p2b)
+        d3 = shortest_distance_point_segment_2d(p2a, p2b, p1a)
+        d4 = shortest_distance_point_segment_2d(p2a, p2b, p1b)
+        return min(d1, d2, d3, d4)
