@@ -10,7 +10,7 @@ from std_msgs.msg import Header, Float32, Float32MultiArray, MultiArrayDimension
 
 # module imports
 from nightmare.modules.logging import printlog, loglevel, pinfo, pwarn, perr, pfatal
-from nightmare.modules.math import no_zero, asymmetrical_sigmoid, rotate, vmult
+from nightmare.modules.math import no_zero, asymmetrical_sigmoid, rotate, vmult, shortest_distance_two_segments_2d
 from nightmare import config
 from nightmare.config import PI, EPSILON
 from nightmare.msg import command
@@ -72,6 +72,12 @@ class Pose:
         points = [p.body_pos for p in poses]
         temp = self.body_pos.copy()
         self.body_pos = vmult(bezier.Point(t, points), mask) + vmult(temp, np.invert(mask))
+        return self
+
+    def mask(self, pose,
+             mask: np.ndarray(shape=(6,))):
+        '''mask the pose with another pose'''
+        self.body_pos = vmult(pose.body_pos, mask) + vmult(self.body_pos, np.invert(mask))
         return self
 
     def copy(self):
@@ -213,7 +219,6 @@ class WalkState:
         self._gait_step = 0
         self._gait_step_state = 0
         self._last_step_pose = pose.copy()
-        print("new step")
 
     def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         if state.cmd.state == 'awake' and state.cmd.mode == 'walk':
@@ -225,30 +230,64 @@ class WalkState:
             # get current step
             gait_step = gait[self._gait_step]
 
-            def distance():
-                """function that returns the minimum distance from one leg to any other leg"""
+            # calculate reduction factor
+            def cost(x: float) -> float:
+                local_temp = temp.copy()
+                # ##### PREDICTION
+                # predict robot pose at the end of the step
+                # legs on ground
+                legs_on_ground_mask = np.invert(gait_step)
+                total_mult_factor = x * 2 * len(gait) * (1 - self._gait_step_state)
+                local_temp.translate(- state.cmd.walk_trasl * total_mult_factor, legs_on_ground_mask).rotate(- state.cmd.walk_rot * total_mult_factor, legs_on_ground_mask)
+                # stepping legs
+                legs_stepping_mask = gait_step
+                total_mult_factor_step = x * config.STEP_TIME
+                local_temp.mask(Pose(config.DEFAULT_POSE, np.ones((6,))).translate(state.cmd.walk_trasl * total_mult_factor_step).rotate(state.cmd.walk_rot * total_mult_factor_step), legs_stepping_mask)
+                # calculate the distance from every leg tip
                 dists = []
-                for start_leg in range(6):
-                    for end_leg in range(6):
-                        if start_leg == end_leg:
-                            continue
-                        start_leg_pos = temp.body_pos.copy()[start_leg]
-                        start_leg_pos[2] = 0  # ignore z because legs can collide even if they aren't on the same plane
-                        end_leg_pos = temp.body_pos.copy()[end_leg]
-                        end_leg_pos[2] = 0
-                        dists.append(np.linalg.norm(start_leg_pos - end_leg_pos))
-                return min(dists)
+                for i in range(6):
+                    for j in range(6):
+                        if i != j:
+                            # remove z component
+                            p1a = local_temp.body_pos[i][:2]
+                            p1b = config.POSE_OFFSET[i][:2]
+                            p2a = local_temp.body_pos[j][:2]
+                            p2b = config.POSE_OFFSET[j][:2]
+                            min_segment_dist = shortest_distance_two_segments_2d(p1a, p1b, p2a, p2b)
+                            dists.append(min_segment_dist)
+                # get min distance
+                dist = config.LEG_KEEPOUT_RADIUS - min(dists)
+                if dist < 0:
+                    return 0
+                else:
+                    return dist
 
-            red = 1 - np.e**(30 * (-distance() + config.LEG_KEEPOUT_RADIUS))
-            if red < 0:
-                red = 0
-            # print(red, distance())
+            # ##### OPTIMIZATION
+            red = 1  # default reduction factor
+            # opt_steps = []
+            for i in range(10):
+                current_cost = cost(red)
+                if current_cost < 0.01:
+                    break
+                if red < 0:
+                    break
+
+                # update red
+                red -= 0.1
+                # opt_steps.append([red, current_cost])
+
+            # print(red)
+
+            # debug optimization plot
+            # reds = np.linspace(0, 2, 20)
+            # costs = [cost(red) for red in reds]
+            # plot(reds, costs, opt_steps)
 
             # translate and rotate legs on ground
             legs_on_ground_mask = np.invert(gait_step)
             total_mult_factor = red * (1 / config.ENGINE_FPS) * 2 * len(gait)
             # the minus sign is because the legs on ground need to move in the opposite direction to move the robot forward
-            temp = temp.translate(- state.cmd.walk_trasl * total_mult_factor, legs_on_ground_mask).rotate(- state.cmd.walk_rot * total_mult_factor, legs_on_ground_mask)
+            temp.translate(- state.cmd.walk_trasl * total_mult_factor, legs_on_ground_mask).rotate(- state.cmd.walk_rot * total_mult_factor, legs_on_ground_mask)
 
             # move along step spline if legs not on ground
             legs_stepping_mask = gait_step
@@ -333,33 +372,34 @@ class EngineNode:
 
         pinfo("ready")
 
+    @staticmethod
+    def relative_ik(rel_pos, leg_dim: np.ndarray(shape=(6, 3))) -> np.ndarray(shape=(3,)):
+        x, y, z = rel_pos
+        CX, FM, TB = leg_dim
+
+        # position validity check
+        coxa_director = np.array([x, y, 0]) / sqrt(x ** 2 + y ** 2)
+        coxa_tip = coxa_director * CX
+        tip_to_coxa_dist = np.linalg.norm(rel_pos - coxa_tip)
+        director = (rel_pos - coxa_tip) / tip_to_coxa_dist
+        if tip_to_coxa_dist > FM + TB:
+            pwarn("position is not reachable! (too far) finding a possible one...")
+            x, y, z = coxa_tip + (FM + TB - EPSILON) * director
+        elif tip_to_coxa_dist < abs(FM - TB):
+            pwarn("position is not reachable! (too close) finding a possible one...")
+            x, y, z = coxa_tip + (abs(FM - TB) + EPSILON) * director
+
+        d1 = sqrt(y**2 + x**2) - CX
+        d = sqrt(z**2 + (d1)**2)
+        alpha = -arctan2(y, x)
+        beta = arccos((z**2 + d**2 - d1**2) / (2 * (- no_zero(z)) * d)) + arccos((FM**2 + d**2 - TB**2) / (2 * FM * d))
+        gamma = - arccos((FM**2 + TB**2 - d**2) / (2 * FM * TB)) + 2 * PI
+        return np.array([alpha, beta - PI / 2, gamma - (PI / 2) * 3])
+
     def set_hardware_pose(self, pose: Pose):
         '''compute ik and write angles to hardware with current enables'''
-        def relative_ik(rel_pos, leg_dim: np.ndarray(shape=(6, 3))) -> np.ndarray(shape=(3,)):
-            x, y, z = rel_pos
-            CX, FM, TB = leg_dim
-
-            # position validity check
-            coxa_director = np.array([x, y, 0]) / sqrt(x ** 2 + y ** 2)
-            coxa_tip = coxa_director * CX
-            tip_to_coxa_dist = np.linalg.norm(rel_pos - coxa_tip)
-            director = (rel_pos - coxa_tip) / tip_to_coxa_dist
-            if tip_to_coxa_dist > FM + TB:
-                pwarn("position is not reachable! (too far) finding a possible one...")
-                x, y, z = coxa_tip + (FM + TB - EPSILON) * director
-            elif tip_to_coxa_dist < abs(FM - TB):
-                pwarn("position is not reachable! (too close) finding a possible one...")
-                x, y, z = coxa_tip + (abs(FM - TB) + EPSILON) * director
-
-            d1 = sqrt(y**2 + x**2) - CX
-            d = sqrt(z**2 + (d1)**2)
-            alpha = -arctan2(y, x)
-            beta = arccos((z**2 + d**2 - d1**2) / (2 * (- no_zero(z)) * d)) + arccos((FM**2 + d**2 - TB**2) / (2 * FM * d))
-            gamma = - arccos((FM**2 + TB**2 - d**2) / (2 * FM * TB)) + 2 * PI
-            return np.array([alpha, beta - PI / 2, gamma - (PI / 2) * 3])
-
         rel_poses = (pose.body_pos - config.POSE_OFFSET) * config.POSE_REL_CONVERT
-        angles = np.ravel(np.array([relative_ik(rel, leg.dim) for rel, leg in zip(rel_poses, config.legs)]))
+        angles = np.ravel(np.array([self.relative_ik(rel, leg.dim) for rel, leg in zip(rel_poses, config.legs)]))
         # publish the angles
         self._engine_joint_publisher_msg.position = angles
         # expand leg enable to its 3 joints

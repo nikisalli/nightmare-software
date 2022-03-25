@@ -47,7 +47,7 @@ LOAD_CELLS_CONVERSION_FACTOR = np.array([325334.23661089, 428671.46949402, -4481
 
 # ENGINE PARAMETERS
 # distance legs must keep from each other
-LEG_KEEPOUT_RADIUS = 0.05
+LEG_KEEPOUT_RADIUS = 0.03
 
 STAND_HEIGHT = 10.e-2
 LEG_ADJ_HEIGHT = 6.e-2
@@ -65,7 +65,7 @@ STEP_HEIGHT = 6.e-2
 MIN_STEP_TIME = 1.
 MAX_STEP_LENGTH = 8.e-2
 
-# ROBOT MOVEMENT PARAMS
+# ROBOT MOVEMENT LIMITS
 # walk settings
 MAX_WALK_TRASL_VEL = np.array([10e-2, 8e-2, 0])  # m/s
 MAX_WALK_ROT_VEL = np.array([0, 0, PI / 10])  # rad/s
@@ -82,6 +82,14 @@ MAX_BODY_ROT_CMD_VEL = np.array([PI / 100, PI / 100, PI / 100])  # rad/s
 
 MAX_BODY_TRASL_CMD_ACC = np.array([20e-6, 20e-6, 20e-6])  # m/s^2
 MAX_BODY_ROT_CMD_ACC = np.array([PI / 1000, PI / 1000, PI / 1000])  # rad/s^2
+
+# max servo angle
+COXA_MAX_ANGLE = PI / 4  # 45 degrees
+COXA_MIN_ANGLE = -PI / 4  # -45 degrees
+FEMUR_MAX_ANGLE = (2 * PI) / 3  # 120 degrees
+FEMUR_MIN_ANGLE = -(2 * PI) / 3  # -120 degrees
+TIBIA_MAX_ANGLE = PI / 2  # 90 degrees
+TIBIA_MIN_ANGLE = -PI / 2  # -90 degrees
 
 # leg adj sequences
 DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
