@@ -221,7 +221,7 @@ class WalkState:
         self._last_step_pose = pose.copy()
 
     def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
-        if state.cmd.state == 'awake' and state.cmd.mode == 'walk':
+        if (state.cmd.state == 'awake' and state.cmd.mode == 'walk') or self._gait_step_state != 0:
             # translate and rotate the current pose according to the walk command
             temp = pose.copy()
             # calculate max speed for the current step
@@ -304,7 +304,7 @@ class WalkState:
 
             # update step state when a substep is completed
             self._gait_step_state += len(gait) / (config.STEP_TIME * config.ENGINE_FPS)
-            if self._gait_step_state >= 1:
+            if self._gait_step_state > 1:
                 self._gait_step_state = 0
                 self._gait_step = (self._gait_step + 1) % len(gait)
                 self._last_step_pose = pose.copy()
