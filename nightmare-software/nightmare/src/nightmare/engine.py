@@ -196,16 +196,16 @@ class StandState:
     _start_pose: Pose
 
     def __init__(self, state: RobotState, pose: Pose):
-        self._start_pose = state.pose
+        self._start_pose = pose.copy()
         # print("stand start pose:\n", self._start_pose)
 
     def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         if state.cmd.state == 'awake' and state.cmd.mode == 'stand':
-            return self, Pose(config.DEFAULT_POSE, np.ones(shape=6)).translate(state.cmd.body_trasl).rotate(state.cmd.body_rot)
+            return self, self._start_pose.copy().translate(state.cmd.body_trasl).rotate(state.cmd.body_rot)
         elif state.cmd.state == 'awake' and state.cmd.mode == 'walk':
-            return WalkState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return WalkState(state, pose), pose.copy()  # return last translated and rotated pose
         elif state.cmd.state == 'idle':
-            return AdjustSitState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return AdjustSitState(state, pose), pose.copy()
         else:
             perr(f'unhandled state in stand state: {state}')
 
@@ -311,7 +311,7 @@ class WalkState:
 
             return self, temp
         elif state.cmd.state == 'awake' and state.cmd.mode == 'stand':
-            return StandState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
+            return StandState(state, pose), pose.copy()
         elif state.cmd.state == 'idle':
             return IdleState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         else:
