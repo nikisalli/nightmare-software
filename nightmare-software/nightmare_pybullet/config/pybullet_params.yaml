@@ -24,7 +24,7 @@ plugins:
 
 loop_rate:              80.0            # default: 80.0, the frequency at which to step sim in hz
 gravity:                -9.81           # default: -9.81, earth gravity in m/s^2
-max_effort:             100.0           # default: 50.0, the max force to apply to the model in vel mode
+max_effort:             4.0           # default: 50.0, the max force to apply to the model in vel mode
 
 # True = allow pybullet to compute the inertia tensor based on mass and volume of the collision shape
 # False = you can provide a more accurate inertia tensor, so inertia will be read then from URDF model
@@ -57,5 +57,5 @@ robot_pose_y: 0.0
 robot_pose_z: 0.3
 robot_pose_yaw: 0.0
 fixed_base: False # if false, allow free movement of the robot
-use_deformable_world: False # enable/disable soft body simulation
+use_deformable_world: True # enable/disable soft body simulation
 gui_options: ""
