@@ -16,7 +16,7 @@ from nightmare.config import PI, EPSILON
 from nightmare.msg import command
 from nightmare.modules.bezier import Bezier as bezier
 
-from nightmare.modules.debug import plot
+# from nightmare.modules.debug import plot
 
 
 # utils
@@ -332,6 +332,7 @@ class FiniteStateMachine:
         '''get next state and updated pose'''
         self._state, pose = self._state.update(state, self._pose)
         self._pose = pose.copy()
+        print(state.force_sensors)
         # print("current_state:", self._state.identifier)
         return pose
 
@@ -399,7 +400,7 @@ class EngineNode:
     def set_hardware_pose(self, pose: Pose):
         '''compute ik and write angles to hardware with current enables'''
         rel_poses = (pose.body_pos - config.POSE_OFFSET) * config.POSE_REL_CONVERT
-        angles = np.ravel(np.array([self.relative_ik(rel, leg.dim) for rel, leg in zip(rel_poses, config.legs)]))
+        angles = np.ravel(np.array([self.relative_ik(rel, leg.dim) for rel, leg in zip(rel_poses, config.legs)])) + config.SERVO_OFFSET
         # publish the angles
         self._engine_joint_publisher_msg.position = angles
         # expand leg enable to its 3 joints

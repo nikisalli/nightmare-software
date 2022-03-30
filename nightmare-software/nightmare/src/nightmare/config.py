@@ -96,7 +96,7 @@ DOUBLE_SEQUENCES = [[[1, 4], [3, 5], [2, 6]],
                     [[3, 6], [1, 5], [2, 4]]]
 
 # URDF PARAMS
-URDF_JOINT_OFFSETS = np.array([0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854, 0.7854, -1.2734, -0.7854, 0, -1.2734, -0.7854, -0.7854, -1.2734, -0.7854])
+URDF_JOINT_OFFSETS = np.array([0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854, 0, -1.2734, -0.7854])
 JOINT_STATE_LABELS = ['leg1coxa', 'leg1femur', 'leg1tibia',
                       'leg2coxa', 'leg2femur', 'leg2tibia',
                       'leg3coxa', 'leg3femur', 'leg3tibia',
@@ -128,42 +128,48 @@ legs = [
         abs_offset=np.array([BODY_OUT_WIDTH / 2, BODY_LENGTH / 2, 0]),
         default_pose=np.array([STAND_OUT_LEG_X, STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=RIGHT,
-        servo_offset=np.array([PI / 4, -0.14874564, 0])
+        # servo_offset=np.array([PI / 4, -0.14874564, 0])
+        servo_offset=np.array([PI / 4, 0, 0])
     ),
     LEG(  # leg 2
         dim=DEFAULT_DIM,
         abs_offset=np.array([BODY_MID_WIDTH / 2, 0, 0]),
         default_pose=np.array([STAND_MID_LEG_X, STAND_MID_LEG_Y, -STAND_HEIGHT]),
         side=RIGHT,
-        servo_offset=np.array([0, -0.14874564, 0])
+        # servo_offset=np.array([0, -0.14874564, 0])
+        servo_offset=np.array([0, 0, 0])
     ),
     LEG(  # leg 3
         dim=DEFAULT_DIM,
         abs_offset=np.array([BODY_OUT_WIDTH / 2, -BODY_LENGTH / 2, 0]),
         default_pose=np.array([STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=RIGHT,
-        servo_offset=np.array([-PI / 4, -0.14874564, 0])
+        # servo_offset=np.array([-PI / 4, -0.14874564, 0])
+        servo_offset=np.array([-PI / 4, 0, 0])
     ),
     LEG(  # leg 4
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_OUT_WIDTH / 2, -BODY_LENGTH / 2, 0]),
         default_pose=np.array([-STAND_OUT_LEG_X, -STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=LEFT,
-        servo_offset=np.array([PI / 4, -0.14874564, 0])
+        # servo_offset=np.array([PI / 4, -0.14874564, 0])
+        servo_offset=np.array([PI / 4, 0, 0])
     ),
     LEG(  # leg 5
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_MID_WIDTH / 2, 0, 0]),
         default_pose=np.array([-STAND_MID_LEG_X, STAND_MID_LEG_Y, -STAND_HEIGHT]),
         side=LEFT,
-        servo_offset=np.array([0, -0.14874564, 0])
+        # servo_offset=np.array([0, -0.14874564, 0])
+        servo_offset=np.array([0, 0, 0])
     ),
     LEG(  # leg 6
         dim=DEFAULT_DIM,
         abs_offset=np.array([-BODY_OUT_WIDTH / 2, BODY_LENGTH / 2, 0]),
         default_pose=np.array([-STAND_OUT_LEG_X, STAND_OUT_LEG_Y, -STAND_HEIGHT]),
         side=LEFT,
-        servo_offset=np.array([-PI / 4, -0.14874564, 0])
+        # servo_offset=np.array([-PI / 4, -0.14874564, 0])
+        servo_offset=np.array([-PI / 4, 0, 0])
     )
 ]
 
