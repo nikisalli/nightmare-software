@@ -1,7 +1,0 @@
-<!-- Start joystick node. -->
-<launch>
-
-  <!-- start joint compatibility layer node -->
-  <node name="state_broadcaster" pkg="nightmare_state_broadcaster" required="true" type="broadcaster.py" output="screen"/>
-
-</launch>

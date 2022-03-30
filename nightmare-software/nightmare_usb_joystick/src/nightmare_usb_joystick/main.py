@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import struct
 import array
@@ -8,11 +6,12 @@ from threading import Thread
 import time
 import numpy as np
 
-from nightmare_usb_joystick.msg import command  # noqa
+# ros imports
 from std_msgs.msg import Header
 import rospy
 
-from nightmare_config.config import GAIT
+# module imports
+from nightmare_usb_joystick.msg import command  # noqa
 
 # joystick vars #
 
@@ -26,13 +25,17 @@ mode = 'stand'  # joystick command mode
 # robot command vars #
 
 gait = 'tripod'
-state = 'sleep'  # string containing the robot's global state e.g. walking sitting etc
+state = 'idle'  # string containing the robot's global state e.g. walking sitting etc
 
 body_trasl = np.array([0, 0, 0])
 body_rot = np.array([0, 0, 0])
 walk_trasl = np.array([0, 0, 0])
 walk_rot = np.array([0, 0, 0])
 
+# GAITS
+GAIT = {'tripod': np.array([[0, 2, 4], [1, 3, 5]]),
+        'ripple': np.array([[0, 4], [1, 3], [2, 5]]),
+        'wave': np.array([[0], [1], [2], [3], [4], [5]])}
 
 header = Header()
 
@@ -113,13 +116,36 @@ button_map = []
 EPSILON = 0.001  # for float comparisons
 
 
+def fmap(x: float, in_min, in_max, out_min, out_max):
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+
 def feq(a, b):  # floating point equal
     return abs(a - b) < EPSILON
 
 
 def handle_js():
+    global jsdev
     while not rospy.is_shutdown():
-        evbuf = jsdev.read(8)
+        evbus = None
+        try:
+            evbuf = jsdev.read(8)
+        except OSError:
+            rospy.loginfo("joystick missing, waiting...")
+            while True:
+                for fn in os.listdir('/dev/input'):
+                    if fn.startswith('js'):
+                        device = '/dev/input/%s' % (fn)
+                        break
+                else:
+                    time.sleep(0.8)
+                    # rospy.loginfo("connect valid joystick to host")
+                    continue
+                break
+            fn = device
+            rospy.loginfo('Opening %s...' % fn)
+            jsdev = open(fn, 'rb')
+            continue  # continue to next iteration of outer loop
         if evbuf:
             _, value, _type, number = struct.unpack('IhBB', evbuf)
             if _type & 0x01:
@@ -156,7 +182,7 @@ def publisher():
     prev_button_states = button_states.copy()
     prev_axis_states = axis_states.copy()
     rate = rospy.Rate(50)
-    pub = rospy.Publisher("/control/usb_joystick", command, queue_size=1)
+    pub = rospy.Publisher("/control/command", command, queue_size=1)
 
     while not rospy.is_shutdown():
         if button_states['bb'] and prev_button_states['bb'] is False:  # joystick mode slection
@@ -166,20 +192,20 @@ def publisher():
             mode = 'stand'
             rospy.loginfo('mode set to stand')
         elif button_states['bx'] and prev_button_states['bx'] is False:
-            mode = 'leg control'
+            mode = 'leg_control'
             rospy.loginfo('mode set to leg control')
         prev_button_states['ba'] = button_states['ba']
         prev_button_states['bb'] = button_states['bb']
         prev_button_states['bx'] = button_states['bx']
         prev_button_states['by'] = button_states['by']
 
-        if button_states['start'] and state == 'sleep' and prev_button_states['start'] is False:
-            state = 'stand'
-            rospy.loginfo('state set to stand')
+        if button_states['start'] and state == 'idle' and prev_button_states['start'] is False:
+            state = 'awake'
+            rospy.loginfo('state set to awake')
             height_displacement = 0
-        elif button_states['start'] and state == 'stand' and prev_button_states['start'] is False:
-            state = 'sleep'
-            rospy.loginfo('state set to sleep')
+        elif button_states['start'] and state == 'awake' and prev_button_states['start'] is False:
+            state = 'idle'
+            rospy.loginfo('state set to idle')
             height_displacement = 0
         prev_button_states['start'] = button_states['start']
 
@@ -201,8 +227,12 @@ def publisher():
             rospy.loginfo(f"gait set to {gait}")
 
         if mode == 'walk':
-            walk_trasl = [- axis_states['jly'], - axis_states['jlx'], 0]
-            walk_rot = [0, 0, - axis_states['jrx']]
+            walk_trasl = [fmap(axis_states['jlx'], -1, 1, -0.1, 0.1),
+                          fmap(- axis_states['jly'], -1, 1, -0.1, 0.1),
+                          0]
+            walk_rot = [0,
+                        0,
+                        fmap(- axis_states['jrx'], -1, 1, -0.4, 0.4)]
 
             body_trasl = [0, 0, height_displacement]
             body_rot = [0, 0, 0]
@@ -211,13 +241,17 @@ def publisher():
             walk_trasl = [0, 0, 0]
             walk_rot = [0, 0, 0]
 
-            body_trasl = [- axis_states['jly'], - axis_states['jlx'], height_displacement]
-            body_rot = [axis_states['jrx'], - axis_states['jry'], 0]
+            body_trasl = [fmap(- axis_states['jlx'], -1, 1, -0.1, 0.1),
+                          fmap(axis_states['jly'], -1, 1, -0.1, 0.1),
+                          height_displacement]
+            body_rot = [fmap(axis_states['jry'], -1, 1, -0.5, 0.5),
+                        fmap(axis_states['jrx'], -1, 1, -0.5, 0.5),
+                        0]
 
         # If None is used as the header value, rospy will automatically
         # fill it in.
         header.stamp = rospy.Time.now()
-        pub.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, state, gait))
+        pub.publish(command(header, body_trasl, body_rot, walk_trasl, walk_rot, mode, state, gait))
         rate.sleep()
 
 

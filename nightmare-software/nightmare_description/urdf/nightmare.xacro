@@ -10,9 +10,9 @@
 
 <link name="body_link">
   <inertial>
-    <origin rpy="0 0 0" xyz="0.00027642737085348105 0.010613740030603296 0.02249920074743168"/>
-    <mass value="5.757228845962151"/>
-    <inertia ixx="0.023236" ixy="1.8e-05" ixz="0.0" iyy="0.013789" iyz="-0.001063" izz="0.033966"/>
+    <origin rpy="0 0 0" xyz="-5.6090748801665625e-05 -0.00769173581431502 0.01843556378112976"/>
+    <mass value="5.613817329636711"/>
+    <inertia ixx="0.03185" ixy="2.4e-05" ixz="-4e-06" iyy="0.013431" iyz="0.000255" izz="0.04215"/>
   </inertial>
   <visual>
     <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -29,612 +29,596 @@
   </collision>
 </link>
 
-<link name="leg_3_coxa_1">
+<link name="leg_1_tibia_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="0.024052035496447563 -0.024052034022785593 -0.02050000171122137"/>
-    <mass value="0.07378304798444445"/>
-    <inertia ixx="3.2e-05" ixy="3e-06" ixz="-0.0" iyy="3.2e-05" iyz="0.0" izz="3.5e-05"/>
+    <origin rpy="0 0 0" xyz="0.04178343647128775 0.01550414301375086 -0.024598215230103873"/>
+    <mass value="0.9419903891385216"/>
+    <inertia ixx="0.001888" ixy="-0.000473" ixz="0.000754" iyy="0.001914" iyz="0.000727" izz="0.001093"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="-0.068335 0.078335 -0.0385"/>
+    <origin rpy="0 0 0" xyz="-0.107917 -0.144991 -0.120366"/>
     <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_3_coxa_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="package://nightmare_description/meshes/leg_1_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="-0.068335 0.078335 -0.0385"/>
+    <origin rpy="0 0 0" xyz="-0.107917 -0.144991 -0.120366"/>
     <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_3_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_2_coxa_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="0.03401538718261085 9.93696248999688e-10 -0.02050000171212193"/>
-    <mass value="0.07378304722463921"/>
-    <inertia ixx="2.9e-05" ixy="-0.0" ixz="-0.0" iyy="3.5e-05" iyz="0.0" izz="3.5e-05"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="-0.093 -0.0 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_2_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="-0.093 -0.0 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_2_coxa_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="package://nightmare_description/meshes/leg_1_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="leg_1_coxa_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="0.02405203401918829 0.02405203542330879 -0.020500001712213764"/>
-    <mass value="0.07378304682101164"/>
-    <inertia ixx="3.2e-05" ixy="-3e-06" ixz="-0.0" iyy="3.2e-05" iyz="-0.0" izz="3.5e-05"/>
+    <origin rpy="0 0 0" xyz="0.02419335787837043 0.023903585464848637 -0.016051474178131547"/>
+    <mass value="0.35112711988344936"/>
+    <inertia ixx="0.000102" ixy="-6e-06" ixz="-2e-06" iyy="0.000103" iyz="-1e-06" izz="7.7e-05"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="-0.068335 -0.078335 -0.0385"/>
+    <origin rpy="0 0 0" xyz="-0.067171 -0.079498 -0.0455"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_1_coxa_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="-0.068335 -0.078335 -0.0385"/>
+    <origin rpy="0 0 0" xyz="-0.067171 -0.079498 -0.0455"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_1_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_6_coxa_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="-0.02405203564458211 0.024052033797916067 -0.02050000171221522"/>
-    <mass value="0.07378304682101106"/>
-    <inertia ixx="3.2e-05" ixy="3e-06" ixz="0.0" iyy="3.2e-05" iyz="-0.0" izz="3.5e-05"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="0.068335 -0.078335 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_6_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0.068335 -0.078335 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_6_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_5_coxa_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="-0.03401538721464084 -1.3253429337074102e-09 -0.0205000017130063"/>
-    <mass value="0.07378304630679161"/>
-    <inertia ixx="2.9e-05" ixy="-0.0" ixz="0.0" iyy="3.5e-05" iyz="0.0" izz="3.5e-05"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="0.093 0.0005 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_5_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0.093 0.0005 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_5_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_4_coxa_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="-0.024052033984224647 -0.024052036049472092 -0.020500001713658775"/>
-    <mass value="0.07378304447579094"/>
-    <inertia ixx="3.2e-05" ixy="-3e-06" ixz="0.0" iyy="3.2e-05" iyz="0.0" izz="3.5e-05"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="0.068335 0.078335 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_4_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0.068335 0.078335 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_4_coxa_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_3_femur_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="0.002811166294498485 -0.03199817277076898 -2.644789265403985e-05"/>
-    <mass value="0.39294361739912087"/>
-    <inertia ixx="0.000228" ixy="0.000159" ixz="0.0" iyy="0.000233" iyz="-0.0" izz="0.000423"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="-0.130935 0.111944 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_3_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="-0.130935 0.111944 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_3_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_2_femur_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="0.024613629490825878 -0.02063859750853185 -2.6447892664531458e-05"/>
-    <mass value="0.3929436173991593"/>
-    <inertia ixx="7.1e-05" ixy="-3e-06" ixz="1e-06" iyy="0.00039" iyz="0.0" izz="0.000423"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="-0.161031 -0.0205 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_2_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="-0.161031 -0.0205 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_2_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_1_femur_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="0.031998172770773436 0.0028111662944979576 -2.6447892665853318e-05"/>
-    <mass value="0.39294361739913425"/>
-    <inertia ixx="0.000233" ixy="-0.000159" ixz="0.0" iyy="0.000228" iyz="0.0" izz="0.000423"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="-0.101944 -0.140935 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_1_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="-0.101944 -0.140935 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_1_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_6_femur_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="-0.0318021665157692 0.0030071725494985047 -2.6447892670266454e-05"/>
-    <mass value="0.39294361739916434"/>
-    <inertia ixx="0.000228" ixy="0.000159" ixz="-0.0" iyy="0.000233" iyz="0.0" izz="0.000423"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="0.101944 -0.140935 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_6_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0.101944 -0.140935 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_6_femur_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_5_femur_2">
-  <inertial>
-    <origin rpy="0 0 0" xyz="-0.02461362953833532 -0.020361402859740193 -2.6447930872065817e-05"/>
-    <mass value="0.39294361912861614"/>
-    <inertia ixx="7.1e-05" ixy="-3e-06" ixz="-1e-06" iyy="0.00039" iyz="-0.0" izz="0.000423"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="0.161031 -0.02 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_5_femur_2.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0.161031 -0.02 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_5_femur_2.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_4_femur_2">
-  <inertial>
-    <origin rpy="0 0 0" xyz="-0.0030071725439563823 -0.03180216658850006 -2.64479308710458e-05"/>
-    <mass value="0.392943619128609"/>
-    <inertia ixx="0.000233" ixy="-0.000159" ixz="-0.0" iyy="0.000228" iyz="-0.0" izz="0.000423"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="0.130935 0.111944 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_4_femur_2.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="0.130935 0.111944 -0.018"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_4_femur_2.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="tail_link_1">
-  <inertial>
-    <origin rpy="0 0 0" xyz="5.8648452051355135e-05 -0.08077626610844917 -0.02049313021079149"/>
-    <mass value="0.34035116757413375"/>
-    <inertia ixx="0.001009" ixy="0.0" ixz="-0.0" iyy="0.000204" iyz="-2e-06" izz="0.000846"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="-0.0 0.113 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/tail_link_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="-0.0 0.113 -0.0385"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/tail_link_1.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="leg_1_tibia_2">
-  <inertial>
-    <origin rpy="0 0 0" xyz="0.04597168022169831 0.016860788290768453 0.015065036661186085"/>
-    <mass value="0.9516929282440427"/>
-    <inertia ixx="0.001279" ixy="-0.001095" ixz="-1.5e-05" iyy="0.001324" iyz="-1.8e-05" izz="0.002344"/>
-  </inertial>
-  <visual>
-    <origin rpy="0 0 0" xyz="-0.189204 -0.228903 -0.017821"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_1_tibia_2.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-  </visual>
-  <collision>
-    <origin rpy="0 0 0" xyz="-0.189204 -0.228903 -0.017821"/>
-    <geometry>
-      <mesh filename="package://nightmare_description/meshes/leg_1_tibia_2.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="leg_2_tibia_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="0.04442888153142993 -0.020584144796290275 0.0150650361958693"/>
-    <mass value="0.9516929282440427"/>
-    <inertia ixx="0.000206" ixy="2.2e-05" ixz="-2.3e-05" iyy="0.002396" iyz="-2e-06" izz="0.002344"/>
+    <origin rpy="0 0 0" xyz="0.0405095296195255 -0.01741506544088068 -0.024599997325444017"/>
+    <mass value="0.9420449187889018"/>
+    <inertia ixx="0.001428" ixy="-1.3e-05" ixz="0.001047" iyy="0.002374" iyz="1.8e-05" izz="0.001093"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="-0.284936 -0.021 -0.017821"/>
+    <origin rpy="0 0 0" xyz="-0.168122 -0.0165 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_2_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="-0.284936 -0.021 -0.017821"/>
+    <origin rpy="0 0 0" xyz="-0.168122 -0.0165 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_2_tibia_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_2_coxa_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="0.03400964092586298 0.00020422845539291943 -0.01605147332435354"/>
+    <mass value="0.3511271309291035"/>
+    <inertia ixx="9.7e-05" ixy="-0.0" ixz="-2e-06" iyy="0.000109" iyz="-0.0" izz="7.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="-0.093 0.0 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_2_coxa_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="-0.093 0.0 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_2_coxa_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="leg_3_tibia_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="0.016860788832001927 -0.045971679856765535 0.015065036195894974"/>
-    <mass value="0.9516929282440427"/>
-    <inertia ixx="0.001324" ixy="0.001095" ixz="-1.8e-05" iyy="0.001279" iyz="1.5e-05" izz="0.002344"/>
+    <origin rpy="0 0 0" xyz="0.01632987875460226 -0.04095773841364264 -0.024599412902793244"/>
+    <mass value="0.9420254589050608"/>
+    <inertia ixx="0.001888" ixy="0.000473" ixz="0.000754" iyy="0.001914" iyz="-0.000727" izz="0.001093"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="-0.218903 0.199204 -0.017821"/>
+    <origin rpy="0 0 0" xyz="-0.131958 0.12095 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_3_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="-0.218903 0.199204 -0.017821"/>
+    <origin rpy="0 0 0" xyz="-0.131958 0.12095 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_3_tibia_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_3_coxa_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="0.02419335787837036 -0.023903585464848692 -0.016051474178131506"/>
+    <mass value="0.35112711988344947"/>
+    <inertia ixx="0.000102" ixy="6e-06" ixz="-2e-06" iyy="0.000103" iyz="1e-06" izz="7.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="-0.067171 0.079498 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_3_coxa_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="-0.067171 0.079498 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_3_coxa_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="leg_4_tibia_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="-0.016979679635497652 -0.04585278905326559 0.015065036195897347"/>
-    <mass value="0.9516929282440427"/>
-    <inertia ixx="0.001279" ixy="-0.001095" ixz="1.5e-05" iyy="0.001324" iyz="1.8e-05" izz="0.002344"/>
+    <origin rpy="0 0 0" xyz="-0.04178509143189514 -0.01550252573635652 -0.02459941290280207"/>
+    <mass value="0.9420254589050611"/>
+    <inertia ixx="0.001888" ixy="-0.000473" ixz="-0.000754" iyy="0.001914" iyz="-0.000727" izz="0.001093"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="0.218196 0.199911 -0.017821"/>
+    <origin rpy="0 0 0" xyz="0.107917 0.144991 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_4_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="0.218196 0.199911 -0.017821"/>
+    <origin rpy="0 0 0" xyz="0.107917 0.144991 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_4_tibia_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_4_femur_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="-0.02693213997445433 -0.0005002719623741908 0.05329446816033774"/>
+    <mass value="0.13689906161265003"/>
+    <inertia ixx="0.000164" ixy="1.2e-05" ixz="3.2e-05" iyy="0.000164" iyz="3.2e-05" izz="6.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="0.081314 0.118388 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_4_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="0.081314 0.118388 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_4_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_4_coxa_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="-0.024193357902577595 -0.02390358548632862 -0.016051473999717337"/>
+    <mass value="0.3511271220544307"/>
+    <inertia ixx="0.000102" ixy="-6e-06" ixz="2e-06" iyy="0.000103" iyz="1e-06" izz="7.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="0.067171 0.079498 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_4_coxa_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="0.067171 0.079498 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_4_coxa_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="leg_5_tibia_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="-0.04442888153142355 -0.02041585551662712 0.015065036195890901"/>
-    <mass value="0.9516929282440427"/>
-    <inertia ixx="0.000206" ixy="2.2e-05" ixz="2.3e-05" iyy="0.002396" iyz="2e-06" izz="0.002344"/>
+    <origin rpy="0 0 0" xyz="-0.040509529619527 0.018584933307422072 -0.02459999732544571"/>
+    <mass value="0.9420449187889016"/>
+    <inertia ixx="0.001428" ixy="1.3e-05" ixz="-0.001047" iyy="0.002374" iyz="1.8e-05" izz="0.001093"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="0.284936 -0.0195 -0.017821"/>
+    <origin rpy="0 0 0" xyz="0.168122 0.0175 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_5_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="0.284936 -0.0195 -0.017821"/>
+    <origin rpy="0 0 0" xyz="0.168122 0.0175 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_5_tibia_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_5_femur_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="-0.01939760292696563 0.01869071222781447 0.05329446835295956"/>
+    <mass value="0.1368990938782139"/>
+    <inertia ixx="0.000176" ixy="0.0" ixz="4.6e-05" iyy="0.000151" iyz="-0.0" izz="6.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="0.1305 0.0175 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_5_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="0.1305 0.0175 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_5_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_5_coxa_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="-0.034009640942105374 0.00020422888767037946 -0.016051473831694755"/>
+    <mass value="0.35112712726422335"/>
+    <inertia ixx="9.7e-05" ixy="0.0" ixz="2e-06" iyy="0.000109" iyz="-0.0" izz="7.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="0.093 0.0 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_5_coxa_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="0.093 0.0 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_5_coxa_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="leg_6_tibia_1">
   <inertial>
-    <origin rpy="0 0 0" xyz="-0.0458527886001843 0.01697968008857778 0.015065036195873956"/>
-    <mass value="0.9516929282440427"/>
-    <inertia ixx="0.001324" ixy="0.001095" ixz="1.8e-05" iyy="0.001279" iyz="-1.5e-05" izz="0.002344"/>
+    <origin rpy="0 0 0" xyz="-0.016328330575181238 0.040959248909850324 -0.024598215230095144"/>
+    <mass value="0.9419903891385227"/>
+    <inertia ixx="0.001888" ixy="0.000473" ixz="-0.000754" iyy="0.001914" iyz="0.000727" izz="0.001093"/>
   </inertial>
   <visual>
-    <origin rpy="0 0 0" xyz="0.189911 -0.228196 -0.017821"/>
+    <origin rpy="0 0 0" xyz="0.132665 -0.120243 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_6_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
-    <origin rpy="0 0 0" xyz="0.189911 -0.228196 -0.017821"/>
+    <origin rpy="0 0 0" xyz="0.132665 -0.120243 -0.120366"/>
     <geometry>
       <mesh filename="package://nightmare_description/meshes/leg_6_tibia_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
-<link name="camera_link">
+<link name="leg_6_femur_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="-0.0007699272971616461 0.026662484639660658 0.0532944681603395"/>
+    <mass value="0.13689906161264997"/>
+    <inertia ixx="0.000164" ixy="-1.2e-05" ixz="3.2e-05" iyy="0.000164" iyz="-3.2e-05" izz="6.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="0.106062 -0.09364 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_6_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="0.106062 -0.09364 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_6_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_6_coxa_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="-0.02419335787837036 0.023903585464848692 -0.01605147417813148"/>
+    <mass value="0.35112711988344947"/>
+    <inertia ixx="0.000102" ixy="6e-06" ixz="2e-06" iyy="0.000103" iyz="-1e-06" izz="7.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="0.067171 -0.079498 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_6_coxa_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="0.067171 -0.079498 -0.0455"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_6_coxa_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_1_femur_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="0.02693213997445433 0.0005002719623741769 0.0532944681603377"/>
+    <mass value="0.13689906161265003"/>
+    <inertia ixx="0.000164" ixy="1.2e-05" ixz="-3.2e-05" iyy="0.000164" iyz="-3.2e-05" izz="6.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="-0.081314 -0.118388 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_1_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="-0.081314 -0.118388 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_1_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_2_femur_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="0.019397602926964297 -0.018309286520488362 0.053294468352960034"/>
+    <mass value="0.1368990938782139"/>
+    <inertia ixx="0.000176" ixy="-0.0" ixz="-4.6e-05" iyy="0.000151" iyz="-0.0" izz="6.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="-0.1305 -0.0165 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_2_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="-0.1305 -0.0165 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_2_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="leg_3_femur_1">
+  <inertial>
+    <origin rpy="0 0 0" xyz="0.000769820515975031 -0.026662591420847162 0.053294468160339475"/>
+    <mass value="0.13689906161264997"/>
+    <inertia ixx="0.000164" ixy="-1.2e-05" ixz="-3.2e-05" iyy="0.000164" iyz="3.2e-05" izz="6.7e-05"/>
+  </inertial>
+  <visual>
+    <origin rpy="0 0 0" xyz="-0.105355 0.094347 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_3_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+  </visual>
+  <collision>
+    <origin rpy="0 0 0" xyz="-0.105355 0.094347 -0.017"/>
+    <geometry>
+      <mesh filename="package://nightmare_description/meshes/leg_3_femur_1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
 </link>
 
 <link name="leg_1_tip">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0" />
+    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+  </inertial>
 </link>
 
 <link name="leg_2_tip">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0" />
+    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+  </inertial>
 </link>
 
 <link name="leg_3_tip">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0" />
+    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+  </inertial>
 </link>
 
 <link name="leg_4_tip">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0" />
+    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+  </inertial>
 </link>
 
 <link name="leg_5_tip">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0" />
+    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+  </inertial>
 </link>
 
 <link name="leg_6_tip">
-</link>
-
-<link name="body_imu">
+  <inertial>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <mass value="0" />
+    <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0" />
+  </inertial>
 </link>
 
 <joint name="base2body" type="fixed">
-  <origin rpy="0 0 -1.57079632679" xyz="0 0 0"/>
+  <origin rpy="0 0 0" xyz="0 0 0"/>
   <parent link="base_link"/>
   <child link="body_link"/>
 </joint>
 
-<joint name="leg3coxa" type="continuous">
-  <origin rpy="0 0 0" xyz="0.068335 -0.078335 0.0385"/>
-  <parent link="body_link"/>
-  <child link="leg_3_coxa_1"/>
-  <axis xyz="-0.0 -0.0 -1.0"/>
-</joint>
-
-<joint name="leg2coxa" type="continuous">
-  <origin rpy="0 0 0" xyz="0.093 0.0 0.0385"/>
-  <parent link="body_link"/>
-  <child link="leg_2_coxa_1"/>
-  <axis xyz="-0.0 0.0 -1.0"/>
+<joint name="leg1tibia" type="continuous">
+  <origin rpy="0 0 0" xyz="0.026603 0.026603 0.103366"/>
+  <parent link="leg_1_femur_1"/>
+  <child link="leg_1_tibia_1"/>
+  <axis xyz="-0.707107 0.707107 0.0"/>
 </joint>
 
 <joint name="leg1coxa" type="continuous">
-  <origin rpy="0 0 0" xyz="0.068335 0.078335 0.0385"/>
+  <origin rpy="0 0 0" xyz="0.067171 0.079498 0.0455"/>
   <parent link="body_link"/>
   <child link="leg_1_coxa_1"/>
   <axis xyz="0.0 -0.0 -1.0"/>
 </joint>
 
-<joint name="leg6coxa" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.068335 0.078335 0.0385"/>
-  <parent link="body_link"/>
-  <child link="leg_6_coxa_1"/>
-  <axis xyz="0.0 -0.0 -1.0"/>
+<joint name="leg2tibia" type="continuous">
+  <origin rpy="0 0 0" xyz="0.037622 0.0 0.103366"/>
+  <parent link="leg_2_femur_1"/>
+  <child link="leg_2_tibia_1"/>
+  <axis xyz="0.0 1.0 0.0"/>
 </joint>
 
-<joint name="leg5coxa" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.093 -0.0005 0.0385"/>
+<joint name="leg2coxa" type="continuous">
+  <origin rpy="0 0 0" xyz="0.093 0.0 0.0455"/>
   <parent link="body_link"/>
-  <child link="leg_5_coxa_1"/>
-  <axis xyz="-0.0 0.0 -1.0"/>
+  <child link="leg_2_coxa_1"/>
+  <axis xyz="-0.0 -0.0 -1.0"/>
+</joint>
+
+<joint name="leg3tibia" type="continuous">
+  <origin rpy="0 0 0" xyz="0.026603 -0.026603 0.103366"/>
+  <parent link="leg_3_femur_1"/>
+  <child link="leg_3_tibia_1"/>
+  <axis xyz="0.707107 0.707107 -0.0"/>
+</joint>
+
+<joint name="leg3coxa" type="continuous">
+  <origin rpy="0 0 0" xyz="0.067171 -0.079498 0.0455"/>
+  <parent link="body_link"/>
+  <child link="leg_3_coxa_1"/>
+  <axis xyz="-0.0 -0.0 -1.0"/>
+</joint>
+
+<joint name="leg4tibia" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.026603 -0.026603 0.103366"/>
+  <parent link="leg_4_femur_1"/>
+  <child link="leg_4_tibia_1"/>
+  <axis xyz="0.707107 -0.707107 0.0"/>
+</joint>
+
+<joint name="leg4femur" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.014143 -0.03889 -0.0285"/>
+  <parent link="leg_4_coxa_1"/>
+  <child link="leg_4_femur_1"/>
+  <axis xyz="-0.707107 0.707107 -0.0"/>
 </joint>
 
 <joint name="leg4coxa" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.068335 -0.078335 0.0385"/>
+  <origin rpy="0 0 0" xyz="-0.067171 -0.079498 0.0455"/>
   <parent link="body_link"/>
   <child link="leg_4_coxa_1"/>
   <axis xyz="-0.0 0.0 -1.0"/>
 </joint>
 
-<joint name="leg3femur" type="continuous">
-  <origin rpy="0 0 0" xyz="0.0626 -0.033609 -0.0205"/>
-  <parent link="leg_3_coxa_1"/>
-  <child link="leg_3_femur_1"/>
-  <axis xyz="-0.707107 -0.707107 0.0"/>
+<joint name="leg5tibia" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.037622 0.0 0.103366"/>
+  <parent link="leg_5_femur_1"/>
+  <child link="leg_5_tibia_1"/>
+  <axis xyz="0.0 -1.0 -0.0"/>
 </joint>
 
-<joint name="leg2femur" type="continuous">
-  <origin rpy="0 0 0" xyz="0.068031 0.0205 -0.0205"/>
-  <parent link="leg_2_coxa_1"/>
-  <child link="leg_2_femur_1"/>
-  <axis xyz="-0.0 -1.0 -0.0"/>
+<joint name="leg5femur" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.0375 -0.0175 -0.0285"/>
+  <parent link="leg_5_coxa_1"/>
+  <child link="leg_5_femur_1"/>
+  <axis xyz="-0.0 1.0 0.0"/>
 </joint>
 
-<joint name="leg1femur" type="continuous">
-  <origin rpy="0 0 0" xyz="0.033609 0.0626 -0.0205"/>
-  <parent link="leg_1_coxa_1"/>
-  <child link="leg_1_femur_1"/>
-  <axis xyz="0.707107 -0.707107 0.0"/>
+<joint name="leg5coxa" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.093 0.0 0.0455"/>
+  <parent link="body_link"/>
+  <child link="leg_5_coxa_1"/>
+  <axis xyz="-0.0 0.0 -1.0"/>
+</joint>
+
+<joint name="leg6tibia" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.026603 0.026603 0.103366"/>
+  <parent link="leg_6_femur_1"/>
+  <child link="leg_6_tibia_1"/>
+  <axis xyz="-0.707107 -0.707107 -0.0"/>
 </joint>
 
 <joint name="leg6femur" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.033609 0.0626 -0.0205"/>
+  <origin rpy="0 0 0" xyz="-0.038891 0.014142 -0.0285"/>
   <parent link="leg_6_coxa_1"/>
   <child link="leg_6_femur_1"/>
   <axis xyz="0.707107 0.707107 -0.0"/>
 </joint>
 
-<joint name="leg5femur" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.068031 0.0205 -0.0205"/>
-  <parent link="leg_5_coxa_1"/>
-  <child link="leg_5_femur_2"/>
-  <axis xyz="0.0 1.0 0.0"/>
-</joint>
-
-<joint name="leg4femur" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.0626 -0.033609 -0.0205"/>
-  <parent link="leg_4_coxa_1"/>
-  <child link="leg_4_femur_2"/>
-  <axis xyz="-0.707107 0.707107 0.0"/>
-</joint>
-
-<joint name="tail_joint" type="continuous">
-  <origin rpy="0 0 0" xyz="0.0 -0.113 0.0385"/>
+<joint name="leg6coxa" type="continuous">
+  <origin rpy="0 0 0" xyz="-0.067171 0.079498 0.0455"/>
   <parent link="body_link"/>
-  <child link="tail_link_1"/>
-  <axis xyz="-0.0 0.0 -1.0"/>
+  <child link="leg_6_coxa_1"/>
+  <axis xyz="0.0 0.0 -1.0"/>
 </joint>
 
-<joint name="leg1tibia" type="continuous">
-  <origin rpy="0 0 0" xyz="0.08726 0.087968 -0.000179"/>
-  <parent link="leg_1_femur_1"/>
-  <child link="leg_1_tibia_2"/>
+<joint name="leg1femur" type="continuous">
+  <origin rpy="0 0 0" xyz="0.014143 0.03889 -0.0285"/>
+  <parent link="leg_1_coxa_1"/>
+  <child link="leg_1_femur_1"/>
   <axis xyz="0.707107 -0.707107 -0.0"/>
 </joint>
 
-<joint name="leg2tibia" type="continuous">
-  <origin rpy="0 0 0" xyz="0.123905 0.0005 -0.000179"/>
-  <parent link="leg_2_femur_1"/>
-  <child link="leg_2_tibia_1"/>
-  <axis xyz="0.0 -1.0 -0.0"/>
+<joint name="leg2femur" type="continuous">
+  <origin rpy="0 0 0" xyz="0.0375 0.0165 -0.0285"/>
+  <parent link="leg_2_coxa_1"/>
+  <child link="leg_2_femur_1"/>
+  <axis xyz="0.0 -1.0 0.0"/>
 </joint>
 
-<joint name="leg3tibia" type="continuous">
-  <origin rpy="0 0 0" xyz="0.087968 -0.08726 -0.000179"/>
-  <parent link="leg_3_femur_1"/>
-  <child link="leg_3_tibia_1"/>
+<joint name="leg3femur" type="continuous">
+  <origin rpy="0 0 0" xyz="0.038184 -0.014849 -0.0285"/>
+  <parent link="leg_3_coxa_1"/>
+  <child link="leg_3_femur_1"/>
   <axis xyz="-0.707107 -0.707107 -0.0"/>
 </joint>
 
-<joint name="leg4tibia" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.087261 -0.087967 -0.000179"/>
-  <parent link="leg_4_femur_2"/>
-  <child link="leg_4_tibia_1"/>
-  <axis xyz="-0.707107 0.707107 -0.0"/>
-</joint>
-
-<joint name="leg5tibia" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.123905 -0.0005 -0.000179"/>
-  <parent link="leg_5_femur_2"/>
-  <child link="leg_5_tibia_1"/>
-  <axis xyz="0.0 1.0 -0.0"/>
-</joint>
-
-<joint name="leg6tibia" type="continuous">
-  <origin rpy="0 0 0" xyz="-0.087967 0.087261 -0.000179"/>
-  <parent link="leg_6_femur_1"/>
-  <child link="leg_6_tibia_1"/>
-  <axis xyz="0.707107 0.707107 -0.0"/>
-</joint>
-
-<joint name="body2camera" type="fixed">
-  <origin rpy="0 0 1.57079632679" xyz="0.0 0.1 0.025"/>
-  <parent link="body_link"/>
-  <child link="camera_link"/>
-</joint>
-
-<joint name="body2body_imu" type="fixed">
-  <origin rpy="0 0 0" xyz="-0.012 0.036 0.025"/>
-  <parent link="body_link"/>
-  <child link="body_imu"/>
-</joint>
-
 <joint name="leg1tip" type="fixed">
-  <origin rpy="0 0 0" xyz="0.135 0.102 -0.015"/>
-  <parent link="leg_1_tibia_2"/>
+  <origin rpy="0 0 0" xyz="0.083143 0.055315 -0.13882"/>
+  <parent link="leg_1_tibia_1"/>
   <child link="leg_1_tip"/>
 </joint>
 
 <joint name="leg2tip" type="fixed">
-  <origin rpy="0 0 0" xyz="0.168 -0.022 -0.013"/>
+  <origin rpy="0 0 0" xyz="0.098086 -0.016834 -0.13945"/>
   <parent link="leg_2_tibia_1"/>
   <child link="leg_2_tip"/>
 </joint>
 
 <joint name="leg3tip" type="fixed">
-  <origin rpy="0 0 0" xyz="0.103 -0.134 -0.013"/>
+  <origin rpy="0 0 0" xyz="0.057977 -0.080731 -0.13799"/>
   <parent link="leg_3_tibia_1"/>
   <child link="leg_3_tip"/>
 </joint>
 
 <joint name="leg4tip" type="fixed">
-  <origin rpy="0 0 0" xyz="-0.105 -0.133 -0.013"/>
+  <origin rpy="0 0 0" xyz="-0.083143 -0.055315 -0.13882"/>
   <parent link="leg_4_tibia_1"/>
   <child link="leg_4_tip"/>
 </joint>
 
 <joint name="leg5tip" type="fixed">
-  <origin rpy="0 0 0" xyz="-0.168 -0.019 -0.013"/>
+  <origin rpy="0 0 0" xyz="-0.098086 0.016834 -0.13945"/>
   <parent link="leg_5_tibia_1"/>
   <child link="leg_5_tip"/>
 </joint>
 
 <joint name="leg6tip" type="fixed">
-  <origin rpy="0 0 0" xyz="-0.133 0.105 -0.013"/>
+  <origin rpy="0 0 0" xyz="-0.057977 0.080731 -0.13799"/>
   <parent link="leg_6_tibia_1"/>
   <child link="leg_6_tip"/>
 </joint>
