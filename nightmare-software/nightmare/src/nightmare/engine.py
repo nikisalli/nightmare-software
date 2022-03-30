@@ -151,7 +151,7 @@ class GetUpState:
     def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         advancement = self.task_time_s() / config.TIME_GET_UP
         if advancement < 1:
-            return self, Pose(config.DEFAULT_SIT_POSE + (config.DEFAULT_POSE - config.DEFAULT_SIT_POSE) * advancement, np.ones(shape=6))
+            return self, Pose(config.DEFAULT_SIT_POSE + (config.DEFAULT_POSE - config.DEFAULT_SIT_POSE) * asymmetrical_sigmoid(advancement), np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'idle':
             return AdjustSitState(state, pose), Pose(config.DEFAULT_POSE, np.ones(shape=6))
         elif advancement > 1 and state.cmd.state == 'awake' and state.cmd.mode == 'stand':
@@ -174,7 +174,7 @@ class SitState:
     def update(self, state: RobotState, pose: Pose) -> (typing.Any, Pose):
         advancement = self.task_time_s() / config.TIME_SIT
         if advancement < 1:
-            return self, Pose(config.DEFAULT_POSE + (config.DEFAULT_SIT_POSE - config.DEFAULT_POSE) * advancement, np.ones(shape=6))
+            return self, Pose(config.DEFAULT_POSE + (config.DEFAULT_SIT_POSE - config.DEFAULT_POSE) * asymmetrical_sigmoid(advancement), np.ones(shape=6))
         else:
             return IdleState(state, pose), Pose(config.DEFAULT_SIT_POSE, np.ones(shape=6))
 

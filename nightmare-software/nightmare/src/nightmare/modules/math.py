@@ -24,6 +24,7 @@ def fmap(x: float, in_min, in_max, out_min, out_max):
 
 
 def asymmetrical_sigmoid(val):
+    # from 0, 0 to 1, 1
     return 1 / (1 + np.e**(-13 * (val - 0.5)))  # width set to 13
 
 
